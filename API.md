@@ -1,0 +1,211 @@
+# API
+
+## Construction
+
+`gpuparticles.newEmitter(config)` creates an active emitter. Defaults:
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `max` | `1000` | Ring capacity; integer from 1 through 2²⁴, subject to device memory |
+| `mode` | `'auto'` | `'analytic'`, `'stateful'`, or automatic selection |
+| `rate` | `0` | Births/second; zero is burst-only |
+| `lifetime` | `{1,1}` | Particle lifetime; scalar or `{min,max}`, positive |
+| `position` | `{0,0}` | Emitter position |
+| `speed` | `{0,0}` | Initial speed; scalar or range |
+| `direction`, `spread` | `0`, `0` | Direction and full angular spread, radians |
+| `gravity` | `{0,0}` | Constant acceleration |
+| `acceleration` | derived from gravity | `{minX,minY,maxX,maxY}` |
+| `damping` | `0` | Nonnegative exponential damping, scalar or range |
+| `radialAcceleration`, `tangentialAcceleration` | `0` | Scalar or range; see compatibility notes |
+| `sizes` | `{8,0}` | Evenly spaced width stops in pixels |
+| `colors` | white → transparent | Evenly spaced RGB/RGBA stops |
+| `sizeVariation`, `spinVariation` | `0` | Values from 0 to 1 |
+| `spin`, `rotation` | `0` | Scalar or range in radians/sec and radians |
+| `relativeRotation` | `false` | Orient to velocity |
+| `emissionArea` | `{distribution='none',x=0,y=0}` | Area settings below |
+| `emitterLifetime` | `-1` | Negative means unlimited; otherwise seconds of active emission |
+| `offset` | `{0,0}` | Pixel offset from billboard center |
+| `quads` | `{}` | Texture-atlas animation, progressing over lifetime |
+| `insertMode` | `'top'` | Ring placement: `'top'`, `'bottom'`, `'random'` |
+| `blendMode` | `'add'` | A LÖVE blend mode |
+| `seed` | `1` | Private deterministic record generator seed |
+| `forces` | `{}` | Force descriptors below |
+
+`texture`, `collision`, `flowField`, and `attractors` are optional. The library does not take ownership of caller textures or quads. Construct after LÖVE graphics initialization.
+
+## Methods
+
+All setters and controls return the emitter for chaining. `update`, `draw`, and `release` do not.
+
+| Method | Operation / GPU cost |
+|---|---|
+| `update(dt)` | Advance time / one stateful pass; dt must be nonnegative and finite |
+| `draw(x=0,y=0)` | One instanced draw with optional translation |
+| `emit(n)` | Burst, clamped to capacity; O(n) build/upload; ignored while stopped/paused |
+| `warm(seconds)` | O(1) analytic; repeated simulation steps stateful |
+| `setColors(c1,c2,...)` | RGBA tables, a list of tables, or flat RGBA groups; upload curve LUT |
+| `setSizes(s1,s2,...)` | Numbers or one list; upload curve LUT |
+| `setSizeVariation(v)` | Set seeded size variation; refresh implicit records |
+| `setSpeed(min,max=min)` | Refresh implicit records |
+| `setSpread(radians)` | Refresh implicit records |
+| `setDirection(radians)` | Refresh implicit records |
+| `setLinearAcceleration(x,y,maxX=x,maxY=y)` | Uniforms; applies to live GPU particles |
+| `setRadialAcceleration(min,max=min)` | Uniforms |
+| `setTangentialAcceleration(min,max=min)` | Uniforms |
+| `setLinearDamping(min,max=min)` | Uniforms |
+| `setSpin(min,max=min)` | Refresh implicit records |
+| `setSpinVariation(v)` | Refresh implicit records |
+| `setRotation(min,max=min)` | Refresh implicit records |
+| `setRelativeRotation(boolean)` | Uniform |
+| `setEmissionArea(distribution,x=0,y=0,angle=0,directionRelative=false)` | Refresh implicit records |
+| `setEmitterLifetime(seconds)` | Reset remaining active emission time |
+| `setParticleLifetime(min,max=min)` | Refresh implicit records |
+| `setPosition(x,y)` | Origin uniform; burst records keep their captured origin |
+| `setCircleCollider(x,y,radius)` | Move/resize and enable a circular obstacle in simulation coordinates; O(1), no uploads or shader rebuild |
+| `setCircleCollider()` | Disable the circle; keep its configured bounce/friction |
+| `setOffset(x,y)` | Billboard offset uniform |
+| `setQuads(q1,q2,...)` | Quads or one list; upload atlas LUT; no arguments clears it |
+| `setInsertMode(mode)` | Change ring placement/cursor, without sorting |
+| `setBufferSize(n)` | Reallocate and clear particles |
+| `setEmissionRate(rate)` | Refresh implicit records and phase from current emission clock |
+| `start()` | Resume emission; update clock mapping if needed |
+| `stop()` | Stop emission and reset remaining emitter lifetime |
+| `pause()` | Stop emission while preserving remaining emitter lifetime |
+| `reset()` | Clear particles and replay from seed; retain active/stopped state |
+| `release()` | Release owned resources and cached shader references; idempotent |
+
+Implicit-record refresh is **O(max)** and performs a full mesh upload. Explicit burst records are preserved. Stateful refresh updates spawn templates without overwriting current simulated state. Construct with the final configuration, or make these changes outside latency-sensitive frame paths. Curves have the hardware texture-width limit; GPU curves support more than eight stops without a shader recompile.
+
+Diagnostics: `getMode()`, `getBackend()`, `getFallbackReason()`, `getCount()` (O(max)), `getPosition()`, `getBufferSize()`, `getEmissionRate()`, `getEmitterLifetime()`, `getParticleLifetime()`, `isActive()`, `isPaused()`, `isStopped()`, `isEmpty()`, and `isFull()`.
+
+Area distributions: `none`, `uniform` (rectangle), `normal`, `ellipse`, `borderellipse`, and `borderrectangle`. `x,y` are half-extents or normal standard deviations. The area rotates by `angle`. With `directionRelative`, each initial direction is rotated by its sampled position's angle.
+
+## Analytic forces
+
+```lua
+local f = require('gpuparticles').forces
+local emitter = require('gpuparticles').newEmitter {
+  max = 50000, rate = 10000, lifetime = 3,
+  forces = {
+    f.acceleration(0, 40),
+    f.turbulence { amplitude = {25, 8}, frequency = {3, 5} },
+    f.curl { amplitude = 35, frequency = 0.8 },
+  },
+}
+assert(emitter:getMode() == 'analytic')
+```
+
+Acceleration contributes `a*t²/2`. Turbulence contributes `amplitude * (sin(frequency*t + seed*2π) - sin(seed*2π))`; frequency is radians/sec. Curl uses central derivatives of a smooth scalar value-noise potential evaluated at a seeded coordinate plus time, and subtracts its birth value. These are deterministic displacement terms, not forces sampled at current particle position.
+
+Gravity/damping in the base trajectory are integrated together exactly:
+
+```
+D = (1 - exp(-k*t))/k
+position = origin + velocity0*D + acceleration*(t-D)/k
+```
+
+The zero-damping branch is the ballistic formula. Independent force displacements compose additively; base damping does not damp those added displacement terms.
+
+```lua
+f.custom {
+  name = 'sideways',             -- valid GLSL identifier
+  code = 'return vec2(amplitude * age * age, 0.0);',
+  uniforms = { amplitude = 12 }, -- numbers or 2–4 component vectors
+}
+```
+
+Analytic custom code receives `seed` and `age` and must return a `vec2` displacement. It must be stateless; no Lua callback runs per particle. Unknown force kinds are rejected. Uniform names are namespaced before shader assembly. Shader variants are shared by canonical force/source set, independent of parameter values and list ordering, and released when their final emitter is released. Editing a configuration table after construction is not a supported force-update API; construct a new effect when its force set changes.
+
+## Stateful forces
+
+### Flow field
+
+```lua
+flowField = {
+  texture = flowImage,
+  origin = {0,0}, size = {1920,1080},
+  strength = 200,
+  encoding = 'unorm', -- map RG from [0,1] to [-1,1]; default is signed RG
+}
+```
+
+RG represents acceleration. Sampling uses `(currentPosition - origin) / size`. `size` defaults to the texture dimensions, `strength` to 1. Supply a float texture for signed/unbounded values, or use `unorm` for ordinary images. The caller controls the field texture's filtering and wrapping. Updating the contents of a supplied Canvas updates the field without recreating the emitter.
+
+### Attractors
+
+```lua
+attractors = {
+  {x=400, y=300, strength=500000, softening=20},
+  {position={600,300}, strength=-200000, softening=40},
+}
+```
+
+Each acceleration is `delta * strength / max(distance², softening²)^(3/2)`; the denominator has a small nonzero floor. Negative strength repels. Entries are packed into a texture at construction; an empty list leaves auto mode analytic.
+
+### Collision
+
+```lua
+collision = {type='plane', y=600, radius=3, bounce=0.7, friction=0.1}
+
+collision = {
+  type='heightfield', texture=heightImage,
+  origin={0,0}, size={1920,1080},
+  scale=1080, bias=0, radius=3, bounce=0.7,
+}
+
+collision = {
+  type='sdf', texture=signedDistanceImage,
+  origin={0,0}, size={1920,1080},
+  scale=1, bias=0, radius=3, bounce=0.7,
+}
+```
+
+The plane is horizontal, solid below `y`. A heightfield's red channel encodes `height = origin.y + red*scale + bias`; it samples the middle texture row and estimates the surface normal with neighboring samples. An SDF's red channel encodes signed distance in world pixels (`red*scale+bias`), **positive outside** the solid. The gradient determines its normal. Both texture collision types require positive world dimensions.
+
+Penetration projects the particle center to the surface plus `radius`. `bounce` is restitution (default 0.5); `friction` removes that fraction of tangent velocity (default 0). Particle visual size does not automatically change collision radius.
+
+### Moving circular obstacle
+
+```lua
+local emitter = require('gpuparticles').newEmitter {
+  max=20000, rate=5000, lifetime=3,
+  position={400,40}, direction=math.pi/2, speed=100, gravity={0,300},
+  circleCollider={x=400, y=250, radius=45, particleRadius=2, bounce=0.2, friction=0.03},
+  -- An existing collision plane, heightfield, or SDF may also be configured.
+}
+local accumulator=0
+function love.update(dt)
+  local x,y=love.mouse.getPosition()
+  emitter:setCircleCollider(x,y,45)
+  accumulator=accumulator+math.min(dt,0.1)
+  while accumulator>=1/120 do
+    emitter:update(1/120)
+    accumulator=accumulator-1/120
+  end
+end
+```
+
+`circleCollider` automatically selects stateful mode. `enabled=false` reserves it without enabling contact. `x,y` default to zero, obstacle `radius` to 40, `particleRadius` to zero, `bounce` to 0.5, and `friction` to zero. Radius must be positive; particle radius nonnegative; bounce/friction in [0,1].
+
+The shader evaluates `length(position-center)-radius`, projects penetrating particle centers outside, and applies restitution/friction. A circle can coexist with `collision`; the deeper contact determines the projection and response. This remains discrete collision, so rapid mouse motion can skip particles and overlapping obstacles can require subsequent steps to resolve. Mouse velocity is not transferred to particles.
+
+`setCircleCollider` changes scalar uniforms without reading particle state, uploading spawn records, or rebuilding collision textures. Its first use on an explicitly stateful emitter allocates a small configuration table; subsequent movement is allocation-free. Analytic emitters reject the setter; construct with `circleCollider` or explicit stateful mode. The native fallback accepts the setter but omits collision.
+
+Coordinates must be in the emitter's simulation space: undo any camera, draw translation, or viewport scaling before passing mouse coordinates. The comparison and waterfall examples include this mapping and wheel-controlled radius changes. Calling `setCircleCollider()` disables contact when the pointer leaves the viewport.
+
+### Custom acceleration
+
+```lua
+forces = {
+  f.custom {
+    name='vortex', stateful=true,
+    uniforms={center={400,300}, strength=120},
+    code=[[
+      vec2 d = p - center;
+      return vec2(-d.y,d.x) / max(length(d),20.0) * strength;
+    ]],
+  },
+}
+```
+
+Stateful code receives `p`, `velocity`, `seed`, and `age` and returns acceleration. `stateful=true` drives automatic mode selection. These descriptors share the same source-based cache as analytic forces.
