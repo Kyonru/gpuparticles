@@ -12,12 +12,13 @@ parser.add_argument('--love', default=shutil.which('love') or '/Applications/lov
 parser.add_argument('--mutations', action='store_true')
 parser.add_argument('--portable-only', action='store_true')
 parser.add_argument('--demos-only', action='store_true')
+parser.add_argument('--editor-only', action='store_true')
 options = parser.parse_args()
 root = Path(__file__).resolve().parents[1]
 
 
-def run(command='test', expected=True, contains='PASS'):
-    result = subprocess.run([options.love, str(root), command], text=True, capture_output=True, timeout=90)
+def run(command='test', expected=True, contains='PASS', arguments=()):
+    result = subprocess.run([options.love, str(root), command, *arguments], text=True, capture_output=True, timeout=90)
     output = result.stdout + result.stderr
     if (result.returncode == 0) != expected or (contains and contains not in output):
         print(output)
@@ -26,6 +27,67 @@ def run(command='test', expected=True, contains='PASS'):
         print(output, end='')
     else:
         print(next((line for line in output.splitlines() if contains in line), output))
+    return output
+
+
+def mutate(label, filename, original, broken, expected, command='test'):
+    path = root / filename
+    source = path.read_bytes()
+    assert source.count(original.encode()) == 1, f'{label}: mutation must have exactly one target'
+    try:
+        path.write_bytes(source.replace(original.encode(), broken.encode(), 1))
+        run(command=command, expected=False, contains=expected)
+        print(f'MUTATION CAUGHT: {label}')
+    finally:
+        path.write_bytes(source)
+
+
+editor_mutations = [
+    ('editor burst timing', 'editor_support/runtime.lua',
+     'self.events[self.eventIndex].time<=self.time+1e-8',
+     'self.events[self.eventIndex].time<=self.time+0.02', 'burst must not fire early', 'editor-test'),
+    ('editor automatic mode selection', 'editor_support/runtime.lua',
+     "c.mode='auto'", "c.mode='stateful'", 'presets must use their cheapest mode', 'editor-test'),
+]
+
+
+def editor_verification():
+    output = run('editor-test', arguments=('--export-fixture',))
+    fixture = Path(next(line.split(' ', 1)[1] for line in output.splitlines() if line.startswith('EDITOR_EXPORT_PATH ')))
+    with tempfile.TemporaryDirectory(prefix='particle-studio-export-') as folder:
+        destination = Path(folder)
+        shutil.copytree(root / 'gpuparticles', destination / 'gpuparticles')
+        shutil.copyfile(fixture, destination / 'effect.lua')
+        (destination / 'conf.lua').write_text((root / 'conf.lua').read_text())
+        (destination / 'main.lua').write_text("""
+function love.load()
+  local ok,err=xpcall(function()
+    assert(not love.filesystem.getInfo('editor_support'))
+    local effect=require('effect').new()
+    assert(effect.emitters[1]:getMode()=='stateful')
+    effect:seek(0.7);effect:update(1/60);effect:draw();effect:release()
+    print('Standalone editor export without editor files PASS')
+  end,debug.traceback)
+  if not ok then print(err) end
+  love.event.quit(ok and 0 or 1)
+end
+function love.errorhandler(message) print(message);return function() return 1 end end
+""")
+        result = subprocess.run([options.love, str(destination)], text=True, capture_output=True, timeout=90)
+        output = result.stdout + result.stderr
+        print(output, end='')
+        assert result.returncode == 0 and 'without editor files PASS' in output
+    fixture.unlink()
+    for arguments in ([], ['--compact'], ['--preset=3']):
+        result = subprocess.run([options.love, str(root / 'editor'), '--smoke', '--capture', *arguments],
+                                text=True, capture_output=True, timeout=90)
+        output = result.stdout + result.stderr
+        print(output, end='')
+        assert result.returncode == 0 and 'Editor standalone render PASS' in output and 'EDITOR_CAPTURE ' in output
+    if options.mutations:
+        for mutation in editor_mutations:
+            mutate(*mutation)
+        run('editor-test')
 
 
 def demo(name, *arguments):
@@ -66,6 +128,11 @@ function love.errorhandler(message) print(message);return function() return 1 en
     subprocess.run([options.love, str(root / 'bench')], check=True, timeout=90)
 
 
+if options.editor_only:
+    editor_verification()
+    print('EDITOR VERIFICATION COMPLETE')
+    sys.exit(0)
+
 if options.demos_only:
     run('waterfall-test')
     run('comparison-test')
@@ -87,6 +154,7 @@ run('fallback')
 run('examples-test')
 run('waterfall-test')
 run('comparison-test')
+run('editor-test')
 if options.mutations:
     mutations = [
         ('simulation blend', 'gpuparticles/stateful.lua',
@@ -110,17 +178,10 @@ if options.mutations:
          'float circleDistance=separation-u_circle.z;', 'float circleDistance=1.0e30;',
          'circle expected 88.000000, got 90.000000'),
     ]
-    for label, filename, original, broken, expected, *commands in mutations:
-        path = root / filename
-        source = path.read_bytes()
-        assert source.count(original.encode()) == 1, f'{label}: mutation must have exactly one target'
-        try:
-            path.write_bytes(source.replace(original.encode(), broken.encode(), 1))
-            run(command=commands[0] if commands else 'test', expected=False, contains=expected)
-            print(f'MUTATION CAUGHT: {label}')
-        finally:
-            path.write_bytes(source)
+    for mutation in mutations + editor_mutations:
+        mutate(*mutation)
     run()  # The restored code must pass again.
     run('comparison-test')
+    run('editor-test')
 print('VERIFICATION COMPLETE')
 sys.exit(0)

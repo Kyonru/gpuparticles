@@ -42,6 +42,7 @@ From the directory containing `particle-gpu`:
 ```sh
 love particle-gpu/probe          # exact hardware probe from the implementation brief
 love particle-gpu               # interactive examples; arrows select, Space emits
+love particle-gpu editor        # Particle Studio: layered effects, curves, timeline, Lua export
 love particle-gpu comparison    # matched native / GPU particles, live FPS, isolated benchmark
 love particle-gpu waterfall     # layered waterfall with GPU collision against the rocks
 love particle-gpu test          # real GPU numeric tests
@@ -60,12 +61,19 @@ On macOS, `love` may be `/Applications/love.app/Contents/MacOS/love`.
 python3 particle-gpu/scripts/verify.py --mutations
 python3 particle-gpu/scripts/verify.py --portable-only
 python3 particle-gpu/scripts/verify.py --demos-only
+python3 particle-gpu/scripts/verify.py --editor-only --mutations
 luacheck particle-gpu --globals love jit --no-max-line-length
 ```
 
-The Python runner is a development tool, not a library dependency. It runs the suite, native fallback, twelve force examples, and numeric checks for the waterfall and comparison. `--demos-only` also opens both standalone demos, runs the isolated FPS benchmark, and captures previews. With `--mutations`, it deliberately breaks blending, filtering, vertex addressing, analytic acceleration, shader caching, comparison size matching, and isolated-system gating; it requires the corresponding tests to fail, restores each file in `finally`, and runs the restored tests again. Do not edit those files concurrently with mutation verification.
+The Python runner is a development tool, not a library dependency. It runs the suite, native fallback, twelve force examples, and numeric checks for the waterfall, comparison, and editor. `--demos-only` also opens both standalone demos, runs the isolated FPS benchmark, and captures previews. `--editor-only` verifies editor workflows and exports in a separate project. With `--mutations`, it deliberately breaks simulation invariants, shader caching, comparison isolation, collision, editor timing, and automatic mode selection; it requires the corresponding tests to fail, restores each file in `finally`, and runs the restored tests again. Do not edit those files concurrently with mutation verification.
 
 See [bench/RESULTS.md](bench/RESULTS.md) for measurements on the current machine and [API.md](API.md) for every method and force configuration.
+
+## Particle Studio editor
+
+Run `love particle-gpu editor`, or press **E** in the root example picker. Build compositions from up to 12 emitter layers, edit color/size curves and generated particle shapes, combine forces and collision, and arrange emission windows and bursts on a timeline. The editor includes undo/redo, deterministic replay, four layered presets, and saved JSON projects.
+
+**Export Lua** produces a self-contained effect module that needs only `gpuparticles/` in your game. Its playback code is shared with the editor preview and verified with numeric GPU state and rendered-output comparisons. See the [editor guide](editor/README.md) for controls, files, limits, and integration code.
 
 ## Native / GPU comparison
 

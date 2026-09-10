@@ -2,6 +2,7 @@ local prefix=(...):gsub('example_support%.runner$','')
 local effects=require(prefix..'example_support.effects')
 local M={}
 function M.install(selected,automated)
+  local hasEditor=love.filesystem.getInfo('editor_support/app.lua')~=nil
   local index=1
   for i,name in ipairs(effects.names) do if name==selected then index=i end end
   local smoke,frames=false,0
@@ -50,6 +51,7 @@ function M.install(selected,automated)
     love.graphics.setColor(0.85,0.9,1,1)
     love.graphics.print(('GPU PARTICLES  /  %s\n%s · %s · capacity %s\nLeft / Right choose effect   Space burst   R restart   Esc quit\nC Native / GPU comparison   W Colliding waterfall'):format(
       effects.names[index],emitter:getMode(),emitter:getBackend(),emitter:getBufferSize()),24,24)
+    if hasEditor then love.graphics.print('E Particle Studio editor',24,92) end
     local name=effects.names[index]
     if name=='collision' then love.graphics.line(0,love.graphics.getHeight()-80,love.graphics.getWidth(),love.graphics.getHeight()-80)
     elseif name=='sdf' then love.graphics.circle('line',love.graphics.getWidth()/2,love.graphics.getHeight()/2,90) end
@@ -63,6 +65,7 @@ function M.install(selected,automated)
       require(prefix..'example_support.'..(key=='c' and 'comparison' or 'waterfall')..'.app').install()
       love.load()
     elseif key=='r' then load() end
+    if key=='e' and hasEditor then release();require('editor_support.app').install();love.load() end
   end
   function love.quit() release() end
   function love.errorhandler(message) print(message);return function() return 1 end end
