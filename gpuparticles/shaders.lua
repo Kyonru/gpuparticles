@@ -11,6 +11,7 @@ function M.acquire(kind, fragment, key)
     local source=assert(love.filesystem.read(directory..kind..'.glsl'))
     source=source:gsub('// COMMON',function() return assert(love.filesystem.read(directory..'common.glsl')) end)
     source=source:gsub('// STYLE',function() return assert(love.filesystem.read(directory..'style.glsl')) end)
+    source=source:gsub('// COLLISION',function() return assert(love.filesystem.read(directory..'collision.glsl')) end)
     source=source:gsub('// FORCES',function() return fragment or 'vec2 forceDisplacement(float seed,float age) { return vec2(0.0); }' end)
     entry={shader=love.graphics.newShader(source),refs=0}
     cache[id]=entry

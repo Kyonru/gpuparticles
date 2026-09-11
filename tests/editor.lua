@@ -28,10 +28,11 @@ function T.run()
   require('tests.editor_sprites').run()
   require('tests.editor_numbers').run()
   require('tests.editor_colors').run()
+  require('tests.editor_selfcollision').run()
   for i=1,#P.names do
     local doc=P.make(i);local decoded=S.decode(J.encode(doc));assert(J.encode(doc)==J.encode(decoded))
     local effect=R.new(doc);effect:seek(i==4 and 0.35 or 1.5)
-    for j,e in ipairs(effect.emitters) do assert(e:getMode()==(i==3 and j==1 and 'stateful' or 'analytic'),'presets must use their cheapest mode') end
+    for j,e in ipairs(effect.emitters) do assert(e:getMode()==((i==3 or i==7) and j==1 and 'stateful' or 'analytic'),'presets must use their cheapest mode') end
     local data=render(effect);local sum=0
     for y=0,639,8 do for x=0,959,8 do local r,g,b=data:getPixel(x,y);sum=sum+r+g+b end end
     data:release();assert(sum>1,'editor preset must render visible particles');effect:release()
@@ -55,6 +56,7 @@ function T.run()
   print('Editor exact burst boundaries / seeking / looping / emission windows / lifetime tail PASS')
 
   doc=P.make(3);for _,layer in ipairs(doc.layers) do layer.emitter.max=256;layer.emitter.rate=100 end
+  doc.layers[1].selfCollision.enabled=true
   doc.layers[1].sprite=require('tests.editor_appearance').sprite(true)
   doc.layers[1].appearance.pixelSize=2;doc.layers[1].appearance.glow=0.3
   local original=R.new(doc);local source=S.exportSource(doc)

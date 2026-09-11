@@ -16,6 +16,28 @@ Both panels share the texture, emission settings, color curve, particle lifetime
 
 [Mouse collision preview](../../previews/comparison-mouse.png)
 
+**S** switches to a GPU **particle-contact off/on** comparison. Both sides use stateful simulation with the same seed, texture, spawn settings, four-second lifetime, and floor; the right additionally resolves particle contacts. **Up/Down** selects **256, 512, 1024, 2048, 5000, or 10000** particles. **I** cycles through 1–4 contact iterations, **[/]** changes visual size and contact diameter, and **C** applies the same mouse obstacle to both. Press **S** again to restore the regular native/GPU settings. The native LÖVE ParticleSystem has no equivalent particle-contact feature, so the GPU baseline isolates this feature's cost.
+
+In this mode, **B** disables the moving obstacle and measures contact off and on independently, with **one fixed 1/120 s simulation step per frame**. Other configuration changes clear old measurements. The displayed ratio compares end-to-end window frame time, including changes in overdraw; spreading out a pile can improve drawing performance even though the solver is more expensive. CPU counters still measure submission, not completed GPU time.
+
+```sh
+love particle-gpu comparison --self-collision
+love particle-gpu comparison --self-collision --count=10000
+love particle-gpu comparison --self-collision --benchmark --smoke --capture
+love particle-gpu self-collision-bench
+love particle-gpu self-collision-bench --count=10000
+# standalone comparison folder:
+love particle-gpu/examples/comparison --self-bench
+```
+
+The separate completed-work benchmark prints simulation-only and update-plus-draw milliseconds for every supported count and 0/1/2/4 contact iterations, synchronizing at batch boundaries. See [measured results](../../bench/SELF_COLLISION.md). Contact uses fixed-radius circles within each emitter; it can leave overlaps in dense piles and does not simulate fluid volume. Each iteration adds two passes, with quadratic work in capacity. Native fallback omits contact and is labeled accordingly.
+
+High counts can be expensive, especially with several iterations. The preview executes at most two small simulation steps per frame and slows its simulated time under load, avoiding an expanding catch-up backlog. **B** continues to use exactly one 1/120 s step per measured frame. Changing settings rebuilds and warms the stream, which takes longer at high counts; pressing Up at the maximum does not rebuild it again.
+
+![GPU particle contacts disabled and enabled](../../previews/comparison-self.png)
+
+[10,000-particle comparison](../../previews/comparison-self-10000.png)
+
 Side-by-side mode has one shared window FPS. The saved isolated results come from frames where only one particle system updates and draws. CPU update and CPU draw-submission timings exclude GPU completion. Both render to 512×512 canvases, regardless of window size. VSync is off; FPS still includes presentation, UI, and LÖVE's event loop. Increase particle size to expose overdraw costs.
 
 Source:

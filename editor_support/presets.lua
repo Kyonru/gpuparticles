@@ -1,9 +1,16 @@
 local D=require('editor_support.document')
-local P={names={'Ember fountain','Arcane bloom','Colliding rain','Impact burst','Pixel embers','Spectral wisps'}}
+local P={names={'Ember fountain','Arcane bloom','Colliding rain','Impact burst','Pixel embers','Spectral wisps','Colliding droplets'}}
 function P.make(index)
   local d=D.new();d.name=P.names[index or 1]
   local l=d.layers[1]
-  if index==5 then
+  if index==7 then
+    l.name='Colliding droplets';l.emitter.max=1024;l.emitter.rate=256;l.emitter.lifetime={4,4}
+    l.emitter.position={480,60};l.emitter.emissionArea={distribution='uniform',x=70,y=0,angle=0,directionRelative=false}
+    l.emitter.direction=math.pi/2;l.emitter.spread=0.15;l.emitter.speed={80,100};l.emitter.gravity={0,220};l.emitter.damping=0.1
+    l.emitter.sizes={12};l.emitter.blendMode='alpha';l.emitter.colors={{0.45,0.83,0.94,0.8},{0.65,0.93,0.99,0.7},{0.5,0.8,0.92,0}}
+    l.ground.enabled=true;l.response={radius=6,bounce=0.15,friction=0.05}
+    l.selfCollision={enabled=true,radius=6,bounce=0.2,strength=0.8,iterations=1}
+  elseif index==5 then
     l.name='Pixel sparks';l.emitter.sizes={16,12,8};l.emitter.blendMode='alpha';l.emitter.rate=300;l.emitter.max=2000
     l.emitter.speed={55,180};l.emitter.gravity={0,-20};l.emitter.lifetime={1.2,2.6};l.emitter.spread=0.8
     l.emitter.colors={{1,0.9,0.4,1},{1,0.5,0.08,1},{0.5,0.1,0.02,0}}

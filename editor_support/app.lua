@@ -16,7 +16,12 @@ function A:guard(action)
   if not self.model.dirty then self:close();action();return end
   self.modal={kind='confirm',action=action,message='Your composition has unsaved changes. Save it before continuing?'};self.ui.focus=nil
 end
-function A:replace(doc) self:guard(function() if self.model:replace(doc) then self.model:message('Loaded '..doc.name) end end) end
+function A:replace(doc) self:guard(function()
+  if self.model:replace(doc) then
+    if self.model:layer().selfCollision.enabled then self.model.tab='Motion' end
+    self.model:message('Loaded '..doc.name)
+  end
+end) end
 function A:update(dt) self.model:update(dt) end
 function A:draw() View.draw(self) end
 function A:mousepressed(x,y,button)
@@ -101,7 +106,7 @@ function A.install()
   local compact,preset,tab=false,1,nil
   for _,value in ipairs(arg or {}) do
     if value=='--smoke' then smoke=true elseif value=='--capture' then capture=true elseif value=='--compact' then compact=true
-    elseif value:match('^%-%-preset=[1-6]$') then preset=tonumber(value:sub(-1)) end
+    elseif value:match('^%-%-preset=[1-7]$') then preset=tonumber(value:sub(-1)) end
     if value=='--texture-tab' then tab='Texture' end
   end
   function love.load()
@@ -110,6 +115,7 @@ function A.install()
     love.window.setTitle('Particle Studio — GPU effect editor');love.keyboard.setKeyRepeat(true);app=A.new{preset=preset}
     if preset==3 then app.model:select(1) end
     if smoke then app.model.playing=false;app.model.tab=preset>=5 and 'Effects' or 'Style' end
+    if preset==7 then app.model.tab='Motion' end
     if tab then app.model.tab=tab end
   end
   function love.update(dt)
@@ -122,7 +128,7 @@ function A.install()
     app:draw()
     if capture and frames>=65 and love.timer.getFPS()>0 and not app.model.seekTarget and not requested then
       requested=true;love.graphics.captureScreenshot(function(data)
-        local file=tab and 'editor-texture.png' or preset==5 and (compact and 'editor-pixel-compact.png' or 'editor-pixel.png') or preset==6 and 'editor-shaders.png' or compact and 'editor-compact.png' or preset==3 and 'editor-collision.png' or 'editor.png'
+        local file=tab and 'editor-texture.png' or preset==7 and (compact and 'editor-self-compact.png' or 'editor-self.png') or preset==5 and (compact and 'editor-pixel-compact.png' or 'editor-pixel.png') or preset==6 and 'editor-shaders.png' or compact and 'editor-compact.png' or preset==3 and 'editor-collision.png' or 'editor.png'
         data:encode('png',file);data:release();captured=true
         print('EDITOR_CAPTURE '..love.filesystem.getSaveDirectory()..'/'..file)
       end)

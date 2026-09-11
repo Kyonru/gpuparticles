@@ -12,6 +12,7 @@ parser.add_argument('--love', default=shutil.which('love') or '/Applications/lov
 parser.add_argument('--mutations', action='store_true')
 parser.add_argument('--portable-only', action='store_true')
 parser.add_argument('--demos-only', action='store_true')
+parser.add_argument('--waterfall-only', action='store_true')
 parser.add_argument('--editor-only', action='store_true')
 options = parser.parse_args()
 root = Path(__file__).resolve().parents[1]
@@ -72,11 +73,28 @@ editor_mutations = [
      "c.mode='auto'", "c.mode='stateful'", 'appearance effects must stay analytic', 'editor-test'),
 ]
 
-plant_mutations = [
+waterfall_mutations = [
+    ('waterfall self-collision emission rate', 'example_support/waterfall/scene.lua',
+     'max=24000,rate=6000,lifetime', 'max=24000,rate=selfCollision and 512 or 6000,lifetime',
+     'waterfall self collision must keep the full emitted count', 'waterfall-test'),
+    ('waterfall particle contact', 'example_support/waterfall/scene.lua',
+     'radius=1.5,bounce=0.1,strength=0.8,iterations=1', 'radius=0.000001,bounce=0.1,strength=0.8,iterations=1',
+     'waterfall self collision must change the actual droplet stream', 'waterfall-test'),
     ('anchored plant roots', 'example_support/waterfall/shaders/plants.glsl',
      'float weight=height*height;', 'float weight=1.0;', 'plant expected', 'waterfall-test'),
     ('plant circle contact', 'example_support/waterfall/plants.lua',
      'local overlap=circle.radius+8*p.scale-distance', 'local overlap=-1', 'circle contact must push', 'waterfall-test'),
+]
+
+self_mutations = [
+    ('particle pair separation', 'gpuparticles/shaders/selfresolve.glsl',
+     '0.5*(diameter-distance)*u_strength', '0.25*(diameter-distance)*u_strength', 'pair separation', 'self-collision-test'),
+    ('particle pair restitution', 'gpuparticles/shaders/selfresolve.glsl',
+     '0.5*(1.0+u_bounce)', '0.25*(1.0+u_bounce)', 'pair bounce', 'self-collision-test'),
+    ('inactive particle exclusion', 'gpuparticles/shaders/selfresolve.glsl',
+     'if (neighbor.z<0.5) continue;', 'if (neighbor.z<0.0) continue;', 'inactive neighbor exclusion', 'self-collision-test'),
+    ('particle collision environment projection', 'gpuparticles/shaders/selfresolve.glsl',
+     'collide(p,velocity);', 'vec2 beforeCollision=p;collide(p,velocity);p=beforeCollision;', 'self collision must reapply environment projection', 'self-collision-test'),
 ]
 
 
@@ -95,6 +113,7 @@ function love.load()
     local effect=require('effect').new()
     assert(effect.emitters[1]:getMode()=='stateful')
     assert(#effect.emitters[1].config.quads==2 and effect.appearances[1])
+    assert(effect.emitters[1].config.selfCollision and effect.emitters[1].selfPacked)
     effect:seek(0.7);effect:update(1/60);effect:draw();effect:release()
     print('Standalone editor export without editor files PASS')
   end,debug.traceback)
@@ -109,7 +128,7 @@ function love.errorhandler(message) print(message);return function() return 1 en
         assert result.returncode == 0 and 'without editor files PASS' in output
     fixture.unlink()
     for arguments in ([], ['--compact'], ['--preset=3'], ['--preset=5'], ['--preset=5', '--compact'],
-                      ['--preset=5', '--texture-tab'], ['--preset=6']):
+                      ['--preset=5', '--texture-tab'], ['--preset=6'], ['--preset=7'], ['--preset=7', '--compact']):
         result = subprocess.run([options.love, str(root / 'editor'), '--smoke', '--capture', *arguments],
                                 text=True, capture_output=True, timeout=90)
         output = result.stdout + result.stderr
@@ -164,16 +183,20 @@ if options.editor_only:
     print('EDITOR VERIFICATION COMPLETE')
     sys.exit(0)
 
-if options.demos_only:
+if options.demos_only or options.waterfall_only:
     run('waterfall-test')
-    run('comparison-test')
     demo('waterfall')
-    demo('comparison', '--benchmark')
-    demo('comparison', '--mouse-collision')
+    if not options.waterfall_only:
+        run('comparison-test')
+        demo('comparison', '--benchmark')
+        demo('comparison', '--mouse-collision')
+        demo('comparison', '--self-collision', '--benchmark')
     demo('waterfall', '--mouse-collision')
     demo('waterfall', '--plant-collision')
+    demo('waterfall', '--self-collision')
+    demo('waterfall', '--self-collision', '--mouse-collision')
     if options.mutations:
-        for mutation in plant_mutations:
+        for mutation in waterfall_mutations:
             mutate(*mutation)
         run('waterfall-test')
     print('DEMO VERIFICATION COMPLETE')
@@ -210,11 +233,11 @@ if options.mutations:
         ('comparison inactive-system gating', 'example_support/comparison/model.lua',
          "return self.view=='both' or self.view==name", 'return true',
          'comparison expected', 'comparison-test'),
-        ('circle collision projection', 'gpuparticles/shaders/simulate.glsl',
+        ('circle collision projection', 'gpuparticles/shaders/collision.glsl',
          'float circleDistance=separation-u_circle.z;', 'float circleDistance=1.0e30;',
          'circle expected 88.000000, got 90.000000'),
     ]
-    for mutation in mutations + editor_mutations + plant_mutations:
+    for mutation in mutations + editor_mutations + waterfall_mutations + self_mutations:
         mutate(*mutation)
     run()  # The restored code must pass again.
     run('comparison-test')

@@ -2,7 +2,7 @@ local prefix = (...):gsub('%.init$', '') .. '.'
 local capabilities = require(prefix .. 'capabilities')
 local config = require(prefix .. 'config')
 local E = require(prefix .. 'emitter')
-local M = {forces = require(prefix .. 'forces')}
+local M = {forces = require(prefix .. 'forces'),selfCollisionLimit=config.selfCollisionLimit}
 local warned = false
 function M.getCapabilities() return capabilities.get() end
 local function disc()
@@ -18,7 +18,7 @@ local function disc()
 end
 function M.newEmitter(input)
   local c = config.normalize(input)
-  local needsState = c.collision or c.circleCollider or (c.attractors and #c.attractors>0) or c.flowField
+  local needsState = c.collision or c.circleCollider or c.selfCollision or (c.attractors and #c.attractors>0) or c.flowField
   for _, force in ipairs(c.forces) do needsState = needsState or force.stateful end
   if c.mode == 'analytic' and needsState then
     error('gpuparticles: this effect requires stateful mode (collision, attractors, flowField or stateful force)',2)

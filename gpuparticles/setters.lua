@@ -118,6 +118,7 @@ function M.install(E)
   end
   function E:setBufferSize(n)
     self:_check();config.number(n,'buffer size',1);assert(n%1==0,'gpuparticles: buffer size must be an integer')
+    assert(not self.config.selfCollision or n<=config.selfCollisionLimit,'gpuparticles: selfCollision supports at most 24000 particle slots per emitter')
     self.config.max=n
     if self.native then self.native:setBufferSize(n)
     else self:reset() end

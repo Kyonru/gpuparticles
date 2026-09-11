@@ -33,6 +33,7 @@ local function build(layer,definition,owned)
   if layer.turbulence.enabled then c.forces[#c.forces+1]=gpu.forces.turbulence(copy(layer.turbulence)) end
   if layer.curl.enabled then c.forces[#c.forces+1]=gpu.forces.curl(copy(layer.curl)) end
   if layer.attractor.enabled then c.attractors={copy(layer.attractor)} end
+  if layer.selfCollision and layer.selfCollision.enabled then c.selfCollision=copy(layer.selfCollision) end
   local response=layer.response
   if layer.ground.enabled then c.collision={type='plane',y=layer.ground.y,radius=response.radius,bounce=response.bounce,friction=response.friction} end
   if layer.circle.enabled then c.circleCollider={x=layer.circle.x,y=layer.circle.y,radius=layer.circle.radius,

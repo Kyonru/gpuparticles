@@ -152,14 +152,18 @@ function R:hud(scene)
   g.setFont(self.title);g.setColor(0.85,0.92,0.85);g.print('Basalt Falls',45,59)
   g.setFont(self.text);g.setColor(0.53,0.68,0.67);g.print('Water, stone, and a little GPU weather.',48,107)
   g.setFont(self.small);g.setColor(0.58,0.79,0.74)
-  g.printf(('DROPLETS  /  %s\nSPRAY + MIST  /  ANALYTIC\nFIXED STEP  /  120 Hz'):format(scene.drops:getBackend()=='gpu' and 'GPU COLLISION' or 'NATIVE FALLBACK'),940,45,292,'right')
+  local backend=scene.drops:getBackend()
+  local contacts=backend~='gpu' and 'UNAVAILABLE' or scene.selfCollision and 'ON' or 'OFF'
+  g.printf(('DROPLETS  /  %s\nSELF COLLISION  /  %s · %d SLOTS\nSPRAY + MIST  /  ANALYTIC\nFIXED STEP  /  120 Hz · %d FPS'):format(
+    backend=='gpu' and 'GPU COLLISION' or 'NATIVE FALLBACK',contacts,scene.drops.config.max,love.timer.getFPS()),912,45,320,'right')
   local legend=('1 Curtain %s    2 Droplets %s    3 Spray + mist %s    D Collision map %s'):format(
     scene.layers.curtain and 'on' or 'off',scene.layers.drops and 'on' or 'off',scene.layers.mist and 'on' or 'off',scene.layers.field and 'on' or 'off')
-  g.setColor(0.02,0.06,0.08,0.8);g.rectangle('fill',35,728,1210,52,6,6)
-  g.setFont(self.text);g.setColor(0.68,0.83,0.79);g.print(legend,49,739)
+  g.setColor(0.02,0.06,0.08,0.8);g.rectangle('fill',35,712,1210,68,6,6)
+  g.setFont(self.text);g.setColor(0.68,0.83,0.79);g.print(legend,49,722)
+  g.print(('S Self collision %s  /  %d slots · %d droplets/s in both modes'):format(contacts:lower(),scene.drops.config.max,scene.drops.config.rate),49,742)
   g.setFont(self.small);g.setColor(0.43,0.61,0.60)
-  g.print('C Mouse '..(scene.mouse.enabled and 'on' or 'off')..'    Wheel Radius    SPACE '..(scene.paused and 'Resume' or 'Pause')..'    R Restart    H Hide controls    ESC Exit',49,759)
-  g.printf(scene.layers.field and 'CORAL = SOLID  /  TEAL = AIR' or ('W Wind '..(scene.wind and 'on' or 'off')..' · brush the ferns'),955,759,273,'right')
+  g.print('C Mouse '..(scene.mouse.enabled and 'on' or 'off')..'    Wheel Radius    SPACE '..(scene.paused and 'Resume' or 'Pause')..'    R Restart    H Hide controls    ESC Exit',49,762)
+  g.printf(scene.layers.field and 'CORAL = SOLID  /  TEAL = AIR' or ('W Wind '..(scene.wind and 'on' or 'off')..' · brush the ferns'),955,762,273,'right')
 end
 function R:release() for _,resource in ipairs(self.owned) do resource:release() end end
 return R

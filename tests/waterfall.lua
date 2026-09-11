@@ -110,6 +110,7 @@ function M.run()
   assert(math.abs(plants.plants[1].bx)+math.abs(plants.plants[1].by)>1,'scene circle must reach the plant springs')
   scene:release();scene:release()
   print('Waterfall independent layers / modes / pause / release PASS')
+  require('tests.waterfall_selfcollision').run()
 end
 function M.install()
   function love.load()

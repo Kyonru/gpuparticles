@@ -3,20 +3,33 @@ local Model=require(prefix..'example_support.comparison.model')
 local View=require(prefix..'example_support.comparison.view')
 local M={}
 function M.install()
+  for _,value in ipairs(arg or {}) do
+    if value=='--self-bench' then require(prefix..'example_support.comparison.selfbench').install();return end
+  end
   local model,view,smoke,capture,requested,captured,benchmark=nil,nil,false,false,false,false,false
   local frames=0
   local mouseDemo=false
+  local particleDemo=false
+  local count
   for _,value in ipairs(arg or {}) do
     if value=='--smoke' then smoke=true end
     if value=='--capture' then capture=true end
     if value=='--benchmark' then benchmark=true end
     if value=='--mouse-collision' then mouseDemo=true end
+    if value=='--self-collision' then particleDemo=true end
+    if value:match('^%-%-count=%d+$') then count=tonumber(value:match('%d+$')) end
   end
   mouseDemo=mouseDemo and not benchmark
   function love.load()
     love.window.setMode(1280,800,{resizable=true,minwidth=960,minheight=700,vsync=0})
     love.window.setTitle('LÖVE vs GPU — matched particle comparison')
-    model=Model.new();view=View.new()
+    local index
+    if count then
+      local capacities=particleDemo and Model.particleCapacities or Model.capacities
+      for i,value in ipairs(capacities) do if value==count then index=i end end
+      assert(index,'Unsupported comparison count; choose '..table.concat(capacities,', ')..'.')
+    end
+    model=Model.new{selfCollision=particleDemo,particleCapacityIndex=index,capacityIndex=index};view=View.new()
     if mouseDemo then model:setMouseCollision(true) end
     if benchmark then model:startBenchmark() end
   end
@@ -24,7 +37,7 @@ function M.install()
     if mouseDemo and smoke and not benchmark then model:setPointer(256,215,true)
     else model:setPointer(view:mapPointer(love.mouse.getPosition())) end
     if mouseDemo and smoke and frames==1 then model:clearMeasurement() end
-    model:update(dt,mouseDemo and smoke and 1/60 or nil);frames=frames+1
+    model:update(dt,(mouseDemo or particleDemo) and smoke and 1/60 or nil);frames=frames+1
     local done=benchmark and model.benchmarkDone or (not benchmark and frames>=(mouseDemo and 120 or 30))
     if smoke and done and (not capture or captured) then print('Comparison standalone render PASS');love.event.quit() end
   end
@@ -34,7 +47,7 @@ function M.install()
     if capture and not requested and frames>=(mouseDemo and 90 or 5) and (not mouseDemo or shownFPS>0) and (not benchmark or (model.benchmarkDone and not shownBenchmark and shownFPS>0)) then
       requested=true
       love.graphics.captureScreenshot(function(data)
-        local file=mouseDemo and not benchmark and 'comparison-mouse.png' or 'comparison.png'
+        local file=particleDemo and (model.capacity>2048 and 'comparison-self-'..model.capacity..'.png' or 'comparison-self.png') or mouseDemo and not benchmark and 'comparison-mouse.png' or 'comparison.png'
         data:encode('png',file);data:release()
         print('COMPARISON_CAPTURE '..love.filesystem.getSaveDirectory()..'/'..file);captured=true
       end)
@@ -51,6 +64,8 @@ function M.install()
     elseif key=='[' then model:changeSize(-1)
     elseif key==']' then model:changeSize(1)
     elseif key=='m' then model:toggleMode()
+    elseif key=='s' then model:setParticleCollision(not model.particleCollision)
+    elseif key=='i' then model:changeIterations()
     elseif key=='c' then model:setMouseCollision(not model.mouseCollision)
     elseif key=='space' then model.paused=not model.paused;model.benchmark=nil;model:clearMeasurement()
     elseif key=='r' then model:rebuild() end

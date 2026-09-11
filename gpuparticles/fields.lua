@@ -34,7 +34,7 @@ function M.new(e)
     e.attractorTexture:setFilter('nearest','nearest');data:release()
   end
 end
-function M.send(e,shader)
+function M.sendCollision(e,shader)
   local f=e.fields
   local c=e.config.circleCollider
   if c then
@@ -42,14 +42,18 @@ function M.send(e,shader)
     f.circleResponse[1],f.circleResponse[2],f.circleResponse[3]=c.particleRadius,c.bounce,c.friction
   end
   shader:send('u_circle',f.circle);shader:send('u_circleResponse',f.circleResponse)
+  shader:send('u_collision',f.collision);shader:send('u_collisionType',f.collisionType)
+  shader:send('u_collisionRegion',f.collisionRegion);shader:send('u_collisionTexel',f.collisionTexel)
+  shader:send('u_collisionEncoding',f.collisionEncoding);shader:send('u_collisionResponse',f.collisionResponse)
+end
+function M.send(e,shader)
+  local f=e.fields
+  M.sendCollision(e,shader)
   shader:send('u_hasFlow',not not e.config.flowField)
   shader:send('u_flow',f.flow);shader:send('u_flowRegion',f.flowRegion)
   shader:send('u_flowEncoding',f.flowEncoding);shader:send('u_flowStrength',f.flowStrength)
   shader:send('u_attractors',e.attractorTexture or e.emptyField)
   shader:send('u_attractorCount',f.attractorCount)
-  shader:send('u_collision',f.collision);shader:send('u_collisionType',f.collisionType)
-  shader:send('u_collisionRegion',f.collisionRegion);shader:send('u_collisionTexel',f.collisionTexel)
-  shader:send('u_collisionEncoding',f.collisionEncoding);shader:send('u_collisionResponse',f.collisionResponse)
 end
 function M.release(e)
   if e.attractorTexture then e.attractorTexture:release() end

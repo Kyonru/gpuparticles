@@ -1,4 +1,4 @@
-local M = {}
+local M = {selfCollisionLimit=24000}
 function M.copy(value)
   if type(value) ~= 'table' then return value end
   local result = {}
@@ -99,6 +99,22 @@ function M.normalize(input)
     end
   end
   if c.circleCollider then M.circleCollider(c.circleCollider) end
+  if c.selfCollision==true then c.selfCollision={} end
+  if c.selfCollision then
+    local s=c.selfCollision
+    assert(type(s)=='table','gpuparticles: selfCollision must be a table or boolean')
+    assert(s.enabled==nil or type(s.enabled)=='boolean','gpuparticles: selfCollision enabled must be boolean')
+    if s.enabled==false then c.selfCollision=nil
+    else
+      assert(c.max<=M.selfCollisionLimit,'gpuparticles: selfCollision supports at most 24000 particle slots per emitter; reduce max or disable it')
+      s.radius=M.number(s.radius or 3,'self collision radius',0.000001)
+      s.bounce=M.number(s.bounce or 0.2,'self collision bounce',0)
+      s.strength=M.number(s.strength or 0.8,'self collision separation',0)
+      s.iterations=M.number(s.iterations or 1,'self collision iterations',1)
+      assert(s.bounce<=1 and s.strength<=1,'gpuparticles: self collision bounce and separation must be between 0 and 1')
+      assert(s.iterations%1==0 and s.iterations<=4,'gpuparticles: self collision iterations must be an integer from 1 to 4')
+    end
+  end
   return c
 end
 return M

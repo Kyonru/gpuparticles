@@ -2,6 +2,7 @@ local prefix=(...):gsub('stateful$','')
 local records,curves,shaders=require(prefix..'records'),require(prefix..'curves'),require(prefix..'shaders')
 local forces,fields=require(prefix..'forces'),require(prefix..'fields')
 local timeline=require(prefix..'timeline')
+local selfCollision=require(prefix..'selfcollision')
 local M={}
 local function prepare()
   local g=love.graphics
@@ -39,6 +40,7 @@ function M.new(e)
   e.simShader,e.simShaderKey=shaders.acquire('simulate',e.compiledForces.source,e.compiledForces.key)
   e.stampShader,e.stampShaderKey=shaders.acquire('stamp')
   fields.new(e)
+  if e.config.selfCollision then selfCollision.new(e,canvas) end
   stamp(e,e.quad,e.config.max)
 end
 function M.update(e,dt)
@@ -52,8 +54,9 @@ function M.update(e,dt)
   s:send('u_motion',e.motionTexture);s:send('u_style',e.styleTexture)
   s:send('u_dt',dt);s:send('u_texSize',e.texSize);s:send('u_count',e.config.max)
   g.draw(e.stateA)
-  g.pop()
   e.stateA,e.stateB=e.stateB,e.stateA
+  if e.selfPacked then selfCollision.step(e) end
+  g.pop()
 end
 function M.warm(e,seconds)
   while seconds>0 do local dt=math.min(seconds,e.config.warmStep or 1/60);M.update(e,dt);seconds=seconds-dt end

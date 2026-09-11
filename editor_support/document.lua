@@ -1,4 +1,4 @@
-local D={version=1,maxLayers=12,maxParticles=500000}
+local D={version=1,maxLayers=12,maxParticles=500000,selfCollisionLimit=2048}
 local utf8=require('utf8')
 local Assets=require('editor_support.assets')
 function D.copy(value)
@@ -32,6 +32,7 @@ function D.layer(name)
     turbulence={enabled=false,amplitude={25,8},frequency={3,5}},curl={enabled=false,amplitude=18,frequency=0.7},
     attractor={enabled=false,x=480,y=260,strength=900000,softening=40},
     flow={enabled=false,strength=100,frequency=2},
+    selfCollision={enabled=false,radius=3,bounce=0.2,strength=0.8,iterations=1},
     ground={enabled=false,y=540},circle={enabled=false,x=480,y=320,radius=70},
     response={radius=2,bounce=0.35,friction=0.08}}
 end
@@ -49,6 +50,7 @@ function D.validate(doc)
     keys(l,schema,'layer')
     -- Additive defaults keep existing version-one projects usable.
     l.sprite=l.sprite or D.copy(schema.sprite);l.appearance=l.appearance or D.copy(schema.appearance)
+    l.selfCollision=l.selfCollision or D.copy(schema.selfCollision)
     Assets.validate(l.sprite);embedded=embedded+#l.sprite.png
     keys(l.appearance,schema.appearance,'appearance')
     local f=l.appearance
@@ -65,6 +67,13 @@ function D.validate(doc)
     local c=l.emitter;assert(type(c)=='table','Missing emitter settings.')
     keys(c,schema.emitter,'emitter')
     number(c.max,1,250000,'Capacity');assert(c.max%1==0,'Capacity must be an integer.');total=total+c.max
+    local selfCollision=l.selfCollision
+    keys(selfCollision,schema.selfCollision,'particle collision')
+    assert(type(selfCollision.enabled)=='boolean','Particle collision enabled must be boolean.')
+    number(selfCollision.radius,0.1,64,'Particle collision radius');number(selfCollision.bounce,0,1,'Particle bounce')
+    number(selfCollision.strength,0,1,'Particle separation');number(selfCollision.iterations,1,4,'Particle collision iterations')
+    assert(selfCollision.iterations%1==0,'Particle collision iterations must be an integer.')
+    assert(not selfCollision.enabled or c.max<=D.selfCollisionLimit,'Particle collisions support at most 2048 slots per layer.')
     number(c.rate,0,100000,'Emission rate');number(c.seed,0,2147483646,'Seed')
     for _,k in ipairs{'lifetime','speed','spin','rotation'} do
       vector(c[k],2,k=='lifetime' and 0.01 or -4000,k=='lifetime' and 30 or 4000,k)

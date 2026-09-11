@@ -12,16 +12,19 @@ function M.mapPointer(x,y,width,height)
 end
 function M.install()
   local scene,smoke,capture,captured,requested,frames=nil,false,false,false,false,0
-  local mouseDemo,plantDemo=false,false
+  local mouseDemo,plantDemo,selfDemo=false,false,false
   for _,value in ipairs(arg or {}) do
     if value=='--smoke' then smoke=true end
     if value=='--capture' then capture=true end
     if value=='--mouse-collision' then mouseDemo=true end
     if value=='--plant-collision' then mouseDemo=true;plantDemo=true end
+    if value=='--self-collision' then selfDemo=true end
   end
   local function restart()
+    local contacts=selfDemo
+    if scene then contacts=scene.selfCollision end
     if scene then scene:release() end
-    scene=Scene.new();scene:warm(3.1)
+    scene=Scene.new{selfCollision=contacts};scene:warm(3.1)
   end
   function love.load() restart() end
   function love.update(dt)
@@ -43,10 +46,10 @@ function M.install()
     local scale,left,top=M.viewport(w,h)
     g.push('all');g.translate(left,top);g.scale(scale)
     scene:draw();g.pop()
-    if capture and frames>=(mouseDemo and 90 or 3) and not requested then
+    if capture and frames>=(mouseDemo and 90 or 3) and love.timer.getFPS()>0 and not requested then
       requested=true
       g.captureScreenshot(function(data)
-        local file=plantDemo and 'waterfall-plants.png' or mouseDemo and 'waterfall-mouse.png' or 'waterfall.png'
+        local file=selfDemo and (mouseDemo and 'waterfall-self-mouse.png' or 'waterfall-self.png') or plantDemo and 'waterfall-plants.png' or mouseDemo and 'waterfall-mouse.png' or 'waterfall.png'
         data:encode('png',file);data:release()
         print('WATERFALL_CAPTURE '..love.filesystem.getSaveDirectory()..'/'..file)
         captured=true
@@ -63,6 +66,7 @@ function M.install()
     elseif key=='3' then scene.layers.mist=not scene.layers.mist
     elseif key=='d' then scene.layers.field=not scene.layers.field end
     if key=='c' then scene:toggleMouse() end
+    if key=='s' then scene:setSelfCollision(not scene.selfCollision) end
     if key=='w' then scene:toggleWind() end
   end
   function love.wheelmoved(_,y) scene:changeRadius(y*4) end

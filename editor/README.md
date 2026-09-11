@@ -13,12 +13,12 @@ On macOS, the executable may be `/Applications/love.app/Contents/MacOS/love`. Pr
 
 ## Build an effect
 
-Choose **Presets** for an ember fountain, arcane bloom, colliding rain, a timed impact burst, pixel embers, or spectral wisps. The last two demonstrate embedded sprites and shader effects. The left column adds, duplicates, removes, reorders, hides, and solos layers. First in the list draws behind subsequent layers. Visibility is saved and exported; solo is a preview control.
+Choose **Presets** for an ember fountain, arcane bloom, colliding rain, a timed impact burst, pixel embers, spectral wisps, or colliding droplets. Pixel embers and spectral wisps demonstrate embedded sprites and shader effects; colliding droplets starts with self-collision enabled. The left column adds, duplicates, removes, reorders, hides, and solos layers. First in the list draws behind subsequent layers. Visibility is saved and exported; solo is a preview control.
 
 The inspector has six tabs:
 
 - **Emitter:** capacity, emission rate, deterministic seed, lifetime ranges, position, direction/spread, speed, and spawn-area geometry.
-- **Motion:** gravity, damping, radial/tangential acceleration, turbulence, curl noise, an attractor, a procedural flow field, and circle/floor collision with bounce and friction.
+- **Motion:** gravity, damping, radial/tangential acceleration, turbulence, curl noise, an attractor, a procedural flow field, circle/floor collision, and optional particle-to-particle contacts.
 - **Style:** additive/alpha blending, up to 32 RGBA stops and 32 size stops, variation, rotation, and spin. Click the color ramp to select a stop. Its inline picker shows saturation/brightness, hue, opacity, and a swatch (solid color beside its transparency preview). Drag to choose a color, type an eight-digit `RRGGBBAA` value, or edit the channels below. Drag size-curve points to shape size over life.
 - **Texture:** built-in pixel-art sheets, PNG import, image preview, sprite-sheet columns/rows/frame count, nearest or linear filtering, and generated disc/spark/ring/smoke shapes.
 - **Effects:** pixel grid, dissolve, outline width/color, palette levels and RGB tint, animated distortion, and glow strength/radius. These process the combined image of the selected layer and leave its simulation mode unchanged.
@@ -29,6 +29,10 @@ Click a number to type, or hold and drag the number or its label: right/up incre
 Attractor **Strength** is shown as acceleration in px/s² at 100 px from the center, before softening, with a range of −1000 to 1000. For example, the default raw coefficient of 900,000 displays as 90. Positive values attract and negative values repel. Pull falls with distance squared; softening limits the force near the center (and reduces pull at 100 px if softening exceeds 100 px). Saved projects and Lua exports retain the original coefficient, so existing effects keep the same motion.
 
 Color pickers are also visible for **Tint** and for **Outline color** when the outline is enabled, using six-digit `RRGGBB` values. Picker drags clamp to their bounds and create one undo step on release; Escape cancels. Tab focuses the color area, hue strip, or opacity track, and arrow keys adjust them (Shift makes finer changes). The chosen hue stays available when editing black or gray, and RGB/hex edits synchronize the picker. Scroll to reach lower properties.
+
+**Motion → Particles against particles**, at the top of the tab, enables approximate contacts within the selected layer. The **Self collision** toggle advertises its **2048-slot maximum**; enabling it reduces larger capacities to 2048 and reports the change. This is one undoable edit. Capacity controls then respect the limit. Contact radius, bounce, separation strength, and 1–4 iterations are adjustable. Radius is independent of size curves and textures. More iterations improve separation at greater cost; dense piles can still overlap. Contacts do not cross layer boundaries. Projects and Lua exports preserve the setting, and older projects default to off. Disabling it restores analytic mode when no other feature needs stateful simulation. Native fallback omits contacts. Press **S** in the comparison demo to compare the GPU cost with the option off/on, or see [completed-work measurements](../bench/SELF_COLLISION.md).
+
+Choose **Presets → Colliding droplets** for a 1024-particle stream with self-collision and a floor already enabled. It opens Motion so the contact settings are immediately available. Launch it directly with `love particle-gpu editor --preset=7`. [Editor preview](../previews/editor-self.png).
 
 Drag in the preview to position the selected emitter. Hold **Shift** to move its enabled circle collider, or **Alt/Option** to move its enabled attractor. These authoring edits commit once on release and replay the effect to the playhead. They do not modify particle buffers on every mouse event.
 

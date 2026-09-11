@@ -44,7 +44,10 @@ love particle-gpu/probe          # exact hardware probe from the implementation 
 love particle-gpu               # interactive examples; arrows select, Space emits
 love particle-gpu editor        # Particle Studio: layered effects, curves, timeline, Lua export
 love particle-gpu comparison    # matched native / GPU particles, live FPS, isolated benchmark
-love particle-gpu waterfall     # layered waterfall with GPU collision against the rocks
+love particle-gpu comparison --self-collision # same GPU preset, particle contacts off / on
+love particle-gpu comparison --self-collision --count=10000 # larger contact workload
+love particle-gpu self-collision-bench # completed simulation cost by count and iterations
+love particle-gpu waterfall     # rock collision; S toggles bounded particle self-collision
 love particle-gpu test          # real GPU numeric tests
 love particle-gpu fallback      # force missing capabilities and draw the native fallback
 love particle-gpu examples-test # compile, assert modes, and render every example
@@ -71,7 +74,7 @@ See [bench/RESULTS.md](bench/RESULTS.md) for measurements on the current machine
 
 ## Particle Studio editor
 
-Run `love particle-gpu editor`, or press **E** in the root example picker. Build compositions from up to 12 emitter layers, import PNG sprites and regular sprite sheets, edit color/size curves, combine forces and collision, and arrange emission windows and bursts on a timeline. Texture and Effects tabs add pixel grids, dissolve, outlines, palette/tint, distortion, and a soft glow. The editor includes undo/redo, deterministic replay, six presets, and JSON projects with embedded images.
+Run `love particle-gpu editor`, or press **E** in the root example picker. Build compositions from up to 12 emitter layers, import PNG sprites and regular sprite sheets, edit color/size curves, combine forces and collision, and arrange emission windows and bursts on a timeline. Texture and Effects tabs add pixel grids, dissolve, outlines, palette/tint, distortion, and a soft glow. The editor includes undo/redo, deterministic replay, seven presets, and JSON projects with embedded images.
 
 **Export Lua** produces a self-contained effect module that needs only `gpuparticles/` in your game. Its playback code is shared with the editor preview and verified with numeric GPU state and rendered-output comparisons. See the [editor guide](editor/README.md) for controls, files, limits, and integration code.
 
@@ -91,6 +94,8 @@ Both panels use the same falling-water preset: one shared soft-disc texture, the
 | **[ / ]** | Change particle size from 2 to 24 pixels |
 | **M** | Switch GPU analytic / stateful mode |
 | **C** | Toggle the mouse collision demonstration; automatically selects stateful mode |
+| **S** | Compare GPU stateful simulation with particle collisions off / on; counts from 256 to 10000 |
+| **I** | Cycle 1–4 contact iterations in the particle collision comparison |
 | **Mouse / wheel** | Hover either panel to position the circle; scroll to change its radius |
 | **Space / R / Esc** | Pause simulation / restart / quit |
 
@@ -98,9 +103,13 @@ The large counter is **window FPS**. When both systems run, that counter include
 
 Collisions start disabled in this matched preset because the native system has no particle/environment collision API. **C** enables a separate demonstration: GPU particles collide with a mouse-controlled circle while native particles pass through. It clears previous benchmark results and switches to stateful simulation. **B** turns the obstacle off and restores the previous mode before benchmarking matching effects. **M** explicitly enables the GPU simulation path to measure its overhead with the same effect. Unsupported GPU features show a clearly labeled native fallback. See [examples/comparison/README.md](examples/comparison/README.md) for source locations and automated capture commands.
 
+For particle-to-particle contact, press **S** in the comparison: both sides use GPU stateful emitters with the same seed, stream, floor, and sizes. The left has particle contacts disabled, the right enabled. **B** measures them independently with one fixed 1/120 s step per frame. Contact can spread out dense particles and reduce overdraw, so a higher window FPS does not imply a cheaper simulation. `love particle-gpu self-collision-bench` measures completed simulation separately from rendering; [results and limits](bench/SELF_COLLISION.md) include measured costs through 10000 particles and 1–4 iterations. This optional feature is also available at the top of **Motion → Particles against particles** in the editor, with a **Colliding droplets** preset to try it.
+
 ## Colliding waterfall
 
 Run `love particle-gpu waterfall` or `love particle-gpu/examples/waterfall`, or press **W** in the main example picker.
+
+Press **S** to toggle droplet self-collision, or launch with `love particle-gpu waterfall --self-collision`. Both modes use 24000 slots and 6000 droplets per simulated second, with identical lifetime and spawn settings. Rocks and the mouse circle still collide with droplets. The HUD reports contact status, capacity, emission rate, and window FPS; **1** hides the curtain to inspect the particles. Each frame executes at most two simulation steps, slowing motion under heavy load instead of reducing density. Spray/mist remain analytic. See the [waterfall controls and limits](examples/waterfall/README.md).
 
 The scene combines animated water ribbons, 24,000 available stateful droplet slots, and analytic spray/mist. A signed-distance texture contains the same rounded, sloped rock geometry used for drawing plus the pool surface. Droplets sample it at their current positions, project out of solid surfaces, and lose normal/tangential velocity through bounce and friction. Simulation uses fixed 1/120-second steps, with bounded catch-up after stalls.
 
@@ -114,7 +123,7 @@ The spray and mist emit from authored impact locations. They are decoration, not
 
 ## Choosing the backend
 
-`mode = 'auto'` selects `analytic` unless `collision`, `circleCollider`, a nonempty `attractors` list, `flowField`, or a force marked `stateful` requires simulation. Explicit `mode = 'analytic'` rejects those features. Explicit `stateful` is available for applications that want iterative integration.
+`mode = 'auto'` selects `analytic` unless `collision`, `circleCollider`, enabled `selfCollision`, a nonempty `attractors` list, `flowField`, or a force marked `stateful` requires simulation. Explicit `mode = 'analytic'` rejects those features. Explicit `stateful` is available for applications that want iterative integration.
 
 ```lua
 local caps = particles.getCapabilities()
@@ -131,7 +140,7 @@ The fallback logs once per loaded module. It resamples color/size curves to eigh
 ## Runtime work and emission
 
 * **Analytic:** `update(dt)` advances scalar clocks. It does no per-particle loop, buffer upload, simulation pass, or readback. `warm(seconds)` advances those clocks once, independent of duration and capacity. `draw` sends uniforms and makes one `drawInstanced` call. The suite checks allocation-free steady-state **update and draw**.
-* **Stateful:** each nonzero update draws one fullscreen quad into the next `rgba32f` canvas, then swaps the pair. State is `xy = position`, `zw = velocity`. Three additional immutable spawn-record canvases make GPU recycling possible. Rendering uses one instanced draw and samples texel centers in the vertex shader. Warmup steps at 1/60 s by default (`warmStep` is configurable).
+* **Stateful:** each nonzero update draws one fullscreen quad into the next `rgba32f` canvas, then swaps the pair. Enabled self collision adds two GPU passes per iteration and one packed-neighbor canvas; disabled emitters keep the original path. State is `xy = position`, `zw = velocity`. Three additional immutable spawn-record canvases make GPU recycling possible. Rendering uses one instanced draw and samples texel centers in the vertex shader. Warmup steps at 1/60 s by default (`warmStep` is configurable).
 * **Bursts:** only the affected record slice is constructed/uploaded, with a second slice on wrap. Stateful bursts also stamp just those texels through MRT. Overwriting a living ring slot is intentional. Other slots retain their state. Once a burst expires, its slot is available for the next scheduled implicit birth.
 * **Count:** `getCount()` scans CPU spawn metadata on demand. It does not read back state, but it is **O(max)**; avoid calling it every frame for a large emitter. Counts follow the same lifetime schedule, subject to CPU/GPU floating-point boundary differences.
 

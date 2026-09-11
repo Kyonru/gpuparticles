@@ -4,7 +4,7 @@ local Storage=require('editor_support.storage')
 local D={}
 function D.draw(app)
   local u,m,g,modal=app.ui,app.model,love.graphics,app.modal
-  local w,h=g.getDimensions();local width,height=580,modal.kind=='help' and 620 or modal.kind=='presets' and 548 or 444
+  local w,h=g.getDimensions();local width,height=580,modal.kind=='help' and 620 or modal.kind=='presets' and (116+#Presets.names*72) or 444
   local x,y=(w-width)/2,(h-height)/2
   g.setColor(0,0,0,0.66);g.rectangle('fill',0,0,w,h)
   u:box(x,y,width,height,'raised');u.suspend=false;u.items={};u.clip=nil
@@ -13,7 +13,7 @@ function D.draw(app)
   u:button('modal:close','X',x+width-56,y+20,36,40,function() app:close() end)
   if modal.kind=='presets' then
     local notes={'Flame, rising embers, and a smoke veil.','Two layers of curled, orbiting light.','Stateful droplets, a circle, a floor, and mist.','Flash, timed sparks, and lingering afterglow.',
-      'Embedded sprite sheet, crisp pixels, and a stepped palette.','Dissolve, distortion, outlines, and a soft glow.'}
+      'Embedded sprite sheet, crisp pixels, and a stepped palette.','Dissolve, distortion, outlines, and a soft glow.','1024 droplets with self collision and a floor. Tune contacts in Motion.'}
     for i,name in ipairs(Presets.names) do
       local row=y+88+(i-1)*72
       u:button('preset:'..i,name,x+24,row,width-48,44,function() app:replace(Presets.make(i)) end)

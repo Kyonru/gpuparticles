@@ -83,6 +83,7 @@ function M.run()
   print('Comparison pointer mapping / live radius / bulk mouse collision / benchmark restoration PASS')
   c:release();c:release()
   print('Comparison stateful toggle / size parity / release PASS')
+  require('tests.comparison_self').run()
 end
 function M.install()
   function love.load()

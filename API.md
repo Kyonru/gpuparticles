@@ -30,6 +30,7 @@
 | `blendMode` | `'add'` | A LÖVE blend mode |
 | `seed` | `1` | Private deterministic record generator seed |
 | `forces` | `{}` | Force descriptors below |
+| `selfCollision` | disabled | Optional equal-radius particle contacts; see below; maximum 24000 slots |
 
 `texture`, `collision`, `flowField`, and `attractors` are optional. The library does not take ownership of caller textures or quads. Construct after LÖVE graphics initialization.
 
@@ -39,7 +40,7 @@ All setters and controls return the emitter for chaining. `update`, `draw`, and 
 
 | Method | Operation / GPU cost |
 |---|---|
-| `update(dt)` | Advance time / one stateful pass; dt must be nonnegative and finite |
+| `update(dt)` | Advance time / one stateful pass, plus two passes per self-collision iteration when enabled; dt must be nonnegative and finite |
 | `draw(x=0,y=0)` | One instanced draw with optional translation |
 | `emit(n)` | Burst, clamped to capacity; O(n) build/upload; ignored while stopped/paused |
 | `warm(seconds)` | O(1) analytic; repeated simulation steps stateful |
@@ -66,7 +67,7 @@ All setters and controls return the emitter for chaining. `update`, `draw`, and 
 | `setOffset(x,y)` | Billboard offset uniform |
 | `setQuads(q1,q2,...)` | Quads or one list; upload atlas LUT; no arguments clears it |
 | `setInsertMode(mode)` | Change ring placement/cursor, without sorting |
-| `setBufferSize(n)` | Reallocate and clear particles |
+| `setBufferSize(n)` | Reallocate and clear particles; maximum 24000 with self collision enabled |
 | `setEmissionRate(rate)` | Refresh implicit records and phase from current emission clock |
 | `start()` | Resume emission; update clock mapping if needed |
 | `stop()` | Stop emission and reset remaining emitter lifetime |
@@ -117,6 +118,34 @@ f.custom {
 Analytic custom code receives `seed` and `age` and must return a `vec2` displacement. It must be stateless; no Lua callback runs per particle. Unknown force kinds are rejected. Uniform names are namespaced before shader assembly. Shader variants are shared by canonical force/source set, independent of parameter values and list ordering, and released when their final emitter is released. Editing a configuration table after construction is not a supported force-update API; construct a new effect when its force set changes.
 
 ## Stateful forces
+
+### Optional particle-to-particle collision
+
+```lua
+local particles = require('gpuparticles')
+local emitter = particles.newEmitter {
+  max = 1024, mode = 'auto', rate = 256, lifetime = 4,
+  position = {300, 40}, emissionArea = {distribution='uniform', x=70, y=0},
+  direction = math.pi/2, speed = 90, gravity = {0,220}, sizes = {12},
+  collision = {type='plane', y=460, radius=6, bounce=0.15},
+  selfCollision = {radius=6, bounce=0.2, strength=0.8, iterations=1},
+}
+assert(emitter:getMode() == 'stateful')
+```
+
+`selfCollision = true` uses defaults: radius **3 px**, bounce **0.2**, separation strength **0.8**, and **1 iteration**. `false`, omission, or `{enabled=false}` disables it. Automatic mode then depends on the remaining effect settings. Explicit analytic mode rejects enabled self collision. Configuration is fixed at construction; recreate the emitter to enable/disable contacts or change their settings.
+
+The radius must be positive; bounce and separation strength range from 0 to 1; iterations must be an integer from 1 to 4. Enabled emitters have a hard capacity limit of **24000**, exposed as `gpuparticles.selfCollisionLimit`. Construction and `setBufferSize` reject larger buffers with a clear error. The limit applies to allocated slots, including slots that are not currently alive. The waterfall uses 24000 slots to keep its density identical with contacts on or off; the comparison offers up to 10000 and the editor uses a 2048-slot authoring limit. GPU work grows quadratically with capacity.
+
+Each live particle is an equal-mass circle with this fixed radius, independent of sprite shape, size curves, or transparency. It interacts only with live particles in **the same emitter**. Each iteration reads a snapshot of current positions, separates overlapping pairs, and exchanges approaching normal velocity using restitution. Corrections are averaged across contacts to keep dense clusters bounded. A deterministic opposing direction handles coincident centers. Environment/circle projection is reapplied after contacts.
+
+This is an approximate visual solver: overlaps can remain in piles, dense contacts can lose energy, and it does not provide rigid-body accuracy, fluid pressure/volume conservation, friction between particles, cross-emitter collisions, or continuous collision detection. Use small fixed timesteps (the comparison uses 1/120 s), avoid spawning many particles at precisely one point, and try more iterations when needed. Very fast particles can tunnel between steps.
+
+The optional path adds one nearest-filtered `rgba32f` canvas and two cached shaders. Each iteration packs position/liveness, then resolves contacts using the existing state ping-pong pair: **two extra draws per iteration**, with worst-case GPU work **O(iterations × capacity²)**. CPU work remains independent of particle count and there is no readback. Disabled emitters allocate none of these resources or passes and keep the existing simulation shader. Native fallback draws particles but omits contacts; inspect `getBackend()`.
+
+Run `love particle-gpu comparison --self-collision` for an interactive GPU off/on comparison, or `love particle-gpu self-collision-bench` for completed simulation/update-and-draw timings across capacities and iterations. See [measured results](bench/SELF_COLLISION.md).
+
+### Fields and environment
 
 ### Flow field
 

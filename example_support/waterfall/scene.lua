@@ -5,24 +5,28 @@ local Render=require(prefix..'example_support.waterfall.render')
 local S={}
 S.__index=S
 S.step=1/120
+local function droplets(terrain,selfCollision)
+  return gpu.newEmitter{
+    max=24000,rate=6000,lifetime={3.0,3.9},seed=1701,warmStep=S.step,
+    position={580,96},emissionArea={distribution='uniform',x=27,y=4},
+    direction=math.pi/2,spread=0.08,speed={95,145},gravity={0,480},damping=0.06,
+    sizes={1.4,2.8,1.4,0},sizeVariation=0.5,
+    colors={{0.55,0.87,0.9,0.28},{0.7,0.94,0.95,0.45},{0.53,0.79,0.84,0}},blendMode='alpha',
+    collision={type='sdf',texture=terrain.field,size={Terrain.width,Terrain.height},radius=1.5,bounce=0.10,friction=0.025},
+    circleCollider={radius=45,particleRadius=1.5,bounce=0.15,friction=0.025,enabled=false},
+    selfCollision=selfCollision and {radius=1.5,bounce=0.1,strength=0.8,iterations=1} or nil,
+  }
+end
 function S.new(options)
   options=options or {}
-  local self=setmetatable({time=0,accumulator=0,paused=false,showHud=true,wind=true,
+  local self=setmetatable({time=0,accumulator=0,paused=false,showHud=true,wind=true,selfCollision=not not options.selfCollision,
     mouse={x=580,y=225,radius=45,inside=false,enabled=true},
     layers={curtain=true,drops=true,mist=true,field=false},emitters={},spray={},mist={}},S)
   self.terrain=Terrain.new()
   local function emitter(config)
     local e=gpu.newEmitter(config);self.emitters[#self.emitters+1]=e;return e
   end
-  self.drops=emitter{
-    max=24000,rate=6000,lifetime={3.0,3.9},seed=1701,
-    position={580,96},emissionArea={distribution='uniform',x=27,y=4},
-    direction=math.pi/2,spread=0.08,speed={95,145},gravity={0,480},damping=0.06,
-    sizes={1.4,2.8,1.4,0},sizeVariation=0.5,
-    colors={{0.55,0.87,0.9,0.28},{0.7,0.94,0.95,0.45},{0.53,0.79,0.84,0}},blendMode='alpha',
-    collision={type='sdf',texture=self.terrain.field,size={Terrain.width,Terrain.height},radius=1.5,bounce=0.10,friction=0.025},
-    circleCollider={radius=45,particleRadius=1.5,bounce=0.15,friction=0.025,enabled=false},
-  }
+  self.drops=droplets(self.terrain,self.selfCollision);self.emitters[1]=self.drops
   assert(self.drops:getMode()=='stateful','waterfall drops require GPU state')
   local impacts={{596,331,220},{751,504,190},{630,690,700}}
   for i,impact in ipairs(impacts) do
@@ -44,6 +48,16 @@ function S.new(options)
   end
   if options.render~=false then self.render=Render.new(self.terrain) end
   return self
+end
+function S:setSelfCollision(enabled)
+  enabled=not not enabled
+  if self.selfCollision==enabled then return end
+  local previous=self.drops
+  self.drops=droplets(self.terrain,enabled);self.emitters[1]=self.drops;self.selfCollision=enabled
+  self:setPointer(self.mouse.x,self.mouse.y,self.mouse.inside)
+  -- Restart just the droplet stream; retain the scene clock, decoration, and controls.
+  self.drops:warm(math.min(self.time,4))
+  previous:release()
 end
 function S:setPointer(x,y,inside)
   local m=self.mouse
@@ -72,8 +86,8 @@ function S:stepOnce()
 end
 function S:update(dt)
   if self.paused then return end
-  -- Bound catch-up after a debugger pause; every executed collision step stays 1/120 s.
-  self.accumulator=self.accumulator+math.min(dt,0.1)
+  -- Bound catch-up at the full droplet count; slow simulated time rather than accumulating work.
+  self.accumulator=math.min(self.accumulator+dt,2*self.step)
   while self.accumulator>=self.step do self:stepOnce();self.accumulator=self.accumulator-self.step end
 end
 function S:warm(seconds)

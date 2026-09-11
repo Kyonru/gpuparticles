@@ -45,7 +45,7 @@ function I.draw(app,x,top,w,bottom)
     u:text('Layer name',left,y+9,'secondary',13)
     u:input('layer:name',l.name,left+96,y,width-96,36,function(v) return m:change(function(_,layer) layer.name=v end) end);y=y+48
     title('Emission')
-    number('Capacity',{'emitter','max'},1,250000,100,0,nil,true)
+    number('Capacity',{'emitter','max'},1,l.selfCollision.enabled and require('editor_support.document').selfCollisionLimit or 250000,100,0,nil,true)
     number('Particles / sec',{'emitter','rate'},0,100000,100,0)
     number('Lifetime min',{'emitter','lifetime',1},0.01,l.emitter.lifetime[2],0.1,2)
     number('Lifetime max',{'emitter','lifetime',2},l.emitter.lifetime[1],30,0.1,2)
@@ -63,6 +63,23 @@ function I.draw(app,x,top,w,bottom)
     number('Area angle °',{'emitter','emissionArea','angle'},-720,720,5,0,180/math.pi)
     toggle('Direction follows area',{'emitter','emissionArea','directionRelative'})
   elseif m.tab=='Motion' then
+    title('Particles against particles')
+    local enabled=l.selfCollision.enabled
+    u:button('selfCollision.enabled',(enabled and 'ON   ' or 'OFF  ')..'Self collision / 2048 max',left,y,width,40,function()
+      local capacity=m:layer().emitter.max
+      m:change(function(_,layer)
+        layer.selfCollision.enabled=not enabled
+        if not enabled then layer.emitter.max=math.min(layer.emitter.max,require('editor_support.document').selfCollisionLimit) end
+      end)
+      if not enabled and capacity>m:layer().emitter.max then m:message(('Particle collisions enabled; capacity reduced from %d to 2048. Undo restores it.'):format(capacity)) end
+    end,enabled);y=y+48
+    if enabled then
+      number('Contact radius',{'selfCollision','radius'},0.1,64,0.5,1)
+      number('Particle bounce',{'selfCollision','bounce'},0,1,0.05,2)
+      number('Separation',{'selfCollision','strength'},0,1,0.05,2)
+      number('Iterations',{'selfCollision','iterations'},1,4,1,0,nil,true)
+      paragraph('Approximate equal-radius circles within this layer. More particles and iterations cost more GPU time. Use a smaller timestep for fast motion.')
+    end
     title('Base motion')
     number('Gravity X',{'emitter','gravity',1},-4000,4000,10,0)
     number('Gravity Y',{'emitter','gravity',2},-4000,4000,10,0)
