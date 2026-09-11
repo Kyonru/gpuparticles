@@ -34,12 +34,8 @@ function C.draw(app,x,y,w)
   u:button('color:remove','Remove',x+w/2+4,y,w/2-4,40,function() m:change(function(_,l) table.remove(l.emitter.colors,m.colorStop) end);m.colorStop=math.max(1,m.colorStop-1) end,false,#colors==1)
   y=y+48
   local color=colors[m.colorStop]
-  local hex=('%02X%02X%02X%02X'):format(math.floor(color[1]*255+0.5),math.floor(color[2]*255+0.5),math.floor(color[3]*255+0.5),math.floor(color[4]*255+0.5))
-  u:text('Stop '..m.colorStop..'  /  RGBA',x,y+10,'secondary',13)
-  u:input('color:hex',hex,x+w-132,y,132,36,function(value)
-    value=value:gsub('^#','');if not value:match('^%x%x%x%x%x%x%x%x$') then return false end
-    return m:change(function(_,l) for i=1,4 do l.emitter.colors[m.colorStop][i]=tonumber(value:sub(i*2-1,i*2),16)/255 end end)
-  end);y=y+44
+  local stop=m.colorStop
+  y=require('editor_support.colorpicker').draw(app,'color','Stop '..stop,x,y,w,function(layer) return layer.emitter.colors[stop] end)
   for i,label in ipairs{'Red','Green','Blue','Alpha'} do
     u:number('color:'..i,label,color[i],x,y,w,function(v) return m:change(function(_,l) l.emitter.colors[m.colorStop][i]=v end) end,{min=0,max=1,step=0.01,decimals=3});y=y+40
   end

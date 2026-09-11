@@ -26,6 +26,8 @@ function T.run()
   require('tests.editor_appearance').run()
   require('tests.editor_preview').run()
   require('tests.editor_sprites').run()
+  require('tests.editor_numbers').run()
+  require('tests.editor_colors').run()
   for i=1,#P.names do
     local doc=P.make(i);local decoded=S.decode(J.encode(doc));assert(J.encode(doc)==J.encode(decoded))
     local effect=R.new(doc);effect:seek(i==4 and 0.35 or 1.5)
@@ -116,7 +118,7 @@ function T.run()
   app:keypressed('escape');click('tab:Style');assert(app.model.tab=='Style')
   for _=1,7 do click('color:add') end;assert(#app.model:layer().emitter.colors==10,'editor must author more than eight color stops')
   click('color:hex');app.ui:textinput('2299EE88');app:keypressed('return');near(app.model:layer().emitter.colors[app.model.colorStop][1],34/255)
-  app.model.scroll=250;draw();local graph=widget('curve:size');local oldHistory=#app.model.undoStack
+  app.model.scroll=450;draw();local graph=widget('curve:size');local oldHistory=#app.model.undoStack
   app:mousepressed(graph.x+graph.w/2,graph.y+graph.h/2,1);app:mousemoved(graph.x+graph.w/2,graph.y+12);app:mousereleased(graph.x+graph.w/2,graph.y+12,1)
   assert(#app.model.undoStack==oldHistory+1,'a curve drag must create one undo entry')
   draw();local x,y,scale=View.viewport(app.layout)

@@ -21,6 +21,7 @@ function I.draw(app,x,top,w,bottom)
     local options={min=lo,max=hi,step=step,decimals=decimals,scale=scale,integer=integer,
       begin=function() m:beginEdit() end,
       move=function(v) put(m:layer(),path,v) end,
+      cancel=function() m:cancelEdit() end,
       finish=function()
         local ok,err=pcall(require('editor_support.document').validate,m.doc)
         if ok then m:commitEdit() else m:cancelEdit();m:message(tostring(err),true) end
@@ -79,7 +80,10 @@ function I.draw(app,x,top,w,bottom)
     toggle('Attractor',{'attractor','enabled'})
     if l.attractor.enabled then
       number('Center X',{'attractor','x'},-2000,3000,5,0);number('Center Y',{'attractor','y'},-2000,3000,5,0)
-      number('Strength',{'attractor','strength'},-10000000,10000000,10000,0);number('Softening',{'attractor','softening'},1,300,2,0)
+      -- Inverse-square coefficient / 100² gives acceleration at a useful scene distance.
+      number('Strength',{'attractor','strength'},-1000,1000,1,1,1/10000)
+      paragraph('Pull at 100 px (px/s²), before softening. Negative values repel.')
+      number('Softening',{'attractor','softening'},1,300,2,0)
     end
     toggle('Procedural flow field',{'flow','enabled'})
     if l.flow.enabled then number('Strength',{'flow','strength'},-1000,1000,10,0);number('Frequency',{'flow','frequency'},0.1,12,0.1,2) end
@@ -137,10 +141,12 @@ function I.draw(app,x,top,w,bottom)
     number('Dissolve',{'appearance','dissolve'},0,1,0.05,2)
     number('Outline / cells',{'appearance','outline'},0,8,0.5,1)
     if l.appearance.outline>0 then
+      y=require('editor_support.colorpicker').draw(app,'outline','Outline color',left,y,width,function(layer) return layer.appearance.outlineColor end)
       for i,label in ipairs{'Red','Green','Blue'} do number('Outline '..label,{'appearance','outlineColor',i},0,1,0.05,2) end
     end
     select('Palette levels',{'appearance','levels'},{0,2,3,4,6,8,16,32})
     u:text('0 = original colors; levels apply per channel.',left,y,'muted',11,width);y=y+28
+    y=require('editor_support.colorpicker').draw(app,'tint','Tint',left,y,width,function(layer) return layer.appearance.tint end)
     for i,label in ipairs{'Red','Green','Blue'} do number('Tint '..label,{'appearance','tint',i},0,1,0.05,2) end
     number('Distortion / cells',{'appearance','distortion'},0,20,0.5,1)
     number('Glow strength',{'appearance','glow'},0,2,0.05,2)

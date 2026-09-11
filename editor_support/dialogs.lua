@@ -57,9 +57,9 @@ function D.draw(app)
   else
     local rows={
       {'Build a composition','Add or duplicate emitters. Visibility exports; solo is preview-only.'},
-      {'Shape an emitter','Click a number to type; drag its label to scrub. Scroll the inspector.'},
+      {'Shape an emitter','Click to type; drag a number or label right/up to increase, left/down to decrease.'},
       {'Draw the motion','Drag the origin. Shift-drag the circle; Alt-drag the attractor.'},
-      {'Shape its lifetime','Style edits up to 32 color/size stops. Drag size-curve nodes.'},
+      {'Shape its lifetime','Style has visible color pickers and up to 32 stops. Drag size-curve nodes.'},
       {'Textures and shaders','Drop a PNG; Texture sets frames. Effects adds pixels and shaders.'},
       {'Compose in time','Timing sets emission windows and bursts. Drag the playhead to seek.'},
       {'Save or take it to a game','Save creates a JSON project. Export Lua needs only gpuparticles/.'},

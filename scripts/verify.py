@@ -43,6 +43,16 @@ def mutate(label, filename, original, broken, expected, command='test'):
 
 
 editor_mutations = [
+    ('color picker opacity', 'editor_support/colorpicker.lua',
+     "if kind=='alpha' then c[4]=clamp(a)", "if kind=='alpha' then c[4]=1", 'opacity selection', 'editor-test'),
+    ('color picker gradient', 'editor_support/colorpicker.lua',
+     'g.draw(self.brightness,sv.x,sv.y,0,sv.w,sv.h)', 'g.draw(self.brightness,sv.x,sv.y,0,sv.w,sv.h*2)', 'rendered picker brightness', 'editor-test'),
+    ('numeric drag clamping', 'editor_support/ui.lua',
+     'return math.max(n.min,math.min(n.max,v))', 'return v', 'numeric drag maximum clamp', 'editor-test'),
+    ('numeric vertical drag', 'editor_support/ui.lua',
+     "a.axis=='x' and x-a.lastX or a.lastY-y", 'x-a.lastX', 'vertical numeric drag', 'editor-test'),
+    ('attractor display scale', 'editor_support/inspector.lua',
+     "-1000,1000,1,1,1/10000", '-1000,1000,1,1,1/1000', 'attractor readable strength', 'editor-test'),
     ('built-in sprite animation', 'editor_support/sprites.lua',
      'masks[id](x%size,y,math.floor(x/size))', 'masks[id](x%size,y,0)', 'built-in sprite frames must animate', 'editor-test'),
     ('preview shader bounds', 'editor_support/view.lua',
