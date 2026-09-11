@@ -109,6 +109,8 @@ For particle-to-particle contact, press **S** in the comparison: both sides use 
 
 Run `love particle-gpu waterfall` or `love particle-gpu/examples/waterfall`, or press **W** in the main example picker.
 
+**F** enables optional water accumulation, also available with `love particle-gpu waterfall --water-volume`. A 160×100 GPU grid carries persistent water across the whole scene, allowing pools on ledges and behind mouse-circle obstructions. **V** stops inflow without deleting existing water; moving the circle lets a blocked pool drain. This coarse cellular approximation replaces and pauses the artistic particle layers while enabled; it does not require self-collision. **F** returns to particles and releases the grid. See the [volume controls, previews, and limits](examples/waterfall/README.md). Verify it with `python3 particle-gpu/scripts/verify.py --water-volume-only --mutations`.
+
 Press **S** to toggle droplet self-collision, or launch with `love particle-gpu waterfall --self-collision`. Both modes use 24000 slots and 6000 droplets per simulated second, with identical lifetime and spawn settings. Rocks and the mouse circle still collide with droplets. The HUD reports contact status, capacity, emission rate, and window FPS; **1** hides the curtain to inspect the particles. Each frame executes at most two simulation steps, slowing motion under heavy load instead of reducing density. Spray/mist remain analytic. See the [waterfall controls and limits](examples/waterfall/README.md).
 
 The scene combines animated water ribbons, 24,000 available stateful droplet slots, and analytic spray/mist. A signed-distance texture contains the same rounded, sloped rock geometry used for drawing plus the pool surface. Droplets sample it at their current positions, project out of solid surfaces, and lose normal/tangential velocity through bounce and friction. Simulation uses fixed 1/120-second steps, with bounded catch-up after stalls.
@@ -119,7 +121,7 @@ Move the mouse into the scene to place a circular obstacle. The wheel changes it
 
 Nearby ferns are rooted meshes: wind bends them on the GPU, and the same mouse circle drives a damped spring per plant for brushing and recovery. **W** toggles wind. This is visual bending, with cached distant scenery; it does not simulate cloth or guarantee leaf-level separation.
 
-The spray and mist emit from authored impact locations. They are decoration, not GPU collision callbacks. Droplets do not interact or conserve fluid volume, and the pool surface is animated artwork. When emitter fallback is active, droplets no longer collide; this demo's artwork itself requires GLSL 3 and float-texture support. See [examples/waterfall/README.md](examples/waterfall/README.md) for the scene's editable geometry and numeric tests.
+In the default particle mode, spray and mist emit from authored impact locations. They are decoration, not GPU collision callbacks. Droplet self-collision does not conserve fluid volume, and the default pool surface is animated artwork. When emitter fallback is active, droplets no longer collide; this demo's artwork itself requires GLSL 3 and float-texture support. See [examples/waterfall/README.md](examples/waterfall/README.md) for the scene's editable geometry and numeric tests.
 
 ## Choosing the backend
 

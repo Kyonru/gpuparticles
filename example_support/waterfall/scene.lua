@@ -2,6 +2,7 @@ local prefix=(...):gsub('example_support%.waterfall%.scene$','')
 local gpu=require(prefix..'gpuparticles')
 local Terrain=require(prefix..'example_support.waterfall.terrain')
 local Render=require(prefix..'example_support.waterfall.render')
+local Fluid=require(prefix..'example_support.waterfall.fluid')
 local S={}
 S.__index=S
 S.step=1/120
@@ -19,7 +20,7 @@ local function droplets(terrain,selfCollision)
 end
 function S.new(options)
   options=options or {}
-  local self=setmetatable({time=0,accumulator=0,paused=false,showHud=true,wind=true,selfCollision=not not options.selfCollision,
+  local self=setmetatable({time=0,accumulator=0,paused=false,showHud=true,wind=true,inflow=true,selfCollision=not not options.selfCollision,
     mouse={x=580,y=225,radius=45,inside=false,enabled=true},
     layers={curtain=true,drops=true,mist=true,field=false},emitters={},spray={},mist={}},S)
   self.terrain=Terrain.new()
@@ -47,7 +48,22 @@ function S.new(options)
     assert(self.spray[i]:getMode()=='analytic' and self.mist[i]:getMode()=='analytic','impact decoration must remain analytic')
   end
   if options.render~=false then self.render=Render.new(self.terrain) end
+  if options.waterVolume then self:setWaterVolume(true) end
   return self
+end
+function S:setWaterVolume(enabled)
+  if enabled and not self.fluid then
+    local reason
+    self.fluid,reason=Fluid.new{transportSteps=3,distance=function(x,y) return self.terrain:rockDistance(x,y) end}
+    self.volumeUnavailable=reason
+    if self.fluid then self.fluid.inflow=self.inflow
+    elseif not self.volumeWarned then print(reason);self.volumeWarned=true end
+  elseif not enabled and self.fluid then self.fluid:release();self.fluid=nil end
+  return self.fluid~=nil,self.volumeUnavailable
+end
+function S:toggleInflow()
+  self.inflow=not self.inflow
+  if self.fluid then self.fluid.inflow=self.inflow end
 end
 function S:setSelfCollision(enabled)
   enabled=not not enabled
@@ -81,7 +97,8 @@ function S:toggleWind()
 end
 function S:stepOnce()
   self.time=self.time+self.step
-  for _,e in ipairs(self.emitters) do e:update(self.step) end
+  if self.fluid then self.fluid:update(self.step,self.mouse)
+  else for _,e in ipairs(self.emitters) do e:update(self.step) end end
   if self.render then self.render:updatePlants(self.step,self.time,self.mouse) end
 end
 function S:update(dt)
@@ -96,14 +113,20 @@ end
 function S:draw(hud)
   local g=love.graphics
   g.push('all');g.setBlendMode('alpha');g.setShader();g.setColor(1,1,1,1)
-  self.render:base(self.time)
-  if self.layers.curtain then self.render:water(self.time,self.mouse) end
-  if self.layers.drops then self.drops:draw() end
-  if self.layers.mist then for _,e in ipairs(self.spray) do e:draw() end end
+  self.render:base(self.time,self.fluid~=nil)
+  if self.fluid then
+    if self.layers.curtain then self.fluid:draw() end
+  else
+    if self.layers.curtain then self.render:water(self.time,self.mouse) end
+    if self.layers.drops then self.drops:draw() end
+    if self.layers.mist then for _,e in ipairs(self.spray) do e:draw() end end
+  end
   self.render:environment()
-  if self.layers.mist then for _,e in ipairs(self.mist) do e:draw() end end
+  if not self.fluid and self.layers.mist then for _,e in ipairs(self.mist) do e:draw() end end
   self.render:foreground(self.time)
-  if self.layers.field then self.render:debug() end
+  if self.layers.field then
+    if self.fluid then self.fluid:draw(true) else self.render:debug() end
+  end
   self.render:mouseObstacle(self.mouse)
   if hud~=false and self.showHud then self.render:hud(self) end
   g.pop()
@@ -112,6 +135,7 @@ function S:release()
   if self.released then return end
   for _,e in ipairs(self.emitters) do e:release() end
   if self.render then self.render:release() end
+  if self.fluid then self.fluid:release() end
   self.terrain:release();self.released=true
 end
 return S

@@ -28,7 +28,10 @@ function T.new()
   return self
 end
 function T:distance(x,y)
-  local d = self.poolY-y
+  return math.min(self.poolY-y,self:rockDistance(x,y))
+end
+function T:rockDistance(x,y)
+  local d = 1e6
   for _,rock in ipairs(self.rocks) do d=math.min(d,rectangleDistance(rock,x,y)) end
   return d
 end

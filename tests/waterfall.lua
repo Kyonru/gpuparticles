@@ -24,6 +24,7 @@ local function render(scene)
   local data=target:newImageData();target:release();return data
 end
 function M.run()
+  require('tests.water_volume').run()
   require('tests.plants').run()
   local scene=Scene.new()
   local terrain=scene.terrain

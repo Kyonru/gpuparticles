@@ -114,11 +114,11 @@ function R.new(terrain)
   self.title=own(g.newFont(36));self.text=own(g.newFont(13));self.small=own(g.newFont(11))
   return self
 end
-function R:base(time)
+function R:base(time,waterVolume)
   local g=love.graphics
   g.setColor(1,1,1,1);g.draw(self.background)
   self.backPlants:draw(time)
-  self.pool:send('u_time',time);g.setShader(self.pool);g.draw(self.poolMesh);g.setShader()
+  if not waterVolume then self.pool:send('u_time',time);g.setShader(self.pool);g.draw(self.poolMesh);g.setShader() end
 end
 function R:water(time,mouse)
   local g=love.graphics
@@ -154,13 +154,22 @@ function R:hud(scene)
   g.setFont(self.small);g.setColor(0.58,0.79,0.74)
   local backend=scene.drops:getBackend()
   local contacts=backend~='gpu' and 'UNAVAILABLE' or scene.selfCollision and 'ON' or 'OFF'
-  g.printf(('DROPLETS  /  %s\nSELF COLLISION  /  %s · %d SLOTS\nSPRAY + MIST  /  ANALYTIC\nFIXED STEP  /  120 Hz · %d FPS'):format(
-    backend=='gpu' and 'GPU COLLISION' or 'NATIVE FALLBACK',contacts,scene.drops.config.max,love.timer.getFPS()),912,45,320,'right')
-  local legend=('1 Curtain %s    2 Droplets %s    3 Spray + mist %s    D Collision map %s'):format(
-    scene.layers.curtain and 'on' or 'off',scene.layers.drops and 'on' or 'off',scene.layers.mist and 'on' or 'off',scene.layers.field and 'on' or 'off')
-  g.setColor(0.02,0.06,0.08,0.8);g.rectangle('fill',35,712,1210,68,6,6)
-  g.setFont(self.text);g.setColor(0.68,0.83,0.79);g.print(legend,49,722)
-  g.print(('S Self collision %s  /  %d slots · %d droplets/s in both modes'):format(contacts:lower(),scene.drops.config.max,scene.drops.config.rate),49,742)
+  local diagnostic=scene.fluid and ('WATER VOLUME  /  %d × %d GRID\nINFLOW  /  %s\nPARTICLE LAYERS  /  SUSPENDED\nFIXED STEP  /  120 Hz · %d FPS'):format(
+    scene.fluid.columns,scene.fluid.rows,scene.inflow and 'ON' or 'OFF',love.timer.getFPS())
+    or ('DROPLETS  /  %s\nSELF COLLISION  /  %s · %d SLOTS\nSPRAY + MIST  /  ANALYTIC\nFIXED STEP  /  120 Hz · %d FPS'):format(
+      backend=='gpu' and 'GPU COLLISION' or 'NATIVE FALLBACK',contacts,scene.drops.config.max,love.timer.getFPS())
+  g.printf(diagnostic,912,45,320,'right')
+  local legend=scene.fluid and ('1 Water %s    D Collision map %s    ·    Close a gap with the circle; move it away to drain.'):format(
+    scene.layers.curtain and 'on' or 'off',scene.layers.field and 'on' or 'off')
+    or ('1 Curtain %s    2 Droplets %s    3 Spray + mist %s    D Collision map %s'):format(
+      scene.layers.curtain and 'on' or 'off',scene.layers.drops and 'on' or 'off',scene.layers.mist and 'on' or 'off',scene.layers.field and 'on' or 'off')
+  g.setColor(0.02,0.06,0.08,0.8);g.rectangle('fill',35,692,1210,88,6,6)
+  g.setFont(self.text);g.setColor(0.68,0.83,0.79);g.print(legend,49,702)
+  local status=scene.fluid and 'F Water volume on    V Inflow '..(scene.inflow and 'on' or 'off')..'    ·    R Empty and restart'
+    or 'F Water volume '..(scene.volumeUnavailable and 'unavailable on this GPU' or 'off')
+  g.print(status,49,722)
+  g.print(scene.fluid and 'Water stays in the scene. It spreads, rises, and spills around obstacles.' or
+    ('S Self collision %s  /  %d slots · %d droplets/s in both modes'):format(contacts:lower(),scene.drops.config.max,scene.drops.config.rate),49,742)
   g.setFont(self.small);g.setColor(0.43,0.61,0.60)
   g.print('C Mouse '..(scene.mouse.enabled and 'on' or 'off')..'    Wheel Radius    SPACE '..(scene.paused and 'Resume' or 'Pause')..'    R Restart    H Hide controls    ESC Exit',49,762)
   g.printf(scene.layers.field and 'CORAL = SOLID  /  TEAL = AIR' or ('W Wind '..(scene.wind and 'on' or 'off')..' · brush the ferns'),955,762,273,'right')

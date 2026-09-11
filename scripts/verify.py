@@ -13,6 +13,7 @@ parser.add_argument('--mutations', action='store_true')
 parser.add_argument('--portable-only', action='store_true')
 parser.add_argument('--demos-only', action='store_true')
 parser.add_argument('--waterfall-only', action='store_true')
+parser.add_argument('--water-volume-only', action='store_true')
 parser.add_argument('--editor-only', action='store_true')
 options = parser.parse_args()
 root = Path(__file__).resolve().parents[1]
@@ -73,7 +74,25 @@ editor_mutations = [
      "c.mode='auto'", "c.mode='stateful'", 'appearance effects must stay analytic', 'editor-test'),
 ]
 
-waterfall_mutations = [
+volume_mutations = [
+    ('water transport blend', 'example_support/waterfall/fluid.lua',
+     "g.setBlendMode('replace','premultiplied')", "g.setBlendMode('alpha','alphamultiply')",
+     'water gravity transfer', 'water-volume-test'),
+    ('water conservation', 'example_support/waterfall/shaders/volume-transport.glsl',
+     'old.r-dot(outgoing,vec4(1.0))', 'old.r-0.5*dot(outgoing,vec4(1.0))',
+     'water gravity departure', 'water-volume-test'),
+    ('water circle dam', 'example_support/waterfall/shaders/volume-common.glsl',
+     'u_circle.w>0.5 ?', 'u_circle.w>1.5 ?',
+     'circle dam must retain upstream water', 'water-volume-test'),
+    ('water displacement conservation', 'example_support/waterfall/shaders/volume-transport.glsl',
+     'return vec4(m+added,', 'return vec4(circleDistance(p)<0.0 ? 0.0 : m+added,',
+     'conserved water budget', 'water-volume-test'),
+    ('water inflow substeps', 'example_support/waterfall/fluid.lua',
+     'self.sourceRate*dt/self.transportSteps', 'self.sourceRate*dt',
+     'relaxations must not multiply inflow', 'water-volume-test'),
+]
+
+waterfall_mutations = volume_mutations + [
     ('waterfall self-collision emission rate', 'example_support/waterfall/scene.lua',
      'max=24000,rate=6000,lifetime', 'max=24000,rate=selfCollision and 512 or 6000,lifetime',
      'waterfall self collision must keep the full emitted count', 'waterfall-test'),
@@ -183,6 +202,17 @@ if options.editor_only:
     print('EDITOR VERIFICATION COMPLETE')
     sys.exit(0)
 
+if options.water_volume_only:
+    run('water-volume-test')
+    demo('waterfall', '--water-volume')
+    demo('waterfall', '--water-volume', '--mouse-collision')
+    if options.mutations:
+        for mutation in volume_mutations:
+            mutate(*mutation)
+        run('water-volume-test')
+    print('WATER VOLUME VERIFICATION COMPLETE')
+    sys.exit(0)
+
 if options.demos_only or options.waterfall_only:
     run('waterfall-test')
     demo('waterfall')
@@ -195,6 +225,8 @@ if options.demos_only or options.waterfall_only:
     demo('waterfall', '--plant-collision')
     demo('waterfall', '--self-collision')
     demo('waterfall', '--self-collision', '--mouse-collision')
+    demo('waterfall', '--water-volume')
+    demo('waterfall', '--water-volume', '--mouse-collision')
     if options.mutations:
         for mutation in waterfall_mutations:
             mutate(*mutation)
