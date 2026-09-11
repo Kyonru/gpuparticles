@@ -1,5 +1,7 @@
 # API
 
+For persistent water, smoke, editable terrain, custom volume shaders, and thermal conversion, see the separate [volume-world API](VOLUME_API.md). Particle emitters retain the API below.
+
 ## Construction
 
 `gpuparticles.newEmitter(config)` creates an active emitter. Defaults:

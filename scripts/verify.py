@@ -14,6 +14,7 @@ parser.add_argument('--portable-only', action='store_true')
 parser.add_argument('--demos-only', action='store_true')
 parser.add_argument('--waterfall-only', action='store_true')
 parser.add_argument('--water-volume-only', action='store_true')
+parser.add_argument('--volume-api-only', action='store_true')
 parser.add_argument('--editor-only', action='store_true')
 options = parser.parse_args()
 root = Path(__file__).resolve().parents[1]
@@ -75,21 +76,39 @@ editor_mutations = [
 ]
 
 volume_mutations = [
-    ('water transport blend', 'example_support/waterfall/fluid.lua',
+    ('water transport blend', 'gpuparticles/volume/util.lua',
      "g.setBlendMode('replace','premultiplied')", "g.setBlendMode('alpha','alphamultiply')",
      'water gravity transfer', 'water-volume-test'),
-    ('water conservation', 'example_support/waterfall/shaders/volume-transport.glsl',
+    ('water conservation', 'gpuparticles/volume/shaders/water-transport.glsl',
      'old.r-dot(outgoing,vec4(1.0))', 'old.r-0.5*dot(outgoing,vec4(1.0))',
      'water gravity departure', 'water-volume-test'),
-    ('water circle dam', 'example_support/waterfall/shaders/volume-common.glsl',
+    ('water circle dam', 'gpuparticles/volume/shaders/common.glsl',
      'u_circle.w>0.5 ?', 'u_circle.w>1.5 ?',
      'circle dam must retain upstream water', 'water-volume-test'),
-    ('water displacement conservation', 'example_support/waterfall/shaders/volume-transport.glsl',
-     'return vec4(m+added,', 'return vec4(circleDistance(p)<0.0 ? 0.0 : m+added,',
+    ('water displacement conservation', 'gpuparticles/volume/shaders/water-transport.glsl',
+     'return vec4(m*u_decay+added,', 'return vec4(circleDistance(p)<0.0 ? 0.0 : m*u_decay+added,',
      'conserved water budget', 'water-volume-test'),
-    ('water inflow substeps', 'example_support/waterfall/fluid.lua',
-     'self.sourceRate*dt/self.transportSteps', 'self.sourceRate*dt',
+    ('water inflow substeps', 'gpuparticles/volume/init.lua',
+     "transport:send('u_injectionScale',1/self.transportSteps)", "transport:send('u_injectionScale',1)",
      'relaxations must not multiply inflow', 'water-volume-test'),
+]
+
+volume_api_mutations = [
+    ('gas buoyancy', 'gpuparticles/volume/shaders/gas-force.glsl',
+     'force.y-=u_buoyancy', 'force.y+=u_buoyancy', 'hot smoke buoyancy must lift', 'volume-test'),
+    ('gas dissipation', 'gpuparticles/volume/shaders/gas-transport.glsl',
+     'float mass=carried.r*u_decay;', 'float mass=carried.r;', 'gas exponential dissipation', 'volume-test'),
+    ('gas cooling', 'gpuparticles/volume/shaders/gas-transport.glsl',
+     'carried.b*u_decay*u_cooling+heat', 'carried.b*u_decay*(0.5+0.5*u_cooling)+heat', 'gas temperature cooling', 'volume-test'),
+    ('gas projection', 'gpuparticles/volume/shaders/project.glsl',
+     'vec2 v=at(velocity,p).xy-gradient;', 'vec2 v=at(velocity,p).xy-0.01*gradient;', 'gas pressure projection must reduce', 'volume-test'),
+    ('volume shader cache', 'gpuparticles/volume/shaders.lua',
+     "local key=kind..'\\n'..(hook and hook.source or '')", "local key=kind..'\\n'..(hook and hook.source or '')..tostring(hook)",
+     'volume variants must share shaders', 'volume-test'),
+    ('thermal conversion', 'gpuparticles/volume/shaders/reaction.glsl',
+     's.r*fraction,0.0,s.b*fraction', 's.r*fraction*0.5,0.0,s.b*fraction*0.5', 'thermal conversion rate', 'volume-test'),
+    ('smooth volume rendering', 'gpuparticles/volume/init.lua',
+     "U.send(s,'u_smooth',self.renderStyle=='smooth')", "U.send(s,'u_smooth',false)", 'smooth rendering must reconstruct', 'volume-test'),
 ]
 
 waterfall_mutations = volume_mutations + [
@@ -197,9 +216,55 @@ function love.errorhandler(message) print(message);return function() return 1 en
     subprocess.run([options.love, str(root / 'bench')], check=True, timeout=90)
 
 
+def volume_portability():
+    with tempfile.TemporaryDirectory(prefix='gpuparticles-volume-api-') as folder:
+        destination = Path(folder)
+        shutil.copytree(root / 'gpuparticles', destination / 'gpuparticles')
+        (destination / 'conf.lua').write_text((root / 'conf.lua').read_text())
+        (destination / 'main.lua').write_text("""
+function love.load()
+  local ok,err=xpcall(function()
+    assert(not love.filesystem.getInfo('example_support'))
+    local gpu=require('gpuparticles')
+    local world=assert(gpu.newVolumeWorld{width=64,height=64,cellSize=2,renderStyle='smooth'})
+    local water=world:addMaterial{name='water',model='water'}
+    local smoke=world:addMaterial{name='smoke',model='gas',
+      force={code='return vec2(push,0);',uniforms={push=20}}}
+    world:newSource{material=water,position={30,15},radius=6,rate=100,temperature=2}
+    world:addReaction{from=water,to=smoke,temperatureAbove=1,rate=2}
+    world:paintTerrain(20,40,8,true):setCircleCollider(40,30,6):setWind(10,0)
+    world:warm(0.2);world:update(1/60);world:draw();world:release()
+    print('Copied standalone volume API PASS')
+  end,debug.traceback)
+  if not ok then print(err) end
+  love.event.quit(ok and 0 or 1)
+end
+function love.errorhandler(message) print(message);return function() return 1 end end
+""")
+        result = subprocess.run([options.love, str(destination)], text=True, capture_output=True, timeout=90)
+        output = result.stdout + result.stderr
+        print(output, end='')
+        assert result.returncode == 0 and 'Copied standalone volume API PASS' in output
+
+
 if options.editor_only:
     editor_verification()
     print('EDITOR VERIFICATION COMPLETE')
+    sys.exit(0)
+
+if options.volume_api_only:
+    run('volume-test')
+    run('water-volume-test')
+    volume_portability()
+    for preset in ('water', 'smoke', 'steam'):
+        demo('volume', f'--preset={preset}')
+        demo('volume', f'--preset={preset}', '--smooth')
+    if options.mutations:
+        for mutation in volume_mutations + volume_api_mutations:
+            mutate(*mutation)
+        run('volume-test')
+        run('water-volume-test')
+    print('VOLUME API VERIFICATION COMPLETE')
     sys.exit(0)
 
 if options.water_volume_only:
@@ -244,6 +309,7 @@ run()
 run('fallback')
 run('examples-test')
 run('waterfall-test')
+run('volume-test')
 run('comparison-test')
 run('editor-test')
 if options.mutations:
@@ -269,7 +335,7 @@ if options.mutations:
          'float circleDistance=separation-u_circle.z;', 'float circleDistance=1.0e30;',
          'circle expected 88.000000, got 90.000000'),
     ]
-    for mutation in mutations + editor_mutations + waterfall_mutations + self_mutations:
+    for mutation in mutations + editor_mutations + waterfall_mutations + self_mutations + volume_api_mutations:
         mutate(*mutation)
     run()  # The restored code must pass again.
     run('comparison-test')

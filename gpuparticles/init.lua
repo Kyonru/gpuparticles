@@ -5,6 +5,7 @@ local E = require(prefix .. 'emitter')
 local M = {forces = require(prefix .. 'forces'),selfCollisionLimit=config.selfCollisionLimit}
 local warned = false
 function M.getCapabilities() return capabilities.get() end
+function M.newVolumeWorld(options) return require(prefix..'volume').new(options) end
 local function disc()
   local data = love.image.newImageData(32,32)
   data:mapPixel(function(x,y)

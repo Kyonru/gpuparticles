@@ -9,6 +9,7 @@ function M.get()
     version = {major, minor, revision}, renderer = {name, version, vendor, device},
     supported = supported, formats = formats, limits = limits,
     analytic = instancing and supported.glsl3 == true,
+    volume = supported.glsl3 == true and supported.pixelshaderhighp == true and formats.rgba32f == true,
     stateful = instancing and supported.glsl3 == true and supported.pixelshaderhighp == true
       and formats.rgba32f == true and (limits.multicanvas or 0) >= 4,
     instancing = instancing, glsl3 = supported.glsl3 == true,

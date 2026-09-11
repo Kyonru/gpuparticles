@@ -52,6 +52,7 @@ function M.install(selected,automated)
     love.graphics.print(('GPU PARTICLES  /  %s\n%s · %s · capacity %s\nLeft / Right choose effect   Space burst   R restart   Esc quit\nC Native / GPU comparison   W Colliding waterfall'):format(
       effects.names[index],emitter:getMode(),emitter:getBackend(),emitter:getBufferSize()),24,24)
     if hasEditor then love.graphics.print('E Particle Studio editor',24,92) end
+    love.graphics.print('V Water / smoke volume API',24,112)
     local name=effects.names[index]
     if name=='collision' then love.graphics.line(0,love.graphics.getHeight()-80,love.graphics.getWidth(),love.graphics.getHeight()-80)
     elseif name=='sdf' then love.graphics.circle('line',love.graphics.getWidth()/2,love.graphics.getHeight()/2,90) end
@@ -66,6 +67,7 @@ function M.install(selected,automated)
       love.load()
     elseif key=='r' then load() end
     if key=='e' and hasEditor then release();require('editor_support.app').install();love.load() end
+    if key=='v' then release();require(prefix..'example_support.volume.app').install();love.load() end
   end
   function love.quit() release() end
   function love.errorhandler(message) print(message);return function() return 1 end end

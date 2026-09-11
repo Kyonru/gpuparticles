@@ -107,6 +107,8 @@ For particle-to-particle contact, press **S** in the comparison: both sides use 
 
 ## Colliding waterfall
 
+The standalone library also provides [`gpuparticles.newVolumeWorld`](VOLUME_API.md): configurable water/gas materials, multiple sources, shared gas velocity/pressure, heat and force brushes, editable terrain, custom GLSL forces/rendering, and temperature-triggered conversion. Run `love particle-gpu volume`, or press **V** in the example picker. Water, smoke, and steam examples offer pixel and smooth display. Volume worlds are separate from particle emitters and are not yet editable in Particle Studio.
+
 Run `love particle-gpu waterfall` or `love particle-gpu/examples/waterfall`, or press **W** in the main example picker.
 
 **F** enables optional water accumulation, also available with `love particle-gpu waterfall --water-volume`. A 160×100 GPU grid carries persistent water across the whole scene, allowing pools on ledges and behind mouse-circle obstructions. **V** stops inflow without deleting existing water; moving the circle lets a blocked pool drain. This coarse cellular approximation replaces and pauses the artistic particle layers while enabled; it does not require self-collision. **F** returns to particles and releases the grid. See the [volume controls, previews, and limits](examples/waterfall/README.md). Verify it with `python3 particle-gpu/scripts/verify.py --water-volume-only --mutations`.

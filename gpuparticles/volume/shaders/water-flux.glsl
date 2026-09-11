@@ -1,7 +1,9 @@
 uniform float u_step;
+uniform float u_compression;
+uniform float u_spread;
 // Equilibrium mass in the LOWER cell of a vertical pair, with slight compression.
 float lowerMass(float total) {
-  const float compression=0.125;
+  float compression=u_compression;
   if (total<=1.0) return total;
   if (total<2.0+compression) return (1.0+total*compression)/(1.0+compression);
   return (total+compression)*0.5;
@@ -15,11 +17,16 @@ vec4 effect(vec4 color,Image state,vec2 tc,vec2 sc) {
   neighbors[0]=p+vec2(-1,0);neighbors[1]=p+vec2(1,0);
   neighbors[2]=p+vec2(0,1);neighbors[3]=p+vec2(0,-1);
   if (m<=0.0) return f;
-  if (circleDistance(p)<0.0) {
+  if (obstacleDistance(p)<0.0) {
     // Moving obstacles displace existing mass outward, even through their interior.
     // Free cells never send into a solid cell. Nothing is cleared when the circle moves.
     for (int i=0;i<4;i++) {
-      if (!rock(neighbors[i])) f[i]=max(0.0,circleDistance(neighbors[i])-circleDistance(p));
+      bool movingCircle=circleDistance(p)<0.0;
+      if (inside(neighbors[i]) && (!movingCircle || Texel(u_terrain,uv(neighbors[i])).r>=0.0)) {
+        float current=movingCircle ? circleDistance(p) : obstacleDistance(p);
+        float next=movingCircle ? circleDistance(neighbors[i]) : obstacleDistance(neighbors[i]);
+        f[i]=max(0.0,next-current);
+      }
     }
     float weights=dot(f,vec4(1.0));
     return weights>0.0 ? f*(0.5*m*u_step/weights) : vec4(0.0);
@@ -31,7 +38,7 @@ vec4 effect(vec4 color,Image state,vec2 tc,vec2 sc) {
     float other=mass(state,n);
     // Falling streams keep their width. Lateral equalization acts on supported water.
     float support=solid(p+vec2(0,1)) ? 1.0 : smoothstep(0.8,1.05,mass(state,p+vec2(0,1)));
-    if (i<2) f[i]=max(0.0,(m-other)*(0.0005+support*0.4995));
+    if (i<2) f[i]=max(0.0,(m-other)*(0.0005+support*(u_spread-0.0005)));
     else if (i==2) f[i]=max(0.0,lowerMass(m+other)-other);
     else f[i]=max(0.0,m-lowerMass(m+other));
   }

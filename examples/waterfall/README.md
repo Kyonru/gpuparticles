@@ -1,5 +1,7 @@
 # Basalt Falls
 
+Water volume now uses the reusable [`gpuparticles.newVolumeWorld` API](../../VOLUME_API.md). The waterfall's `fluid.lua` keeps scene settings and compatibility accessors; simulation shaders live in `gpuparticles/volume/`. The public API also supports gas smoke, custom forces/shading, multiple sources, terrain editing, and thermal conversion. Try `love particle-gpu volume` for those features.
+
 ![Waterfall cascading over sloped rocks into a pool](../../previews/waterfall.png)
 
 ```sh
