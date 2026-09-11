@@ -7,7 +7,7 @@ S.__index=S
 S.step=1/120
 function S.new(options)
   options=options or {}
-  local self=setmetatable({time=0,accumulator=0,paused=false,showHud=true,
+  local self=setmetatable({time=0,accumulator=0,paused=false,showHud=true,wind=true,
     mouse={x=580,y=225,radius=45,inside=false,enabled=true},
     layers={curtain=true,drops=true,mist=true,field=false},emitters={},spray={},mist={}},S)
   self.terrain=Terrain.new()
@@ -59,9 +59,16 @@ function S:changeRadius(delta)
   self.mouse.radius=math.max(8,math.min(140,self.mouse.radius+delta))
   self:setPointer(self.mouse.x,self.mouse.y,self.mouse.inside)
 end
+function S:toggleWind()
+  self.wind=not self.wind
+  if self.render then
+    self.render.backPlants.wind=self.wind and 1 or 0;self.render.frontPlants.wind=self.wind and 1 or 0
+  end
+end
 function S:stepOnce()
   self.time=self.time+self.step
   for _,e in ipairs(self.emitters) do e:update(self.step) end
+  if self.render then self.render:updatePlants(self.step,self.time,self.mouse) end
 end
 function S:update(dt)
   if self.paused then return end
@@ -81,7 +88,7 @@ function S:draw(hud)
   if self.layers.mist then for _,e in ipairs(self.spray) do e:draw() end end
   self.render:environment()
   if self.layers.mist then for _,e in ipairs(self.mist) do e:draw() end end
-  self.render:foreground()
+  self.render:foreground(self.time)
   if self.layers.field then self.render:debug() end
   self.render:mouseObstacle(self.mouse)
   if hud~=false and self.showHud then self.render:hud(self) end

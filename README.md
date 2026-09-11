@@ -71,9 +71,11 @@ See [bench/RESULTS.md](bench/RESULTS.md) for measurements on the current machine
 
 ## Particle Studio editor
 
-Run `love particle-gpu editor`, or press **E** in the root example picker. Build compositions from up to 12 emitter layers, edit color/size curves and generated particle shapes, combine forces and collision, and arrange emission windows and bursts on a timeline. The editor includes undo/redo, deterministic replay, four layered presets, and saved JSON projects.
+Run `love particle-gpu editor`, or press **E** in the root example picker. Build compositions from up to 12 emitter layers, import PNG sprites and regular sprite sheets, edit color/size curves, combine forces and collision, and arrange emission windows and bursts on a timeline. Texture and Effects tabs add pixel grids, dissolve, outlines, palette/tint, distortion, and a soft glow. The editor includes undo/redo, deterministic replay, six presets, and JSON projects with embedded images.
 
 **Export Lua** produces a self-contained effect module that needs only `gpuparticles/` in your game. Its playback code is shared with the editor preview and verified with numeric GPU state and rendered-output comparisons. See the [editor guide](editor/README.md) for controls, files, limits, and integration code.
+
+The [development document](DEVELOPMENT.md) records the appearance tools and interactive vegetation scope, implementation choices, and verification.
 
 ## Native / GPU comparison
 
@@ -105,6 +107,8 @@ The scene combines animated water ribbons, 24,000 available stateful droplet slo
 **1** toggles the water ribbons, **2** droplets, **3** spray/mist, and **D** the collision field. **Space** pauses, **R** restarts, **H** hides the controls, and **Esc** quits. Hiding a layer leaves its simulation running so you can inspect the visual contributions at the same scene time.
 
 Move the mouse into the scene to place a circular obstacle. The wheel changes its radius; **C** toggles it. Droplets collide with both the circle and the existing rocks. The water ribbons are visually clipped at the circle; spray and mist remain decorative. Mouse movement changes uniforms and leaves the terrain texture intact.
+
+Nearby ferns are rooted meshes: wind bends them on the GPU, and the same mouse circle drives a damped spring per plant for brushing and recovery. **W** toggles wind. This is visual bending, with cached distant scenery; it does not simulate cloth or guarantee leaf-level separation.
 
 The spray and mist emit from authored impact locations. They are decoration, not GPU collision callbacks. Droplets do not interact or conserve fluid volume, and the pool surface is animated artwork. When emitter fallback is active, droplets no longer collide; this demo's artwork itself requires GLSL 3 and float-texture support. See [examples/waterfall/README.md](examples/waterfall/README.md) for the scene's editable geometry and numeric tests.
 

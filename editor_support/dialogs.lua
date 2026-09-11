@@ -4,7 +4,7 @@ local Storage=require('editor_support.storage')
 local D={}
 function D.draw(app)
   local u,m,g,modal=app.ui,app.model,love.graphics,app.modal
-  local w,h=g.getDimensions();local width,height=580,modal.kind=='help' and 566 or 444
+  local w,h=g.getDimensions();local width,height=580,modal.kind=='help' and 620 or modal.kind=='presets' and 548 or 444
   local x,y=(w-width)/2,(h-height)/2
   g.setColor(0,0,0,0.66);g.rectangle('fill',0,0,w,h)
   u:box(x,y,width,height,'raised');u.suspend=false;u.items={};u.clip=nil
@@ -12,7 +12,8 @@ function D.draw(app)
   u:text(titles[modal.kind],x+24,y+24,'ink',24,width-96)
   u:button('modal:close','X',x+width-56,y+20,36,40,function() app:close() end)
   if modal.kind=='presets' then
-    local notes={'Flame, rising embers, and a smoke veil.','Two layers of curled, orbiting light.','Stateful droplets, a circle, a floor, and mist.','Flash, timed sparks, and lingering afterglow.'}
+    local notes={'Flame, rising embers, and a smoke veil.','Two layers of curled, orbiting light.','Stateful droplets, a circle, a floor, and mist.','Flash, timed sparks, and lingering afterglow.',
+      'Embedded sprite sheet, crisp pixels, and a stepped palette.','Dissolve, distortion, outlines, and a soft glow.'}
     for i,name in ipairs(Presets.names) do
       local row=y+88+(i-1)*72
       u:button('preset:'..i,name,x+24,row,width-48,44,function() app:replace(Presets.make(i)) end)
@@ -59,6 +60,7 @@ function D.draw(app)
       {'Shape an emitter','Click a number to type; drag its label to scrub. Scroll the inspector.'},
       {'Draw the motion','Drag the origin. Shift-drag the circle; Alt-drag the attractor.'},
       {'Shape its lifetime','Style edits up to 32 color/size stops. Drag size-curve nodes.'},
+      {'Textures and shaders','Drop a PNG; Texture sets frames. Effects adds pixels and shaders.'},
       {'Compose in time','Timing sets emission windows and bursts. Drag the playhead to seek.'},
       {'Save or take it to a game','Save creates a JSON project. Export Lua needs only gpuparticles/.'},
       {'Keyboard','Space play/pause · Cmd/Ctrl S save · Z undo · Shift Z redo'},

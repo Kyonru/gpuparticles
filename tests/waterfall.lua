@@ -24,6 +24,7 @@ local function render(scene)
   local data=target:newImageData();target:release();return data
 end
 function M.run()
+  require('tests.plants').run()
   local scene=Scene.new()
   local terrain=scene.terrain
   assert(scene.drops:getMode()=='stateful' and scene.drops:getBackend()=='gpu')
@@ -101,6 +102,12 @@ function M.run()
   scene:toggleMouse();scene:setPointer(nil,nil,false);assert(not e.config.circleCollider.enabled)
   print('Waterfall pointer scaling / mouse collision / radius / field reuse / disable PASS')
   local time=scene.time;scene.paused=true;scene:update(0.1);near(scene.time,time,0.00001)
+  scene:toggleWind();assert(not scene.wind and scene.render.frontPlants.wind==0 and scene.render.backPlants.wind==0)
+  scene:toggleWind();assert(scene.wind and scene.render.frontPlants.wind==1)
+  local plants=scene.render.frontPlants
+  scene:setPointer(plants.plants[1].x-10,plants.plants[1].y-25,true)
+  for _=1,120 do scene:stepOnce() end
+  assert(math.abs(plants.plants[1].bx)+math.abs(plants.plants[1].by)>1,'scene circle must reach the plant springs')
   scene:release();scene:release()
   print('Waterfall independent layers / modes / pause / release PASS')
 end

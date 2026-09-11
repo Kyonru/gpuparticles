@@ -12,11 +12,12 @@ function M.mapPointer(x,y,width,height)
 end
 function M.install()
   local scene,smoke,capture,captured,requested,frames=nil,false,false,false,false,0
-  local mouseDemo=false
+  local mouseDemo,plantDemo=false,false
   for _,value in ipairs(arg or {}) do
     if value=='--smoke' then smoke=true end
     if value=='--capture' then capture=true end
     if value=='--mouse-collision' then mouseDemo=true end
+    if value=='--plant-collision' then mouseDemo=true;plantDemo=true end
   end
   local function restart()
     if scene then scene:release() end
@@ -24,7 +25,7 @@ function M.install()
   end
   function love.load() restart() end
   function love.update(dt)
-    if smoke then scene:setPointer(580,225,mouseDemo)
+    if smoke then scene:setPointer(plantDemo and 482 or 580,plantDemo and 288 or 225,mouseDemo)
     else
       local x,y=love.mouse.getPosition()
       scene:setPointer(M.mapPointer(x,y,love.graphics.getDimensions()))
@@ -45,7 +46,7 @@ function M.install()
     if capture and frames>=(mouseDemo and 90 or 3) and not requested then
       requested=true
       g.captureScreenshot(function(data)
-        local file=mouseDemo and 'waterfall-mouse.png' or 'waterfall.png'
+        local file=plantDemo and 'waterfall-plants.png' or mouseDemo and 'waterfall-mouse.png' or 'waterfall.png'
         data:encode('png',file);data:release()
         print('WATERFALL_CAPTURE '..love.filesystem.getSaveDirectory()..'/'..file)
         captured=true
@@ -62,6 +63,7 @@ function M.install()
     elseif key=='3' then scene.layers.mist=not scene.layers.mist
     elseif key=='d' then scene.layers.field=not scene.layers.field end
     if key=='c' then scene:toggleMouse() end
+    if key=='w' then scene:toggleWind() end
   end
   function love.wheelmoved(_,y) scene:changeRadius(y*4) end
   function love.quit() if scene then scene:release() end end

@@ -43,11 +43,30 @@ def mutate(label, filename, original, broken, expected, command='test'):
 
 
 editor_mutations = [
+    ('built-in sprite animation', 'editor_support/sprites.lua',
+     'masks[id](x%size,y,math.floor(x/size))', 'masks[id](x%size,y,0)', 'built-in sprite frames must animate', 'editor-test'),
+    ('preview shader bounds', 'editor_support/view.lua',
+     'm.runtime:draw(0,0,bounds)', 'm.runtime:draw()', 'particles must render through the full preview', 'editor-test'),
+    ('native sprite-sheet dimensions', 'gpuparticles/native.lua',
+     'width,height=quadWidth,quadHeight', 'width,height=e.texture:getDimensions()', 'appearance expected', 'editor-test'),
+    ('pixel canvas filtering', 'editor_support/appearance.lua',
+     "self.canvas:setFilter('nearest','nearest')", "self.canvas:setFilter('linear','linear')", 'appearance expected', 'editor-test'),
+    ('layer dissolve', 'editor_support/appearance.lua',
+     'c*step(u_dissolve,n)', 'c*step(u_dissolve*0.5,n)', 'full dissolve must remove', 'editor-test'),
+    ('premultiplied layer composition', 'editor_support/appearance.lua',
+     "g.setBlendMode(emitter.config.blendMode,'premultiplied')", "g.setBlendMode(emitter.config.blendMode,'alphamultiply')", 'appearance expected', 'editor-test'),
     ('editor burst timing', 'editor_support/runtime.lua',
      'self.events[self.eventIndex].time<=self.time+1e-8',
      'self.events[self.eventIndex].time<=self.time+0.02', 'burst must not fire early', 'editor-test'),
     ('editor automatic mode selection', 'editor_support/runtime.lua',
-     "c.mode='auto'", "c.mode='stateful'", 'presets must use their cheapest mode', 'editor-test'),
+     "c.mode='auto'", "c.mode='stateful'", 'appearance effects must stay analytic', 'editor-test'),
+]
+
+plant_mutations = [
+    ('anchored plant roots', 'example_support/waterfall/shaders/plants.glsl',
+     'float weight=height*height;', 'float weight=1.0;', 'plant expected', 'waterfall-test'),
+    ('plant circle contact', 'example_support/waterfall/plants.lua',
+     'local overlap=circle.radius+8*p.scale-distance', 'local overlap=-1', 'circle contact must push', 'waterfall-test'),
 ]
 
 
@@ -65,6 +84,7 @@ function love.load()
     assert(not love.filesystem.getInfo('editor_support'))
     local effect=require('effect').new()
     assert(effect.emitters[1]:getMode()=='stateful')
+    assert(#effect.emitters[1].config.quads==2 and effect.appearances[1])
     effect:seek(0.7);effect:update(1/60);effect:draw();effect:release()
     print('Standalone editor export without editor files PASS')
   end,debug.traceback)
@@ -78,7 +98,8 @@ function love.errorhandler(message) print(message);return function() return 1 en
         print(output, end='')
         assert result.returncode == 0 and 'without editor files PASS' in output
     fixture.unlink()
-    for arguments in ([], ['--compact'], ['--preset=3']):
+    for arguments in ([], ['--compact'], ['--preset=3'], ['--preset=5'], ['--preset=5', '--compact'],
+                      ['--preset=5', '--texture-tab'], ['--preset=6']):
         result = subprocess.run([options.love, str(root / 'editor'), '--smoke', '--capture', *arguments],
                                 text=True, capture_output=True, timeout=90)
         output = result.stdout + result.stderr
@@ -140,6 +161,11 @@ if options.demos_only:
     demo('comparison', '--benchmark')
     demo('comparison', '--mouse-collision')
     demo('waterfall', '--mouse-collision')
+    demo('waterfall', '--plant-collision')
+    if options.mutations:
+        for mutation in plant_mutations:
+            mutate(*mutation)
+        run('waterfall-test')
     print('DEMO VERIFICATION COMPLETE')
     sys.exit(0)
 
@@ -178,7 +204,7 @@ if options.mutations:
          'float circleDistance=separation-u_circle.z;', 'float circleDistance=1.0e30;',
          'circle expected 88.000000, got 90.000000'),
     ]
-    for mutation in mutations + editor_mutations:
+    for mutation in mutations + editor_mutations + plant_mutations:
         mutate(*mutation)
     run()  # The restored code must pass again.
     run('comparison-test')

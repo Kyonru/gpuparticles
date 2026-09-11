@@ -1,5 +1,7 @@
--- Also embedded verbatim in Lua exports. Only depends on gpuparticles and LÖVE.
+-- Export bundles this runtime and its appearance/assets helpers; only gpuparticles and LÖVE remain external.
 local gpu=require('gpuparticles')
+local Assets=require('editor_support.assets')
+local Appearance=require('editor_support.appearance')
 local R={};R.__index=R
 local function copy(v)
   if type(v)~='table' then return v end
@@ -7,7 +9,14 @@ local function copy(v)
 end
 local function build(layer,definition,owned)
   local c=copy(layer.emitter);c.mode='auto';c.forces={}
-  if layer.shape and layer.shape~='disc' then
+  if layer.sprite and layer.sprite.png~='' then
+    local image=Assets.image(layer.sprite);owned[#owned+1]=image;c.texture=image;c.quads={}
+    local sprite=layer.sprite;local w,h=image:getDimensions();local fw,fh=w/sprite.columns,h/sprite.rows
+    for i=0,sprite.frames-1 do
+      local quad=love.graphics.newQuad(i%sprite.columns*fw,math.floor(i/sprite.columns)*fh,fw,fh,w,h)
+      owned[#owned+1]=quad;c.quads[#c.quads+1]=quad
+    end
+  elseif layer.shape and layer.shape~='disc' then
     local data=love.image.newImageData(32,32)
     data:mapPixel(function(x,y)
       x,y=(x+0.5-16)/16,(y+0.5-16)/16
@@ -19,6 +28,7 @@ local function build(layer,definition,owned)
     end)
     local ok,image=pcall(love.graphics.newImage,data);data:release();if not ok then error(image) end
     owned[#owned+1]=image;c.texture=image
+    image:setFilter(layer.sprite and layer.sprite.filter or 'linear',layer.sprite and layer.sprite.filter or 'linear')
   end
   if layer.turbulence.enabled then c.forces[#c.forces+1]=gpu.forces.turbulence(copy(layer.turbulence)) end
   if layer.curl.enabled then c.forces[#c.forces+1]=gpu.forces.curl(copy(layer.curl)) end
@@ -37,13 +47,16 @@ local function build(layer,definition,owned)
     image:setFilter('linear','linear');image:setWrap('repeat','repeat')
     owned[#owned+1]=image;c.flowField={texture=image,size={definition.width,definition.height},strength=layer.flow.strength}
   end
-  return gpu.newEmitter(c)
+  local emitter=gpu.newEmitter(c)
+  if not c.texture and layer.sprite then emitter.texture:setFilter(layer.sprite.filter,layer.sprite.filter) end
+  return emitter
 end
 function R.new(definition)
-  local self=setmetatable({definition=copy(definition),emitters={},owned={},events={},time=0,eventIndex=1,playing=true,hasState=false},R)
+  local self=setmetatable({definition=copy(definition),emitters={},owned={},appearances={},events={},time=0,eventIndex=1,playing=true,hasState=false},R)
   local ok,err=xpcall(function()
     for i,l in ipairs(self.definition.layers) do
       local e=build(l,definition,self.owned);self.emitters[i]=e;e:stop()
+      if l.enabled and l.appearance then self.appearances[i]=Appearance.new(l.appearance,definition.width,definition.height) end
       if l.enabled then
         self.hasState=self.hasState or e:getMode()=='stateful' or e:getBackend()=='native'
         self.events[#self.events+1]={time=l.start,kind=1,layer=i}
@@ -105,8 +118,13 @@ function R:seek(seconds)
   assert(type(seconds)=='number' and seconds==seconds and math.abs(seconds)<math.huge,'Seek time must be finite')
   self:reset();self:advanceTo(math.max(0,math.min(seconds,self.definition.duration)))
 end
-function R:draw(x,y)
-  for i,e in ipairs(self.emitters) do if self.definition.layers[i].enabled and (not self.solo or self.solo==i) then e:draw(x or 0,y or 0) end end
+function R:draw(x,y,bounds)
+  for i,e in ipairs(self.emitters) do
+    if self.definition.layers[i].enabled and (not self.solo or self.solo==i) then
+      local appearance=self.appearances[i]
+      if appearance then appearance:draw(e,self.time,x,y,bounds) else e:draw(x or 0,y or 0) end
+    end
+  end
 end
 function R:burst(index,count)
   local e=self.emitters[index];local active=e:isActive();e:start();e:emit(count);if not active then e:stop() end
@@ -114,6 +132,7 @@ end
 function R:release()
   if self.released then return end
   for _,e in ipairs(self.emitters) do e:release() end
+  for _,appearance in pairs(self.appearances) do appearance:release() end
   for _,image in ipairs(self.owned) do image:release() end
   self.released=true
 end

@@ -29,7 +29,9 @@ function A:mousepressed(x,y,button)
   self.model:beginEdit();self:dragWorld(wx,wy)
 end
 function A:dragWorld(x,y)
-  x,y=math.max(0,math.min(960,x)),math.max(0,math.min(640,y))
+  local b=View.bounds(self.layout)
+  x=math.max(-2000,math.min(3000,math.max(b.x,math.min(b.x+b.w,x))))
+  y=math.max(-2000,math.min(3000,math.max(b.y,math.min(b.y+b.h,y))))
   local l=self.model:layer()
   if self.dragTarget=='origin' then l.emitter.position[1],l.emitter.position[2]=x,y
   else l[self.dragTarget].x,l[self.dragTarget].y=x,y end
@@ -71,12 +73,18 @@ function A:keypressed(key)
   elseif key=='pageup' or key=='pagedown' then m.scroll=math.max(0,math.min(m.scrollMax or 0,m.scroll+(key=='pagedown' and 264 or -264))) end
 end
 function A:filedropped(file)
-  local ok,doc=pcall(function()
-    assert(file:getFilename():lower():match('%.json$'),'Drop a saved particle project .json file.')
-    assert(file:getSize()<=8000000,'Project exceeds 8 MB.');assert(file:open('r'));local text=file:read();file:close()
-    return Storage.decode(text)
+  if self.modal or not self.ui:commit() or self.model.before then self.model:message('Finish the current edit or close the dialog before importing.',true);return end
+  local name=file:getFilename():match('[^/\\]+$') or 'Imported texture.png'
+  local png=name:lower():match('%.png$')
+  local ok,result=pcall(function()
+    assert(png or name:lower():match('%.json$'),'Drop a PNG texture or a saved project .json file.')
+    assert(file:getSize()<=(png and 1048576 or 8000000),png and 'Use a PNG no larger than 1 MB.' or 'Project exceeds 8 MB.')
+    assert(file:open('r'));return assert(file:read())
   end)
-  if ok then self:replace(doc) else self.model:message('Import failed: '..tostring(doc),true) end
+  if file:isOpen() then file:close() end
+  if ok and png then self.model:importTexture(result,#name<=120 and name or 'Imported texture.png');return end
+  if ok then ok,result=pcall(Storage.decode,result) end
+  if ok then self:replace(result) else self.model:message('Import failed: '..tostring(result),true) end
 end
 function A:requestQuit()
   if self.allowQuit then return false end
@@ -90,17 +98,19 @@ end
 function A:release() self.ui:release();self.model:release() end
 function A.install()
   local app,frames,smoke,capture,captured,requested=nil,0,false,false,false,false
-  local compact,preset=false,1
+  local compact,preset,tab=false,1,nil
   for _,value in ipairs(arg or {}) do
     if value=='--smoke' then smoke=true elseif value=='--capture' then capture=true elseif value=='--compact' then compact=true
-    elseif value:match('^%-%-preset=[1-4]$') then preset=tonumber(value:sub(-1)) end
+    elseif value:match('^%-%-preset=[1-6]$') then preset=tonumber(value:sub(-1)) end
+    if value=='--texture-tab' then tab='Texture' end
   end
   function love.load()
     love.filesystem.setIdentity('gpuparticles-studio')
     love.window.setMode(compact and 1120 or 1440,compact and 760 or 900,{resizable=true,minwidth=1120,minheight=760,vsync=1})
     love.window.setTitle('Particle Studio — GPU effect editor');love.keyboard.setKeyRepeat(true);app=A.new{preset=preset}
     if preset==3 then app.model:select(1) end
-    if smoke then app.model.playing=false;app.model.tab='Style' end
+    if smoke then app.model.playing=false;app.model.tab=preset>=5 and 'Effects' or 'Style' end
+    if tab then app.model.tab=tab end
   end
   function love.update(dt)
     app:update(dt);frames=frames+1
@@ -112,7 +122,7 @@ function A.install()
     app:draw()
     if capture and frames>=65 and love.timer.getFPS()>0 and not app.model.seekTarget and not requested then
       requested=true;love.graphics.captureScreenshot(function(data)
-        local file=compact and 'editor-compact.png' or preset==3 and 'editor-collision.png' or 'editor.png'
+        local file=tab and 'editor-texture.png' or preset==5 and (compact and 'editor-pixel-compact.png' or 'editor-pixel.png') or preset==6 and 'editor-shaders.png' or compact and 'editor-compact.png' or preset==3 and 'editor-collision.png' or 'editor.png'
         data:encode('png',file);data:release();captured=true
         print('EDITOR_CAPTURE '..love.filesystem.getSaveDirectory()..'/'..file)
       end)

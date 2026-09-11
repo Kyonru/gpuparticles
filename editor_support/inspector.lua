@@ -1,16 +1,21 @@
 local U=require('editor_support.ui')
-local I={tabs={'Emitter','Motion','Style','Timing'}}
+local I={tabs={'Emitter','Motion','Style','Texture','Effects','Timing'}}
 local function get(t,path) for _,k in ipairs(path) do t=t[k] end;return t end
 local function put(t,path,v) for i=1,#path-1 do t=t[path[i]] end;t[path[#path]]=v end
 function I.draw(app,x,top,w,bottom)
   local m,u=app.model,app.ui;local l=m:layer();local g=love.graphics
   u:text('INSPECTOR',x+16,top+16,'muted',11)
   u:text(l.name,x+16,top+37,'ink',19,w-32)
-  local tabW=(w-24)/4
-  for i,name in ipairs(I.tabs) do u:button('tab:'..name,name,x+12+(i-1)*tabW,top+72,tabW-2,40,function() m.tab=name;m.scroll=0 end,m.tab==name) end
-  local contentTop=top+128;local y=contentTop-m.scroll;local left,width=x+16,w-32
+  local tabW=(w-24)/3
+  for i,name in ipairs(I.tabs) do u:button('tab:'..name,name,x+12+(i-1)%3*tabW,top+72+math.floor((i-1)/3)*44,tabW-2,40,function() m.tab=name;m.scroll=0 end,m.tab==name) end
+  local contentTop=top+172;local y=contentTop-m.scroll;local left,width=x+16,w-32
   g.setScissor(x,contentTop,w,bottom-contentTop);u.clip={y=contentTop,h=bottom-contentTop}
   local function title(label) u:text(label,left,y+8,'ink',13);y=y+36 end
+  local function paragraph(text,size)
+    local font=u.fonts[size or 11];g.setFont(font);U.color('secondary')
+    local _,lines=font:getWrap(text,width);g.printf(text,left,y,width)
+    y=y+#lines*font:getHeight()*font:getLineHeight()+16
+  end
   local function number(label,path,lo,hi,step,decimals,scale,integer)
     local id=table.concat(path,'.')
     local options={min=lo,max=hi,step=step,decimals=decimals,scale=scale,integer=integer,
@@ -86,7 +91,6 @@ function I.draw(app,x,top,w,bottom)
       number('Particle radius',{'response','radius'},0,40,0.5,1);number('Bounce',{'response','bounce'},0,1,0.05,2);number('Friction',{'response','friction'},0,1,0.05,2)
     end
   elseif m.tab=='Style' then
-    select('Particle shape',{'shape'},{'disc','spark','ring','smoke'})
     select('Blending',{'emitter','blendMode'},{'add','alpha'})
     y=require('editor_support.curves').draw(app,left,y,width)
     number('Size variation',{'emitter','sizeVariation'},0,1,0.05,2)
@@ -95,6 +99,56 @@ function I.draw(app,x,top,w,bottom)
     number('Rotation min °',{'emitter','rotation',1},-720,l.emitter.rotation[2]*180/math.pi,5,0,180/math.pi)
     number('Rotation max °',{'emitter','rotation',2},l.emitter.rotation[1]*180/math.pi,720,5,0,180/math.pi)
     toggle('Rotate with velocity',{'emitter','relativeRotation'})
+  elseif m.tab=='Texture' then
+    title('Particle image')
+    local sprites=require('editor_support.sprites');local selected=sprites.identify(l.sprite);local cell=(width-8)/2
+    for i,entry in ipairs(sprites.entries) do
+      u:button('texture:builtin:'..entry.id,entry.name,left+(i-1)%2*(cell+8),y+math.floor((i-1)/2)*48,cell,40,function()
+        m:change(function(_,layer) layer.sprite=sprites.make(entry.id) end)
+      end,selected==entry.id)
+    end
+    y=y+96
+    paragraph('Choose a built-in sheet or drop a PNG. Images travel with your project.',13)
+    local emitter=m.runtime.emitters[m.selected]
+    U.color('canvas');g.rectangle('fill',left,y,width,96,4,4)
+    if emitter then
+      local image=emitter.texture;local iw,ih=image:getDimensions();local scale=math.min((width-24)/iw,80/ih)
+      g.setColor(1,1,1,1);g.draw(image,left+(width-iw*scale)/2,y+(96-ih*scale)/2,0,scale,scale)
+    end
+    y=y+108
+    u:text(l.sprite.png~='' and l.sprite.name or 'Generated '..l.shape,left,y,'ink',13,width);y=y+28
+    if l.sprite.png~='' then
+      u:button('texture:remove','Use generated shape',left,y,width,40,function()
+        m:change(function(_,layer) layer.sprite=require('editor_support.document').layer().sprite end)
+      end);y=y+48
+      title('Sprite sheet · frames over lifetime')
+      number('Columns',{'sprite','columns'},1,256,1,0,nil,true)
+      number('Rows',{'sprite','rows'},1,256,1,0,nil,true)
+      number('Frames',{'sprite','frames'},1,math.min(256,l.sprite.columns*l.sprite.rows),1,0,nil,true)
+      paragraph('Frames run left to right, then top to bottom. Billboards are square.')
+    else select('Particle shape',{'shape'},{'disc','spark','ring','smoke'}) end
+    select('Filtering',{'sprite','filter'},{'linear','nearest'})
+    u:text('PNG · up to 1024 × 1024 · 1 MB per image',left,y,'muted',11,width);y=y+32
+  elseif m.tab=='Effects' then
+    title('Pixel grid')
+    select('World pixels / cell',{'appearance','pixelSize'},{1,2,4,8,16})
+    paragraph('1 = full resolution. Larger cells use nearest scaling; motion and collision stay precise.')
+    title('Layer shader')
+    number('Dissolve',{'appearance','dissolve'},0,1,0.05,2)
+    number('Outline / cells',{'appearance','outline'},0,8,0.5,1)
+    if l.appearance.outline>0 then
+      for i,label in ipairs{'Red','Green','Blue'} do number('Outline '..label,{'appearance','outlineColor',i},0,1,0.05,2) end
+    end
+    select('Palette levels',{'appearance','levels'},{0,2,3,4,6,8,16,32})
+    u:text('0 = original colors; levels apply per channel.',left,y,'muted',11,width);y=y+28
+    for i,label in ipairs{'Red','Green','Blue'} do number('Tint '..label,{'appearance','tint',i},0,1,0.05,2) end
+    number('Distortion / cells',{'appearance','distortion'},0,20,0.5,1)
+    number('Glow strength',{'appearance','glow'},0,2,0.05,2)
+    if l.appearance.glow>0 then number('Glow radius / cells',{'appearance','glowRadius'},1,16,0.5,1) end
+    paragraph('Effects process this layer together. Glow adds a soft local halo.')
+    u:button('effects:reset','Reset appearance',left,y,width,40,function()
+      m:change(function(_,layer) layer.appearance=require('editor_support.document').layer().appearance end)
+    end);y=y+48
   else
     title('Emission window')
     number('Start / sec',{'start'},0,m.doc.duration,0.1,2)

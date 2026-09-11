@@ -30,13 +30,18 @@ function M.configure(e)
   p:setRotation(unpack(c.rotation))
   p:setRelativeRotation(c.relativeRotation or false)
   p:setSizeVariation(c.sizeVariation)
+  local width,height=e.texture:getDimensions()
+  if c.quads[1] then
+    local _,_,quadWidth,quadHeight=c.quads[1]:getViewport()
+    width,height=quadWidth,quadHeight
+  end
   local sizes=resample(c.sizes,8)
   local scaled={}
-  for i,size in ipairs(sizes) do scaled[i]=size/e.texture:getWidth() end
+  for i,size in ipairs(sizes) do scaled[i]=size/width end
   p:setSizes(unpack(scaled))
   p:setColors(unpack(resample(c.colors, 8)))
   p:setEmitterLifetime(c.emitterLifetime)
-  p:setOffset(e.texture:getWidth()/2+c.offset[1],e.texture:getHeight()/2+c.offset[2])
+  p:setOffset(width/2+c.offset[1],height/2+c.offset[2])
   p:setInsertMode(c.insertMode)
   local a = c.emissionArea
   p:setEmissionArea(a.distribution, a.x, a.y, a.angle or 0, a.directionRelative or false)

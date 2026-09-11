@@ -2,19 +2,7 @@ local directory=(...):gsub('render$',''):gsub('%.','/')
 local R={}
 R.__index=R
 local W,H=1280,800
-local function fern(x,y,scale,angle)
-  local g=love.graphics
-  g.push();g.translate(x,y);g.rotate(angle);g.scale(scale)
-  g.setColor(0.13,0.29,0.23);g.setLineWidth(1.4)
-  g.line(0,0,4,-22,1,-54,-9,-87)
-  for i=1,8 do
-    local y0=-i*10
-    local extent=(9-i)*2.5
-    g.polygon('fill',2,y0,-extent,y0-16,-extent*0.7,y0-3)
-    g.polygon('fill',2,y0,extent+4,y0-13,extent*0.7+3,y0-1)
-  end
-  g.pop()
-end
+local Plants=require((...):gsub('render$','plants'))
 local function ribbon(points)
   local vertices={}
   for i=1,#points-1 do
@@ -81,7 +69,6 @@ function R.new(terrain)
     -- The source shelf meets the first water ribbon.
     g.setColor(0.07,0.145,0.16);g.polygon('fill',364,71,570,67,618,92,571,114,437,123,392,151)
     g.setColor(0.18,0.32,0.25);g.line(369,70,568,66,596,83)
-    for i=1,12 do fern(325+i*18,97+math.sin(i)*20,0.5+i%3*0.2,-0.5+i%4*0.24) end
   end)
   self.rock:send('u_overlay',false)
   self.rocks=canvas(function()
@@ -100,12 +87,15 @@ function R.new(terrain)
       g.pop()
     end
   end)
-  self.plants=canvas(function()
-    for i=1,8 do fern(435+i*9,311+i*2,0.35+i%3*0.15,-0.7+i*0.12) end
-    for i=1,10 do fern(861+i*7,445-i*2,0.4+i%3*0.18,-0.4+i*0.12) end
-    for i=1,8 do fern(425+i*12,635-i*1.4,0.55,-0.7+i*0.17) end
+  local back,front={},{}
+  for i=1,12 do back[#back+1]={325+i*18,97+math.sin(i)*20,0.5+i%3*0.2,-0.5+i%4*0.24} end
+  for i=1,8 do front[#front+1]={435+i*9,311+i*2,0.35+i%3*0.15,-0.7+i*0.12} end
+  for i=1,10 do front[#front+1]={861+i*7,445-i*2,0.4+i%3*0.18,-0.4+i*0.12} end
+  for i=1,8 do front[#front+1]={425+i*12,635-i*1.4,0.55,-0.7+i*0.17} end
+  for i=1,13 do front[#front+1]={20+i*24,779+math.sin(i)*13,0.6+i%4*0.2,-0.6+i%5*0.2} end
+  self.backPlants=own(Plants.new(back));self.frontPlants=own(Plants.new(front))
+  self.foregroundCanvas=canvas(function()
     g.setColor(0.018,0.055,0.064);g.polygon('fill',0,740,93,693,193,742,319,725,411,800,0,800)
-    for i=1,13 do fern(20+i*24,779+math.sin(i)*13,0.6+i%4*0.2,-0.6+i%5*0.2) end
   end)
   self.overlay=canvas(function()
     self.rock:send('u_overlay',true);g.setShader(self.rock);g.rectangle('fill',0,0,W,H);g.setShader()
@@ -127,6 +117,7 @@ end
 function R:base(time)
   local g=love.graphics
   g.setColor(1,1,1,1);g.draw(self.background)
+  self.backPlants:draw(time)
   self.pool:send('u_time',time);g.setShader(self.pool);g.draw(self.poolMesh);g.setShader()
 end
 function R:water(time,mouse)
@@ -146,7 +137,12 @@ function R:mouseObstacle(mouse)
   g.setFont(self.small);g.print(('%d px'):format(mouse.radius),mouse.x+mouse.radius+7,mouse.y-6)
 end
 function R:environment() love.graphics.setColor(1,1,1,1);love.graphics.draw(self.rocks) end
-function R:foreground() love.graphics.setColor(1,1,1,1);love.graphics.draw(self.plants) end
+function R:updatePlants(dt,time,mouse)
+  self.backPlants:update(dt,time,mouse);self.frontPlants:update(dt,time,mouse)
+end
+function R:foreground(time)
+  love.graphics.setColor(1,1,1,1);love.graphics.draw(self.foregroundCanvas);self.frontPlants:draw(time)
+end
 function R:debug()
   love.graphics.setColor(1,1,1,1);love.graphics.draw(self.overlay)
 end
@@ -163,7 +159,7 @@ function R:hud(scene)
   g.setFont(self.text);g.setColor(0.68,0.83,0.79);g.print(legend,49,739)
   g.setFont(self.small);g.setColor(0.43,0.61,0.60)
   g.print('C Mouse '..(scene.mouse.enabled and 'on' or 'off')..'    Wheel Radius    SPACE '..(scene.paused and 'Resume' or 'Pause')..'    R Restart    H Hide controls    ESC Exit',49,759)
-  g.printf(scene.layers.field and 'CORAL = SOLID  /  TEAL = AIR' or 'SDF rocks + water surface',955,759,273,'right')
+  g.printf(scene.layers.field and 'CORAL = SOLID  /  TEAL = AIR' or ('W Wind '..(scene.wind and 'on' or 'off')..' · brush the ferns'),955,759,273,'right')
 end
 function R:release() for _,resource in ipairs(self.owned) do resource:release() end end
 return R

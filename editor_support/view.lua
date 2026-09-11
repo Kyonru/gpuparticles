@@ -7,12 +7,20 @@ function V.layout(width,height)
     preview={x=left,y=64,w=width-left-right,h=height-64-204},timeline={x=left,y=height-204,w=width-left-right,h=176}}
 end
 function V.viewport(layout)
-  local r=layout.preview;local scale=math.min((r.w-40)/960,(r.h-72)/640)
-  return r.x+(r.w-960*scale)/2,r.y+48+(r.h-64-640*scale)/2,scale
+  local r=V.previewRect(layout);local scale=math.min(r.w/960,r.h/640)
+  return r.x+(r.w-960*scale)/2,r.y+(r.h-640*scale)/2,scale
+end
+function V.previewRect(layout)
+  local r=layout.preview
+  return {x=r.x+1,y=r.y+56,w=r.w-2,h=r.h-88}
+end
+function V.bounds(layout)
+  local r=V.previewRect(layout);local x,y,scale=V.viewport(layout)
+  return {x=(r.x-x)/scale,y=(r.y-y)/scale,w=r.w/scale,h=r.h/scale}
 end
 function V.world(layout,x,y)
-  local left,top,scale=V.viewport(layout)
-  return (x-left)/scale,(y-top)/scale,x>=left and y>=top and x<=left+960*scale and y<=top+640*scale
+  local left,top,scale=V.viewport(layout);local r=V.previewRect(layout)
+  return (x-left)/scale,(y-top)/scale,x>=r.x and y>=r.y and x<=r.x+r.w and y<=r.y+r.h
 end
 local function separator(x1,y1,x2,y2) U.color('line');love.graphics.setLineWidth(1);love.graphics.line(x1,y1,x2,y2) end
 local function toolbar(app,L)
@@ -55,17 +63,18 @@ local function preview(app,L)
   u:text('LIVE PREVIEW',r.x+20,r.y+16,'muted',11)
   u:button('grid','Grid',r.x+r.w-166,r.y+8,62,40,function() m.grid=not m.grid end,m.grid)
   u:button('restart','Replay',r.x+r.w-96,r.y+8,82,40,function() m:seek(0) end)
-  local x,y,scale=V.viewport(L)
-  g.setScissor(x,y,960*scale,640*scale);g.push('all');g.translate(x,y);g.scale(scale)
-  U.color('canvas');g.rectangle('fill',0,0,960,640)
+  local x,y,scale=V.viewport(L);local area=V.previewRect(L);local bounds=V.bounds(L)
+  g.setScissor(area.x,area.y,area.w,area.h);g.push('all');g.translate(x,y);g.scale(scale)
+  U.color('canvas');g.rectangle('fill',bounds.x,bounds.y,bounds.w,bounds.h)
   if m.grid then
     g.setColor(0.11,0.12,0.13,0.55);g.setLineWidth(1/scale)
-    for i=0,960,40 do g.line(i,0,i,640) end;for j=0,640,40 do g.line(0,j,960,j) end
+    for i=math.ceil(bounds.x/40)*40,bounds.x+bounds.w,40 do g.line(i,bounds.y,i,bounds.y+bounds.h) end
+    for j=math.ceil(bounds.y/40)*40,bounds.y+bounds.h,40 do g.line(bounds.x,j,bounds.x+bounds.w,j) end
   end
-  g.setColor(1,1,1,1);m.runtime:draw()
+  g.setColor(1,1,1,1);m.runtime:draw(0,0,bounds)
   local l=m:layer();local c=l.emitter
   g.setColor(0.98,0.65,0.29,0.5);g.setLineWidth(1/scale)
-  if l.ground.enabled then g.line(0,l.ground.y,960,l.ground.y) end
+  if l.ground.enabled then g.line(bounds.x,l.ground.y,bounds.x+bounds.w,l.ground.y) end
   if l.circle.enabled then g.circle('line',l.circle.x,l.circle.y,l.circle.radius) end
   if l.attractor.enabled then g.circle('line',l.attractor.x,l.attractor.y,14);g.line(l.attractor.x-20,l.attractor.y,l.attractor.x+20,l.attractor.y) end
   U.color('accent');g.setLineWidth(1.5/scale)
@@ -77,10 +86,10 @@ local function preview(app,L)
     for _,sign in ipairs{-1,1} do local angle=c.direction+sign*c.spread/2;g.line(c.position[1],c.position[2],c.position[1]+math.cos(angle)*72,c.position[2]+math.sin(angle)*72) end
   end
   if c.emissionArea.distribution~='none' then
-    local area=c.emissionArea
-    g.push();g.translate(c.position[1],c.position[2]);g.rotate(area.angle);g.setColor(0.98,0.65,0.29,0.22)
-    if area.distribution=='uniform' or area.distribution=='borderrectangle' then g.rectangle('line',-area.x,-area.y,area.x*2,area.y*2)
-    else g.ellipse('line',0,0,math.max(1,area.x),math.max(1,area.y)) end
+    local emission=c.emissionArea
+    g.push();g.translate(c.position[1],c.position[2]);g.rotate(emission.angle);g.setColor(0.98,0.65,0.29,0.22)
+    if emission.distribution=='uniform' or emission.distribution=='borderrectangle' then g.rectangle('line',-emission.x,-emission.y,emission.x*2,emission.y*2)
+    else g.ellipse('line',0,0,math.max(1,emission.x),math.max(1,emission.y)) end
     g.pop()
   end
   g.pop();g.setScissor()

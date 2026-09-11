@@ -1,9 +1,21 @@
 local D=require('editor_support.document')
-local P={names={'Ember fountain','Arcane bloom','Colliding rain','Impact burst'}}
+local P={names={'Ember fountain','Arcane bloom','Colliding rain','Impact burst','Pixel embers','Spectral wisps'}}
 function P.make(index)
   local d=D.new();d.name=P.names[index or 1]
   local l=d.layers[1]
-  if index==2 then
+  if index==5 then
+    l.name='Pixel sparks';l.emitter.sizes={16,12,8};l.emitter.blendMode='alpha';l.emitter.rate=300;l.emitter.max=2000
+    l.emitter.speed={55,180};l.emitter.gravity={0,-20};l.emitter.lifetime={1.2,2.6};l.emitter.spread=0.8
+    l.emitter.colors={{1,0.9,0.4,1},{1,0.5,0.08,1},{0.5,0.1,0.02,0}}
+    l.appearance.pixelSize=4;l.appearance.levels=4;l.appearance.outline=1
+    l.sprite=require('editor_support.sprites').make('sparks');l.turbulence.enabled=true
+  elseif index==6 then
+    l.name='Spectral wisps';l.shape='ring';l.emitter.blendMode='alpha';l.emitter.position={480,380};l.emitter.spread=math.pi*2
+    l.emitter.rate=160;l.emitter.max=1200;l.emitter.speed={12,80};l.emitter.gravity={0,-35};l.emitter.sizes={10,38,60}
+    l.emitter.colors={{0.2,1,0.8,0},{0.3,0.75,1,0.8},{0.5,0.2,1,0}}
+    l.curl.enabled=true;l.curl.amplitude=24;l.appearance.dissolve=0.18;l.appearance.distortion=3
+    l.appearance.glow=0.8;l.appearance.glowRadius=5;l.appearance.outline=1;l.appearance.outlineColor={0.4,0.9,1}
+  elseif index==2 then
     l.name='Orbiting filaments';l.emitter.position={480,340};l.emitter.spread=math.pi*2;l.emitter.speed={8,32}
     l.emitter.emissionArea={distribution='borderellipse',x=90,y=90,angle=0,directionRelative=true}
     l.emitter.gravity={0,0};l.emitter.tangentialAcceleration=65;l.emitter.radialAcceleration=-30

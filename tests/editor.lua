@@ -23,7 +23,10 @@ local function render(effect)
 end
 function T.run()
   love.window.setMode(1280,800,{vsync=0})
-  for i=1,4 do
+  require('tests.editor_appearance').run()
+  require('tests.editor_preview').run()
+  require('tests.editor_sprites').run()
+  for i=1,#P.names do
     local doc=P.make(i);local decoded=S.decode(J.encode(doc));assert(J.encode(doc)==J.encode(decoded))
     local effect=R.new(doc);effect:seek(i==4 and 0.35 or 1.5)
     for j,e in ipairs(effect.emitters) do assert(e:getMode()==(i==3 and j==1 and 'stateful' or 'analytic'),'presets must use their cheapest mode') end
@@ -50,6 +53,8 @@ function T.run()
   print('Editor exact burst boundaries / seeking / looping / emission windows / lifetime tail PASS')
 
   doc=P.make(3);for _,layer in ipairs(doc.layers) do layer.emitter.max=256;layer.emitter.rate=100 end
+  doc.layers[1].sprite=require('tests.editor_appearance').sprite(true)
+  doc.layers[1].appearance.pixelSize=2;doc.layers[1].appearance.glow=0.3
   local original=R.new(doc);local source=S.exportSource(doc)
   assert(not source:find('require%(["\']editor_support'),'export must not depend on the editor')
   local factory=assert(loadstring(source,'generated-effect'))();local exported=factory.new()
@@ -80,12 +85,32 @@ function T.run()
   m:release();print('Editor model edits / undo-redo / layer actions / rejected edit rollback / bounded replay PASS')
 
   local app=App.new();app.model.playing=false;finish(app.model)
+  local _,bytes=require('tests.editor_appearance').sprite(true)
+  love.filesystem.createDirectory('verification');assert(love.filesystem.write('verification/import.png',bytes))
+  local dropped=love.filesystem.newFile('verification/import.png');app:filedropped(dropped);dropped:release();love.filesystem.remove('verification/import.png')
+  assert(app.model:layer().sprite.png~='' and app.model.tab=='Texture','PNG file drop must import to the selected layer')
+  local imported=J.encode(app.model.doc);assert(not app.model:importTexture('bad','broken.png'));assert(imported==J.encode(app.model.doc),'failed texture imports must leave the project unchanged')
+  app.model:history(false);assert(app.model:layer().sprite.png=='');app.model:history(true);assert(app.model:layer().sprite.png~='')
+  app.model.tab='Emitter';finish(app.model)
   local function draw() app:draw() end
   local function widget(id) for _,w in ipairs(app.ui.items) do if w.id==id then return w end end;error('Missing editor control '..id) end
   local function click(id)
     draw();local w=widget(id);local x,y=w.x+w.w/2,w.y+w.h/2
     app:mousepressed(x,y,1);app:mousereleased(x,y,1)
   end
+  click('tab:Texture');click('sprite.columns');app.ui:textinput('2');app:keypressed('return');assert(app.model:layer().sprite.columns==2)
+  click('sprite.columns');app.ui:textinput('3');app:keypressed('return');assert(app.ui.edit and app.ui.edit.error,'invalid sheet geometry must remain editable')
+  app:keypressed('escape')
+  local oldSprite=J.encode(app.model:layer().sprite);local oldEmitter=J.encode(app.model:layer().emitter)
+  local history=#app.model.undoStack
+  click('texture:builtin:flame');assert(app.model:layer().sprite.frames==4 and app.model:layer().sprite.filter=='nearest')
+  assert(#app.model.undoStack==history+1 and J.encode(app.model:layer().emitter)==oldEmitter,'built-in selection must be one undoable texture edit')
+  app.model:history(false);assert(J.encode(app.model:layer().sprite)==oldSprite,'undo must restore the previous imported sheet')
+  app.model:history(true);assert(require('editor_support.sprites').identify(app.model:layer().sprite)=='flame')
+  for _,id in ipairs{'smoke','splash','sparks'} do click('texture:builtin:'..id);assert(require('editor_support.sprites').identify(app.model:layer().sprite)==id) end
+  click('tab:Effects');click('appearance.pixelSize');assert(app.model:layer().appearance.pixelSize==2)
+  click('appearance.dissolve');app.ui:textinput('0.5');app:keypressed('return');near(app.model:layer().appearance.dissolve,0.5)
+  click('tab:Emitter')
   click('emitter.rate');app.ui:textinput('777');app:keypressed('return');near(app.model:layer().emitter.rate,777)
   click('emitter.rate');app.ui:textinput('-5');app:keypressed('return');assert(app.ui.edit and app.ui.edit.error);near(app.model:layer().emitter.rate,777)
   app:keypressed('escape');click('tab:Style');assert(app.model.tab=='Style')

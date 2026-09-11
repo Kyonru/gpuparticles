@@ -1,5 +1,6 @@
 local D={version=1,maxLayers=12,maxParticles=500000}
 local utf8=require('utf8')
+local Assets=require('editor_support.assets')
 function D.copy(value)
   if type(value)~='table' then return value end
   local out={};for k,v in pairs(value) do out[k]=D.copy(v) end;return out
@@ -21,6 +22,8 @@ local function keys(value,schema,label)
 end
 function D.layer(name)
   return {name=name or 'New emitter',enabled=true,shape='disc',start=0,span=6,bursts={},
+    sprite={name='',png='',columns=1,rows=1,frames=1,filter='linear'},
+    appearance={pixelSize=1,dissolve=0,outline=0,outlineColor={0.05,0.08,0.12},levels=0,tint={1,1,1},distortion=0,glow=0,glowRadius=4},
     emitter={max=6000,rate=1800,lifetime={0.8,1.6},position={480,470},direction=-math.pi/2,spread=0.45,
       speed={90,190},gravity={0,-30},damping=0.4,radialAcceleration=0,tangentialAcceleration=0,
       sizes={3,8,0},colors={{1,0.7,0.18,0},{1,0.28,0.04,0.65},{0.35,0.06,0.02,0}},
@@ -40,10 +43,20 @@ function D.validate(doc)
   assert(type(doc.loop)=='boolean','Loop must be boolean.')
   assert(doc.width==960 and doc.height==640,'This editor uses a 960 × 640 scene.')
   assert(type(doc.layers)=='table' and #doc.layers>=1 and #doc.layers<=D.maxLayers,'Use 1–12 emitter layers.')
-  local total=0
+  local total,embedded=0,0
   local schema=D.layer()
   for _,l in ipairs(doc.layers) do
     keys(l,schema,'layer')
+    -- Additive defaults keep existing version-one projects usable.
+    l.sprite=l.sprite or D.copy(schema.sprite);l.appearance=l.appearance or D.copy(schema.appearance)
+    Assets.validate(l.sprite);embedded=embedded+#l.sprite.png
+    keys(l.appearance,schema.appearance,'appearance')
+    local f=l.appearance
+    assert(({[1]=true,[2]=true,[4]=true,[8]=true,[16]=true})[f.pixelSize],'Pixel size must be 1, 2, 4, 8, or 16.')
+    number(f.dissolve,0,1,'Dissolve');number(f.outline,0,8,'Outline');number(f.distortion,0,20,'Distortion')
+    number(f.glow,0,2,'Glow');number(f.glowRadius,1,16,'Glow radius')
+    number(f.levels,0,32,'Palette levels');assert(f.levels%1==0 and f.levels~=1,'Palette levels must be off (0) or 2–32.')
+    vector(f.tint,3,0,1,'Tint');vector(f.outlineColor,3,0,1,'Outline color')
     text(l.name,'Emitter name');assert(type(l.enabled)=='boolean','Layer visibility must be boolean.')
     l.shape=l.shape or 'disc';assert(({disc=true,spark=true,ring=true,smoke=true})[l.shape],'Invalid particle shape.')
     number(l.start,0,doc.duration,'Start time');number(l.span,0.01,30,'Emission span')
@@ -81,6 +94,7 @@ function D.validate(doc)
     number(l.response.radius,0,40,'Particle radius');number(l.response.bounce,0,1,'Bounce');number(l.response.friction,0,1,'Friction')
   end
   assert(total<=D.maxParticles,'The composition exceeds the 500,000 particle capacity limit.')
+  assert(embedded<=6000000,'Embedded textures exceed the 6 MB project budget.')
   return doc
 end
 return D

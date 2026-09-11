@@ -13,13 +13,15 @@ On macOS, the executable may be `/Applications/love.app/Contents/MacOS/love`. Pr
 
 ## Build an effect
 
-Choose **Presets** for an ember fountain, arcane bloom, colliding rain, or a timed impact burst. Each is a composition of multiple emitters. The left column adds, duplicates, removes, reorders, hides, and solos layers. First in the list draws behind subsequent layers. Visibility is saved and exported; solo is a preview control.
+Choose **Presets** for an ember fountain, arcane bloom, colliding rain, a timed impact burst, pixel embers, or spectral wisps. The last two demonstrate embedded sprites and shader effects. The left column adds, duplicates, removes, reorders, hides, and solos layers. First in the list draws behind subsequent layers. Visibility is saved and exported; solo is a preview control.
 
-The inspector has four tabs:
+The inspector has six tabs:
 
 - **Emitter:** capacity, emission rate, deterministic seed, lifetime ranges, position, direction/spread, speed, and spawn-area geometry.
 - **Motion:** gravity, damping, radial/tangential acceleration, turbulence, curl noise, an attractor, a procedural flow field, and circle/floor collision with bounce and friction.
-- **Style:** additive/alpha blending, soft-disc/spark/ring/smoke shapes, up to 32 RGBA stops and 32 size stops, variation, rotation, and spin. Click the color ramp to select a stop, type an eight-digit `RRGGBBAA` value or edit channels, and drag size-curve points.
+- **Style:** additive/alpha blending, up to 32 RGBA stops and 32 size stops, variation, rotation, and spin. Click the color ramp to select a stop, type an eight-digit `RRGGBBAA` value or edit channels, and drag size-curve points.
+- **Texture:** built-in pixel-art sheets, PNG import, image preview, sprite-sheet columns/rows/frame count, nearest or linear filtering, and generated disc/spark/ring/smoke shapes.
+- **Effects:** pixel grid, dissolve, outline width/color, palette levels and RGB tint, animated distortion, and glow strength/radius. These process the combined image of the selected layer and leave its simulation mode unchanged.
 - **Timing:** emission start/duration and up to 32 timed bursts per layer. Set rate to zero for burst-only effects. Particles finish their lives after their emission window closes.
 
 Click a number to type; drag its label to scrub. Scroll the inspector or use Page Up/Down. Tab changes keyboard focus, Enter activates a control, and arrow keys adjust focused numeric labels or curve points. Invalid values remain in the field until corrected or canceled with Escape.
@@ -27,6 +29,22 @@ Click a number to type; drag its label to scrub. Scroll the inspector or use Pag
 Drag in the preview to position the selected emitter. Hold **Shift** to move its enabled circle collider, or **Alt/Option** to move its enabled attractor. These authoring edits commit once on release and replay the effect to the playhead. They do not modify particle buffers on every mouse event.
 
 The bottom timeline shows emission windows, burst diamonds, and the playhead. Drag the playhead to seek. Analytic effects jump through scheduled events; stateful effects replay in batches of at most 32 simulation steps per editor update, keeping the interface responsive. **Project** changes the composition duration and looping. **Burst 256** auditions an unsaved burst; use Timing to author a persistent event.
+
+The preview fills the space between its controls and the timeline. It preserves the effect's proportions and shows extra world space when the panel is taller or wider than the 960 × 640 reference scene. Particles, shader layers, the grid, and dragging all use that same visible area; they are clipped only at its edges. Resizing does not restart playback.
+
+## Textures, pixels, and shaders
+
+Select a layer and open **Texture** to choose **Pixel sparks**, **Pixel flame**, **Pixel smoke**, or **Pixel splash**. These built-in sheets set their frame layout and nearest filtering automatically. Sparks has three 8 × 8 frames; the others have four 16 × 16 frames. Their monochrome artwork takes the emitter's lifetime colors. Selection changes only the texture, supports undo/redo, and embeds the image in saved projects and Lua exports. The **Pixel embers** preset uses the same sparks sheet.
+
+To use your own image, drop a **PNG** onto the window. The image is decoded before the edit is accepted; invalid images leave the project unchanged. Use images up to **1024 × 1024 pixels / 1 MB**. Embedded images have a combined 6 MB encoded budget per project. Import, removal, and sheet settings participate in undo/redo. **Use generated shape** returns to the procedural sprite controls.
+
+A regular sprite sheet runs left to right, then top to bottom, once over each particle's lifetime. Columns and rows must divide the image dimensions; frame count can be smaller than the grid. Reduce frame count before shrinking the grid. Up to 256 frames are supported. The library draws square billboards, so use square source frames when preserving aspect ratio matters. Nearest filtering is suitable for pixel sprites; linear-filtered atlases may need padded edges to avoid neighboring-frame bleed.
+
+**World pixels / cell** selects 1, 2, 4, 8, or 16. A value above 1 renders that layer at reduced resolution and enlarges it with nearest filtering, including rotating sprites. Draw exports at integer positions and integer scales for consistent screen pixels. The editor fits the scene to its viewport, so its displayed grid may be smaller than your game's. Simulation and collision retain full precision.
+
+Shader effects operate on the layer as a whole: outlines follow its combined silhouette, dissolve uses a fixed noise pattern, palette levels quantize each color channel, tint multiplies RGB, distortion animates with the effect clock, and glow adds a local halo. Width, distortion, and glow radius are measured in grid cells. This is not per-particle material editing or full-scene HDR bloom. Appearance-enabled layers require an extra canvas pass; disabled settings retain direct rendering with no processing canvas. The preview sizes these canvases to its visible world area, with room for outline/glow sampling, and reuses them until their dimensions change. Pixel grids and shader patterns stay anchored to world coordinates. Simulation modes remain unchanged. Textured appearance effects are also tested with particles forced onto the native fallback on the target hardware.
+
+[Texture import preview](../previews/editor-texture.png) · [Pixel-art preview](../previews/editor-pixel.png) · [Shader preview](../previews/editor-shaders.png)
 
 ## Save, import, and export
 
@@ -38,7 +56,7 @@ On macOS the directory is usually:
 ~/Library/Application Support/LOVE/gpuparticles-studio/
 ```
 
-**Export Lua** writes `exports/<name>.lua`. Copy that file and the library's `gpuparticles/` directory into a LÖVE game. No editor files, external libraries, or texture assets are needed. The export embeds the same scheduler, configuration conversion, and procedural sprite generation used by the preview.
+**Export Lua** writes `exports/<name>.lua`. Copy that file and the library's `gpuparticles/` directory into a LÖVE game. No editor files, external libraries, or separate texture assets are needed. The export embeds the same scheduler, configuration conversion, PNG data, sprite generation, and appearance renderer used by the preview. JSON projects also embed their images. Existing version-one projects receive neutral defaults for the new settings when loaded.
 
 ```lua
 local effect
@@ -50,7 +68,7 @@ function love.draw() effect:draw() end -- optional x,y draw translation
 function love.quit() effect:release() end
 ```
 
-Exports expose `update(dt)`, `draw(x,y)`, `seek(seconds)`, `reset()`, `burst(layerIndex,count)`, and `release()`. Scene coordinates are 960×640 world pixels. `draw(x,y)` translates the complete effect, including the visible result of collisions simulated in that scene. Copy the entire `gpuparticles` folder, including shaders.
+Exports expose `update(dt)`, `draw(x,y,bounds)`, `seek(seconds)`, `reset()`, `burst(layerIndex,count)`, and `release()`. The reference scene is 960×640 world pixels. `draw(x,y)` translates the complete effect, including the visible result of collisions simulated in that scene. Appearance processing defaults to that reference rectangle; pass an optional `{x=..., y=..., w=..., h=...}` in untranslated effect coordinates to cover your game's camera area, as the editor preview does. Use a scissor when clipping the final output to a camera viewport. Copy the entire `gpuparticles` folder, including shaders.
 
 | Shortcut | Action |
 | --- | --- |
@@ -70,7 +88,7 @@ An effect can contain 12 layers with a total capacity of 500,000 particles, at m
 
 Parameter changes rebuild the affected composition after a short debounce and replay to the playhead. Large stateful effects therefore take longer to edit than analytic ones. Scene capacity is displayed without per-frame GPU readback. The FPS counter includes the editor's UI and preview, so use the comparison/bench projects for performance measurements.
 
-The editor authors the exposed controls above. It does not yet import arbitrary sprite sheets, paint SDFs, edit arbitrary GLSL, animate parameter keyframes, sort alpha particles, or emit new particles from GPU collision callbacks. Imported projects must use this editor's versioned schema. Lifetime curves use evenly spaced stops, matching the library. Collision retains the library's discrete-projection limits.
+The editor authors the exposed controls above. It does not yet support packed/nonuniform atlases, paint SDFs, edit arbitrary GLSL, animate parameter keyframes, sort alpha particles, or emit new particles from GPU collision callbacks. Imported projects must use this editor's versioned schema. Lifetime curves use evenly spaced stops, matching the library. Collision retains the library's discrete-projection limits.
 
 ## Verification and source
 
@@ -80,9 +98,11 @@ python3 particle-gpu/scripts/verify.py --editor-only --mutations
 love particle-gpu editor --smoke --capture
 love particle-gpu editor --smoke --capture --compact
 love particle-gpu editor --smoke --capture --preset=3
+love particle-gpu editor --smoke --capture --preset=5 --texture-tab
+love particle-gpu editor --smoke --capture --preset=6
 ```
 
-Tests cover real UI input, invalid entry, multi-stop editing, drag undo, document rollback, unsaved-change protection, exact burst boundaries, mode selection, bounded seeking, resource release, JSON/file round trips, and numeric/rendered export parity. The Python verifier runs an export in a separate LÖVE project containing only the generated effect and `gpuparticles/`, captures both editor sizes, and verifies tests fail when burst timing or automatic mode selection is deliberately broken.
+Tests cover real UI input, PNG file drops, rejected images, sprite-sheet frames, pixel-grid uniformity, shader contributions, premultiplied alpha, multi-stop editing, drag undo, document rollback, unsaved-change protection, exact burst boundaries, mode selection, bounded seeking, resource release, JSON/file round trips, and numeric/rendered export parity. The Python verifier runs a textured effect with appearance processing in a separate LÖVE project containing only the generated effect and `gpuparticles/`, captures both editor sizes, and verifies tests fail when filtering, dissolve, blend mode, burst timing, or automatic mode selection is deliberately broken.
 
 The implementation is split into [document](../editor_support/document.lua), [runtime](../editor_support/runtime.lua), [model](../editor_support/model.lua), [storage](../editor_support/storage.lua), reusable [controls](../editor_support/ui.lua), [inspector](../editor_support/inspector.lua), [curves](../editor_support/curves.lua), [view](../editor_support/view.lua), and [application](../editor_support/app.lua). [Design notes](DESIGN.md) record the control and visual conventions.
 

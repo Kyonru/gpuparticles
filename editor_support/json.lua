@@ -35,7 +35,13 @@ function J.decode(text)
   local function str()
     assert(text:sub(at,at)=='"',"Expected a quoted string."); at=at+1; local out={}; local length=0
     while at<=#text do
-      local c=text:sub(at,at); at=at+1
+      local stop=text:find('["\\%z\1-\31]',at) or (#text+1)
+      if stop>at then
+        local chunk=text:sub(at,stop-1);length=length+#chunk
+        assert(length<=1398104,"String too long.");out[#out+1]=chunk;at=stop
+      end
+      if at>#text then break end
+      local c=text:sub(at,at);at=at+1
       if c=='"' then return table.concat(out) end
       if c=='\\' then
         local e=text:sub(at,at); at=at+1
@@ -52,7 +58,7 @@ function J.decode(text)
         end
         assert(c,"Invalid string escape.")
       else assert(c:byte()>=32,"Text cannot contain control characters.") end
-      length=length+#c; assert(length<=1024,"String too long."); out[#out+1]=c
+      length=length+#c; assert(length<=1398104,"String too long."); out[#out+1]=c
     end
     error("Unterminated string.")
   end

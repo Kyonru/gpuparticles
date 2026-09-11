@@ -14,6 +14,12 @@ function M:layer() return self.doc.layers[self.selected] end
 function M:message(text,error)
   self.status,self.statusTime,self.error=text,6,error or false
 end
+function M:importTexture(bytes,name)
+  local ok,sprite=pcall(require('editor_support.assets').import,bytes,name)
+  if not ok then self:message('Texture import failed: '..tostring(sprite),true);return false end
+  if not self:change(function(_,layer) layer.sprite=sprite end) then return false end
+  self.tab='Texture';self.scroll=0;self:message('Imported '..name..'. Adjust the sheet layout or open Effects.');return true
+end
 function M:rebuild(target)
   local ok,result=xpcall(function() return Runtime.new(self.doc) end,debug.traceback)
   self.pending=0
