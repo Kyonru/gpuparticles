@@ -16,7 +16,7 @@ Three layers make the waterfall:
 
 1. Shader-animated ribbons form the continuous water curtain.
 2. Stateful GPU droplets collide with a signed-distance field containing the rocks and pool surface.
-3. Analytic blue spray rises from each impact. Thin mist emitters follow the angle of the ledges and pool instead of floating around point sources.
+3. Analytic blue spray rises from each impact. Thin mist emitters follow the angle of the ledges and pool, and the terrain pass occludes mist where it overlaps solid rock.
 
 **F** switches to optional **water volume**. This runs a separate, persistent water grid across the entire scene: water falls from the source, spreads over rocks, fills low areas, and rises as more arrives. It does not require particle self-collision. Place the mouse circle against the right end of the first ledge (around **674, 306**, radius **55**) to obstruct the outlet. Water collects upstream and finds another route; moving the circle releases the obstruction. A circle suspended in open air redirects water around its sides. A temporary pool needs supporting geometry.
 

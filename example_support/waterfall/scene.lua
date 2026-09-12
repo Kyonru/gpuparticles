@@ -133,10 +133,14 @@ function S:draw(hud)
   else
     if self.layers.curtain then self.render:water(self.time,self.mouse) end
     if self.layers.drops then self.drops:draw() end
-    if self.layers.mist then for _,e in ipairs(self.spray) do e:draw() end end
+    if self.layers.mist then
+      for _,e in ipairs(self.spray) do e:draw() end
+      -- Mist is a soft surface layer. Draw it before the shared rock geometry so
+      -- basalt occludes any particle area that crosses into the terrain.
+      for _,e in ipairs(self.mist) do e:draw() end
+    end
   end
   self.render:environment()
-  if not self.fluid and self.layers.mist then for _,e in ipairs(self.mist) do e:draw() end end
   self.render:foreground(self.time)
   if self.layers.field then
     if self.fluid then self.fluid:draw(true) else self.render:debug() end
