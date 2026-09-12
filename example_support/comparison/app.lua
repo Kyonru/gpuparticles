@@ -11,6 +11,8 @@ function M.install()
   local frames=0
   local mouseDemo=false
   local particleDemo=false
+  local afterimageDemo=false
+  local blurDemo=false
   local count
   for _,value in ipairs(arg or {}) do
     if value=='--smoke' then smoke=true end
@@ -18,10 +20,13 @@ function M.install()
     if value=='--benchmark' then benchmark=true end
     if value=='--mouse-collision' then mouseDemo=true end
     if value=='--self-collision' then particleDemo=true end
+    if value=='--afterimage' then afterimageDemo=true end
+    if value=='--blur' then blurDemo=true end
     if value:match('^%-%-count=%d+$') then count=tonumber(value:match('%d+$')) end
   end
   mouseDemo=mouseDemo and not benchmark
-  local gif=GifCapture.new(mouseDemo and 'comparison-mouse' or particleDemo and 'comparison-self' or 'comparison')
+  local gif=GifCapture.new((afterimageDemo or blurDemo) and 'comparison-postprocess'
+    or mouseDemo and 'comparison-mouse' or particleDemo and 'comparison-self' or 'comparison')
   function love.load()
     love.window.setMode(1280,800,{resizable=true,minwidth=960,minheight=700,vsync=0})
     love.window.setTitle('LÖVE vs GPU — matched particle comparison')
@@ -32,6 +37,7 @@ function M.install()
       assert(index,'Unsupported comparison count; choose '..table.concat(capacities,', ')..'.')
     end
     model=Model.new{selfCollision=particleDemo,particleCapacityIndex=index,capacityIndex=index};view=View.new()
+    model:setAfterimage(afterimageDemo);model:setBlur(blurDemo)
     if mouseDemo then model:setMouseCollision(true) end
     if benchmark then model:startBenchmark() end
   end
@@ -50,7 +56,9 @@ function M.install()
     if capture and not requested and frames>=(mouseDemo and 90 or 5) and (not mouseDemo or shownFPS>0) and (not benchmark or (model.benchmarkDone and not shownBenchmark and shownFPS>0)) then
       requested=true
       love.graphics.captureScreenshot(function(data)
-        local file=particleDemo and (model.capacity>2048 and 'comparison-self-'..model.capacity..'.png' or 'comparison-self.png') or mouseDemo and not benchmark and 'comparison-mouse.png' or 'comparison.png'
+        local file=(afterimageDemo or blurDemo) and 'comparison-postprocess.png'
+          or particleDemo and (model.capacity>2048 and 'comparison-self-'..model.capacity..'.png' or 'comparison-self.png')
+          or mouseDemo and not benchmark and 'comparison-mouse.png' or 'comparison.png'
         data:encode('png',file);data:release()
         print('COMPARISON_CAPTURE '..love.filesystem.getSaveDirectory()..'/'..file);captured=true
       end)
@@ -70,6 +78,8 @@ function M.install()
     elseif key=='s' then model:setParticleCollision(not model.particleCollision)
     elseif key=='i' then model:changeIterations()
     elseif key=='c' then model:setMouseCollision(not model.mouseCollision)
+    elseif key=='a' then model:setAfterimage(not model.afterimage)
+    elseif key=='g' then model:setBlur(not model.blur)
     elseif key=='space' then model.paused=not model.paused;model.benchmark=nil;model:clearMeasurement()
     elseif key=='r' then model:rebuild() end
   end

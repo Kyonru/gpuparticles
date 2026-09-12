@@ -12,6 +12,16 @@ local function moments(target)
   end end
   data:release();return weight,sumY/weight
 end
+local function imageDifference(a,b)
+  local first,second=a:newImageData(),b:newImageData()
+  local difference=0
+  for y=0,511,2 do for x=0,511,2 do
+    local ar,ag,ab=first:getPixel(x,y)
+    local br,bg,bb=second:getPixel(x,y)
+    difference=difference+math.abs(ar-br)+math.abs(ag-bg)+math.abs(ab-bb)
+  end end
+  first:release();second:release();return difference
+end
 function M.run()
   local c=Model.new{capacityIndex=1,quiet=true}
   assert(c.native:typeOf('ParticleSystem'),'left side must be the actual native ParticleSystem')
@@ -27,6 +37,23 @@ function M.run()
   assert(nativeLight>100 and gpuLight>100,'both systems must render visible particles')
   near(gpuLight/nativeLight,1,0.15);near(nativeY,gpuY,6)
   print('Comparison real native backend / shared texture / matched settings / image distribution PASS')
+  local nativeSystem,gpuSystem=c.native,c.gpu
+  c:setAfterimage(true)
+  assert(c.native==nativeSystem and c.gpu==gpuSystem,'postprocessing must not rebuild either particle system')
+  for _=1,8 do c:update(1/30);c:renderTargets() end
+  local trailFrame=love.graphics.newCanvas(512,512,{dpiscale=1,msaa=0})
+  love.graphics.setCanvas(trailFrame);love.graphics.setBlendMode('replace','premultiplied');love.graphics.draw(c.targets.gpu);love.graphics.setCanvas();love.graphics.setBlendMode('alpha')
+  c:setAfterimage(false);c:renderTargets()
+  assert(imageDifference(trailFrame,c.targets.gpu)>1,'afterimage history must change the rendered image')
+  c:setBlur(true);c:renderTargets()
+  local sharpFrame=love.graphics.newCanvas(512,512,{dpiscale=1,msaa=0})
+  c:setBlur(false);c:renderTargets()
+  love.graphics.setCanvas(sharpFrame);love.graphics.setBlendMode('replace','premultiplied');love.graphics.draw(c.targets.gpu);love.graphics.setCanvas();love.graphics.setBlendMode('alpha')
+  c:setBlur(true);c:renderTargets()
+  assert(imageDifference(sharpFrame,c.targets.gpu)>1,'two-pass blur must change the rendered image')
+  c:setBlur(false);trailFrame:release();sharpFrame:release()
+  assert(c.native==nativeSystem and c.gpu==gpuSystem,'postprocessing toggles must preserve simulation state')
+  print('Comparison afterimage history / separable blur / no-rebuild toggles PASS')
   for _=1,60 do c:update(0.01);c:renderTargets();c:finishFrame() end
   near(c.fps,100,0.001)
   assert(not c.results.native and not c.results.gpu,'shared FPS must not be presented as separate per-system FPS')

@@ -10,6 +10,14 @@ love particle-gpu/examples/comparison
 
 **1** native only, **2** GPU only, **3** both. **B** measures each independently for three seconds. **Up/Down** changes count, **[/]** changes size, **M** selects analytic/stateful, **Space** pauses, **R** restarts.
 
+**A** toggles a directional waterfall afterimage and **G** toggles image blur. The example applies the same postprocess chain to both panels: the afterimage samples upward along the rain's path and retains a short ping-pong history, while blur uses horizontal and vertical fullscreen passes. These effects change only the rendered image; they do not rebuild or alter either particle simulation. `DRAW SUBMIT` and the isolated FPS benchmark include their cost.
+
+![Matched particles with afterimage and blur](../../previews/comparison-postprocess.gif)
+
+```sh
+love particle-gpu comparison --afterimage --blur
+```
+
 Both panels share the texture, emission settings, color curve, particle lifetime, and size in pixels. The native size is converted to a texture scale. Random sampling is independent. Native scheduling may leave some slots empty; live counts are displayed. Collisions start off in both systems.
 
 **C** enables a mouse obstacle. Hover either panel: the circle is shown at matching positions in both, with GPU particles colliding and native particles passing through. Scroll the wheel to change radius. Leaving the particle panels disables contact. Enabling the obstacle selects stateful mode and clears old benchmark results. **B** disables it and restores the previous mode before running a matched benchmark. **M** also exits the collision demonstration.
@@ -52,6 +60,7 @@ love particle-gpu comparison-test
 love particle-gpu comparison --smoke --benchmark --capture
 love particle-gpu comparison --mouse-collision
 love particle-gpu comparison --mouse-collision --smoke --capture
+love particle-gpu comparison --afterimage --blur --smoke --capture
 ```
 
 Capture mode prints the absolute path to `comparison.png` in LÖVE's save directory. The screenshot is taken after both isolated benchmark results are available and the side-by-side view has resumed.

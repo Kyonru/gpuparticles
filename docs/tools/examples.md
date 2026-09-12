@@ -84,8 +84,14 @@ The split-screen comparison matches texture, emission, lifetime, gravity, speed,
 | `[` / `]` | Change particle width from 2 to 24 pixels |
 | `M` | Switch GPU analytic and stateful mode |
 | `C` | Toggle the mouse circle demonstration |
+| `A` | Toggle a directional waterfall afterimage on both panels |
+| `G` | Toggle a two-pass image blur on both panels |
 | `S` | Compare stateful particles with contacts off and on |
 | `I` | Cycle one to four contact iterations |
+
+Afterimage and blur are matched image effects applied after particle rendering. The afterimage samples upward along the falling particles and keeps a short frame history, producing coherent waterfall streaks instead of a dense haze. Neither effect changes the simulation. The draw-submission counters and isolated benchmark include the fullscreen passes, making their cost visible on both systems.
+
+![Native and GPU particles with matched afterimage and blur](../assets/images/comparison-postprocess.gif)
 
 Self-collision comparison counts range from 256 to 10,000. Both panels use GPU stateful emitters in that view so the contact pass is the isolated difference.
 

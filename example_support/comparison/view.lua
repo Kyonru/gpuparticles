@@ -36,6 +36,7 @@ function V:draw(model)
   g.setFont(self.small);g.setColor(palette.teal)
   local detail=pair and ('%s each · %d contact iteration%s'):format(model.capacity,model.iterations,model.iterations==1 and '' or 's')
     or ('%s each · %d px · %g s · %s'):format(model.capacity,model.size,model.lifetime,model.gpuMode)
+  detail=detail..(' · afterimage %s · blur %s'):format(model.afterimage and 'ON' or 'OFF',model.blur and 'ON' or 'OFF')
   g.print(detail,28,61)
   local live=model.fps>0 and ('%.0f'):format(model.fps) or '…'
   g.setFont(self.number);g.setColor(palette.peach);g.printf(live,width-187,23,155,'right')
@@ -94,7 +95,7 @@ function V:draw(model)
   if model.mouseCollision then summary=('Circle %d px     ·     GPU collides     ·     LÖVE passes through'):format(model.pointer.radius) end
   g.print(summary,28,height-72)
   g.setFont(self.small);g.setColor(palette.blue)
-  local controls='1 Left   2 Right   3 Both   B Benchmark   Up/Down Count   [ ] Size   M Mode   C Circle   S Contacts'
+  local controls='1 Left   2 Right   3 Both   B Benchmark   Up/Down Count   [ ] Size   M Mode   C Circle   A Afterimage   G Blur   S Contacts'
   if pair then controls=controls..'   I Iterations' end
   controls=controls..'   Space '..(model.paused and 'Resume' or 'Pause')..'   R Reset   Esc'
   g.print(controls,28,height-38)

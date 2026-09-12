@@ -1,4 +1,5 @@
 local prefix=(...):gsub('example_support%.comparison%.model$','')
+local shaderPath=(...):gsub('model$',''):gsub('%.','/')..'shaders/'
 local gpu=require(prefix..'gpuparticles')
 local palette=require(prefix..'example_support.palette')
 local ParticlePreset=require(prefix..'example_support.comparison.particle_preset')
@@ -14,13 +15,35 @@ function C.new(options)
   options=options or {}
   local self=setmetatable({capacityIndex=options.capacityIndex or 3,sizeIndex=options.selfCollision and 4 or 2,gpuMode=options.selfCollision and 'stateful' or 'analytic',view='both',
     particleCollision=options.selfCollision or false,particleCapacityIndex=options.particleCapacityIndex or 3,iterations=options.iterations or 1,
-    mouseCollision=false,pointer={x=256,y=210,radius=48,inside=false},
+    mouseCollision=false,afterimage=false,blur=false,pointer={x=256,y=210,radius=48,inside=false},
     elapsed=0,frames=0,settling=0.5,fps=0,liveNative=0,paused=false,results={},benchmark=nil,quiet=options.quiet,
     cost={native={update=0,draw=0},gpu={update=0,draw=0}},samples={native={update=0,draw=0},gpu={update=0,draw=0}}},C)
   self.texture=ParticlePreset.texture()
-  self.targets={native=love.graphics.newCanvas(512,512,{dpiscale=1,msaa=0}),gpu=love.graphics.newCanvas(512,512,{dpiscale=1,msaa=0})}
+  local function canvas() return love.graphics.newCanvas(512,512,{dpiscale=1,msaa=0}) end
+  self.targets={native=canvas(),gpu=canvas()};self.sceneFrames={native=canvas(),gpu=canvas()};self.scratch={native=canvas(),gpu=canvas()}
+  self.history={native={current=canvas(),next=canvas()},gpu={current=canvas(),next=canvas()}}
+  self.afterimageShader=love.graphics.newShader(assert(love.filesystem.read(shaderPath..'afterimage.glsl')))
+  self.blurShader=love.graphics.newShader(assert(love.filesystem.read(shaderPath..'blur.glsl')))
+  self:_clearHistory()
   self:rebuild()
   return self
+end
+function C:_clearHistory()
+  local g=love.graphics;g.push('all');g.origin();g.setShader();g.setScissor()
+  for _,pair in pairs(self.history) do
+    g.setCanvas(pair.current);g.clear(palette.deep);g.setCanvas(pair.next);g.clear(palette.deep)
+  end
+  g.pop()
+end
+function C:setAfterimage(enabled)
+  enabled=not not enabled
+  if self.afterimage==enabled then return end
+  self.afterimage=enabled;self:_clearHistory();self:clearMeasurement()
+end
+function C:setBlur(enabled)
+  enabled=not not enabled
+  if self.blur==enabled then return end
+  self.blur=enabled;self:clearMeasurement()
 end
 function C:active(name) return self.view=='both' or self.view==name end
 function C:clearMeasurement()
@@ -68,11 +91,11 @@ function C:rebuild()
   self.liveNative=self.native:getCount()
   self.backend=self.gpu:getBackend()
   self.liveGPU=self.backend=='gpu' and capacity or self.gpu:getCount()
-  self.results={};self.benchmark=nil;self.benchmarkDone=false;self:clearMeasurement()
+  self.results={};self.benchmark=nil;self.benchmarkDone=false;self:_clearHistory();self:clearMeasurement()
 end
 function C:setView(view)
   assert(view=='both' or view=='native' or view=='gpu')
-  self.view=view;self:clearMeasurement()
+  self.view=view;self:_clearHistory();self:clearMeasurement()
 end
 function C:changeCapacity(delta)
   local key=self.particleCollision and 'particleCapacityIndex' or 'capacityIndex'
@@ -148,15 +171,28 @@ function C:renderTargets()
   g.push('all');g.origin();g.setShader();g.setScissor();g.setColor(1,1,1,1);g.setBlendMode('alpha')
   for _,name in ipairs{'native','gpu'} do
     if self:active(name) then
-      g.setCanvas(self.targets[name]);g.clear(palette.deep)
+      g.setBlendMode('alpha');g.setCanvas(self.sceneFrames[name]);g.clear(palette.deep)
       local start=love.timer.getTime()
       if name=='native' then
         if self.particleCollision then self.native:draw() else g.draw(self.native) end
       else self.gpu:draw() end
-      self.samples[name].draw=self.samples[name].draw+(love.timer.getTime()-start)
       if self.particleCollision then
         g.setColor(palette.teal);g.setLineWidth(1);g.line(0,472,512,472);g.setColor(1,1,1,1)
       end
+      local source=self.sceneFrames[name]
+      g.setBlendMode('replace','premultiplied');g.setColor(1,1,1,1)
+      if self.afterimage then
+        local history=self.history[name]
+        g.setCanvas(history.next);g.setShader(self.afterimageShader)
+        self.afterimageShader:send('u_history',history.current);self.afterimageShader:send('u_decay',0.78)
+        self.afterimageShader:send('u_texel',{1/512,1/512});self.afterimageShader:send('u_trailPixels',18)
+        g.draw(source);g.setShader();history.current,history.next=history.next,history.current;source=history.current
+      end
+      if self.blur then
+        g.setCanvas(self.scratch[name]);g.setShader(self.blurShader);self.blurShader:send('u_direction',{1/512,0});g.draw(source)
+        g.setCanvas(self.targets[name]);self.blurShader:send('u_direction',{0,1/512});g.draw(self.scratch[name]);g.setShader()
+      else g.setCanvas(self.targets[name]);g.setShader();g.draw(source) end
+      self.samples[name].draw=self.samples[name].draw+(love.timer.getTime()-start)
     end
   end
   g.pop()
@@ -203,6 +239,8 @@ end
 function C:release()
   if self.released then return end
   self.native:release();self.gpu:release();self.texture:release()
-  self.targets.native:release();self.targets.gpu:release();self.released=true
+  for _,group in ipairs{self.targets,self.sceneFrames,self.scratch} do for _,canvas in pairs(group) do canvas:release() end end
+  for _,pair in pairs(self.history) do pair.current:release();pair.next:release() end
+  self.afterimageShader:release();self.blurShader:release();self.released=true
 end
 return C

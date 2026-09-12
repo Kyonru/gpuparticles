@@ -15,6 +15,7 @@ root = Path(__file__).resolve().parents[1]
 
 examples = [
     ('comparison-mouse', 'comparison', ('--mouse-collision',)),
+    ('comparison-postprocess', 'comparison', ('--afterimage', '--blur')),
     ('colliders', 'colliders', ()),
     ('custom-shaders', 'custom-shaders', ()),
     ('effect-library', 'library', ()),
