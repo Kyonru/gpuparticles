@@ -12,20 +12,16 @@ extra_css = ["stylesheets/extra.css"]
 nav = [
   { "Overview" = "index.md" },
   { "Get started" = [
-    { "Install" = "getting-started/install.md" },
-    { "First effect" = "getting-started/first-effect.md" },
+    { "Quick start" = "getting-started/quick-start.md" },
     { "Choose a system" = "getting-started/choose-a-system.md" },
   ] },
   { "Particle emitters" = [
-    { "Configure an emitter" = "particles/configuration.md" },
-    { "Textures and pixel art" = "particles/textures.md" },
-    { "Forces" = "particles/forces.md" },
+    { "Configure and render" = "particles/emitter.md" },
+    { "Motion and lifetime" = "particles/motion.md" },
     { "Collision" = "particles/collision.md" },
-    { "Lifecycle and bursts" = "particles/lifecycle.md" },
   ] },
   { "Material volumes" = [
-    { "Create a volume" = "volumes/get-started.md" },
-    { "Water" = "volumes/water.md" },
+    { "Create water" = "volumes/water.md" },
     { "Smoke and reactions" = "volumes/smoke-and-reactions.md" },
     { "Runtime interaction" = "volumes/runtime-interaction.md" },
   ] },
@@ -36,11 +32,7 @@ nav = [
   { "Reference" = [
     { "Emitter API" = "reference/emitter.md" },
     { "Volume API" = "reference/volume.md" },
-    { "Capabilities and limits" = "reference/capabilities.md" },
-  ] },
-  { "Development" = [
-    { "Performance" = "development/performance.md" },
-    { "Testing" = "development/testing.md" },
+    { "Limits and performance" = "reference/limits.md" },
   ] },
 ]
 

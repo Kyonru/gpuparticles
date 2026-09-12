@@ -1,53 +1,79 @@
-# Accumulating water
+# Create accumulating water
 
-Water volumes preserve density across cells. A stream can hit terrain, spread, fill a basin, and form a temporary pool when a moving obstacle blocks its path.
+A volume stores material in world cells, so water can spread, collect, and remain after individual particles would expire.
 
 ![Pixel-art water collecting around a mouse obstacle](../assets/images/waterfall-volume-mouse.gif)
 
-## Create the basin
+## Build a basin
 
-Provide a signed-distance callback when the world is constructed. It runs once per cell; negative distance is solid.
+This example creates terrain, water, and a rectangular waterfall source. Negative distance is solid.
 
 ```lua
-local function terrainDistance(x, y)
+local gpu = require('gpuparticles')
+local world, water
+
+local function terrain(x, y)
   local floor = 680 - y
   local leftWall = x - 120
   local rightWall = 1160 - x
   return math.min(floor, leftWall, rightWall)
 end
 
-local world, reason = gpu.newVolumeWorld {
-  width = 1280,
-  height = 720,
-  cellSize = 6,
-  distance = terrainDistance,
-  transportSteps = 3,
-  renderStyle = 'pixel',
-}
-assert(world, reason)
+function love.load()
+  local reason
+  world, reason = gpu.newVolumeWorld {
+    width = 1280,
+    height = 720,
+    cellSize = 8,
+    distance = terrain,
+    transportSteps = 3,
+    renderStyle = 'pixel',
+  }
+  assert(world, reason)
 
-local water = world:addMaterial {
-  name = 'water',
-  model = 'water',
-  flowSpeed = 1,
-  compression = 0.125,
-  spread = 0.5,
-  color = {0.18, 0.68, 0.95, 0.9},
-}
+  water = world:addMaterial {
+    name = 'water',
+    model = 'water',
+    flowSpeed = 1,
+    compression = 0.125,
+    spread = 0.5,
+    color = {0.40, 0.64, 0.77, 0.9},
+  }
 
-local fall = world:newSource {
-  material = water,
-  shape = 'rectangle',
-  position = {640, 40},
-  width = 48,
-  height = 0,
-  rate = 15000,
-}
+  world:newSource {
+    material = water,
+    shape = 'rectangle',
+    position = {640, 40},
+    width = 48,
+    height = 0,
+    rate = 15000,
+  }
+end
+
+function love.update(dt) world:update(dt) end
+function love.draw() world:draw() end
+function love.quit() world:release() end
 ```
 
-The sides and bottom contain water; the top permits accounted overflow. Water is conservative but compressible, so small mounds, delayed settling, and grid-edge artifacts are expected.
+Construction returns `nil, reason` when GLSL 3, high-precision pixel shaders, or `rgba32f` canvases are unavailable. Volume worlds have no native fallback.
 
-## Form a temporary pool with the mouse
+## Choose resolution
+
+Grid size is `ceil(width/cellSize) × ceil(height/cellSize)`. Start with 8 pixels per cell, then reduce it only when terrain or motion needs more detail.
+
+| Option | Default | Effect |
+| --- | --- | --- |
+| `cellSize` | `8` | Smaller cells capture finer shapes and cost more |
+| `fixedStep` | `1/120` | Simulation step duration |
+| `maxSubsteps` | `8` | Maximum catch-up steps per update |
+| `transportSteps` | `3` | Water settling passes, 1–4 |
+| `flowSpeed` | `1` | Downhill movement rate |
+| `spread` | `0.5` | Supported lateral movement |
+| `renderStyle` | `'pixel'` | Pixel or smooth display only |
+
+Water is conservative but compressible. Small mounds, delayed settling, and cell-sized edges are expected. Use a coarse volume for the pooled body and particle emitters for droplets, mist, and spray.
+
+## Block the stream
 
 ```lua
 function love.update(dt)
@@ -57,14 +83,24 @@ function love.update(dt)
 end
 ```
 
-The circle displaces covered water. Blocking the fall redirects incoming volume into nearby free cells; removing the circle lets the pool drain according to terrain and solver resolution.
+The obstacle displaces covered water into nearby free cells. A blocked stream accumulates where terrain contains it and drains after the obstacle moves.
 
-## Tune its look and motion
+## Add another source
 
-- Lower `cellSize` for smaller features and a more expensive simulation.
-- Raise `transportSteps` toward 4 for more settling work per step.
-- Lower `flowSpeed` for slow or viscous stylization.
-- Adjust `spread` for supported lateral movement.
-- Use `renderStyle='pixel'` for hard cells or `'smooth'` for interpolated display.
+Sources can be circular or rectangular and move independently:
 
-This solver is designed for responsive visual material, not incompressible engineering fluid dynamics. Use a coarser volume for the pooled body and ordinary particle emitters for mist, droplets, and bright spray.
+```lua
+local tap = world:newSource {
+  material = water,
+  position = {300,100},
+  radius = 14,
+  rate = 2000,
+}
+
+tap:setPosition(500, 100)
+tap:stop()
+tap:start()
+tap:emit(400) -- immediate amount
+```
+
+`rate` uses density × world-pixel² per second. Sources reject solid cells. Continue with [runtime terrain and colliders](runtime-interaction.md) or [smoke and steam](smoke-and-reactions.md).

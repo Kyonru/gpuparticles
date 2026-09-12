@@ -4,6 +4,14 @@ Collision requires current particle state, so `mode='auto'` selects the stateful
 
 ![GPU particles colliding with a mouse-controlled circle](../assets/images/comparison-mouse.gif)
 
+| Need | Collider |
+| --- | --- |
+| Flat floor or ceiling | Plane |
+| One terrain height for each x-coordinate | Heightfield |
+| Caves, islands, or arbitrary silhouettes | Signed distance field |
+| A moving gameplay obstacle | Circle, box, or capsule |
+| Approximate contact within one emitter | Self-collision |
+
 ## Floor plane
 
 ```lua

@@ -29,6 +29,14 @@ world:setWind(24, -4)
 
 Positive buoyancy makes hot gas rise. Cooling moves temperature toward zero; dissipation removes visible density. All gases share motion but retain separate density, heat, color, source, and render settings.
 
+| To get | Change |
+| --- | --- |
+| Faster rising smoke | Raise `buoyancy` or source `temperature` |
+| Longer trails | Lower `dissipation` |
+| Heat that lasts | Lower `cooling` |
+| More curls | Add a custom force and lower `cellSize` |
+| Tighter incompressible motion | Raise world `pressureIterations` |
+
 ## Add a custom force
 
 ```lua

@@ -3,7 +3,7 @@
   <h1>Particles that stay on the GPU.</h1>
   <p class="gp-lede">Draw immense analytic effects, add stateful collision when motion needs memory, or simulate persistent water and smoke on a grid. One standalone Lua library chooses the cheapest suitable path.</p>
   <div class="gp-actions">
-    <a class="md-button md-button--primary" href="getting-started/first-effect/">Build an effect</a>
+    <a class="md-button md-button--primary" href="getting-started/quick-start/">Build an effect</a>
     <a class="md-button" href="getting-started/choose-a-system/">Choose a system</a>
   </div>
 </div>
@@ -14,7 +14,7 @@
   <div class="gp-card">
     <h3>Analytic particles</h3>
     <p>Compute position from age and a spawn record. There is no per-frame particle state, and the whole emitter draws in one instanced call.</p>
-    <a href="particles/configuration/">Configure an emitter →</a>
+    <a href="particles/emitter/">Configure an emitter →</a>
   </div>
   <div class="gp-card">
     <h3>Stateful particles</h3>
@@ -24,7 +24,7 @@
   <div class="gp-card">
     <h3>Material volumes</h3>
     <p>A grid stores density, heat, and velocity so water can collect, smoke can rise, terrain can change, and materials can react.</p>
-    <a href="volumes/get-started/">Create a volume →</a>
+    <a href="volumes/water/">Create a volume →</a>
   </div>
 </div>
 
@@ -47,4 +47,4 @@ The library keeps the familiar emitter vocabulary while adding deterministic see
 
 The tradeoffs are explicit. Stateful work costs simulation passes. Self-collision scales quadratically and has a capacity limit. Volume simulation costs scale with grid cells and pressure iterations. Particles are not alpha-sorted, collision is discrete, and volume worlds have no native fallback.
 
-Next: [install the library](getting-started/install.md), [make your first effect](getting-started/first-effect.md), or open [Particle Studio](tools/editor.md).
+Next: [build your first effect](getting-started/quick-start.md), [choose a system](getting-started/choose-a-system.md), or open [Particle Studio](tools/editor.md).
