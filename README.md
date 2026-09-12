@@ -1,5 +1,9 @@
 # gpuparticles
 
+[![Quality](https://github.com/Kyonru/gpuparticles/actions/workflows/quality.yml/badge.svg)](https://github.com/Kyonru/gpuparticles/actions/workflows/quality.yml)
+[![Documentation](https://github.com/Kyonru/gpuparticles/actions/workflows/pages.yml/badge.svg)](https://kyonru.github.io/gpuparticles/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-20c9b5.svg)](LICENSE)
+
 A standalone GPU particle module for **LÖVE 11.x**, verified on 11.5. No compute shaders, no dependencies, and no changes to LÖVE's global graphics settings. Copy the **`gpuparticles/` directory** into another LÖVE project and use `require('gpuparticles')`.
 
 The analytic backend draws hundreds of thousands of particles with one instanced draw. It stores spawn records once and evaluates motion in the vertex shader. The stateful backend adds a float-canvas simulation pass for flow fields, attractors, and collisions. Unsupported GPUs use LÖVE's native ParticleSystem.
@@ -34,6 +38,20 @@ function love.quit() emitter:release() end
 `texture = image` is optional. Each emitter owns a generated soft disc when no image is supplied. Caller-supplied Images, Canvases, and Quads remain the caller's responsibility. `release()` is idempotent and releases the emitter's buffers, canvases, LUTs, and references to cached shaders.
 
 `draw(x, y)` adds an optional draw translation. `position` is the simulation origin. Sizes are **quad widths in pixels**, angles are radians, time is seconds, and colors use LÖVE 11's numeric color range. Quads currently render as square particle billboards; atlas viewports control the sampled rectangle.
+
+## Documentation site
+
+The task-oriented Zensical site in [`docs/`](docs/index.md) covers installation, backend selection, emitter configuration, textures and pixel art, forces, collision, material volumes, Particle Studio, examples, performance, and verification.
+
+```sh
+cd particle-gpu
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements-docs.txt
+zensical serve
+```
+
+Build the static site with `zensical build --clean --strict`. Generated files are written to the ignored `site/` directory.
 
 ## Run the projects
 

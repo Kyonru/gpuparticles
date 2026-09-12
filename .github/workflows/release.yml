@@ -1,0 +1,31 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Package standalone module
+        run: |
+          tar -czf "gpuparticles-${GITHUB_REF_NAME}.tar.gz" gpuparticles README.md API.md VOLUME_API.md LICENSE
+          zip -q -r "gpuparticles-${GITHUB_REF_NAME}.zip" gpuparticles README.md API.md VOLUME_API.md LICENSE
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            "gpuparticles-${GITHUB_REF_NAME}.tar.gz" \
+            "gpuparticles-${GITHUB_REF_NAME}.zip" \
+            --generate-notes \
+            --title "gpuparticles ${GITHUB_REF_NAME}"
