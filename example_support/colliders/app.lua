@@ -6,6 +6,8 @@ local A={}
 function A.install()
   local emitter,title,text
   local selected,time,accumulator,frames=3,0,0,0
+  local responseIndex=1
+  local responses={'bounce','slide','stop','disappear','respawn'}
   local mx,my=0,0
   local smoke,capture,requested,captured=false,false,false,false
   for _,value in ipairs(arg or {}) do
@@ -31,6 +33,7 @@ function A.install()
       capsuleCollider={radius=30,particleRadius=3,bounce=0.35,friction=0.05,enabled=false},
     }
     assert(emitter:getMode()=='stateful','dynamic colliders must select stateful mode')
+    emitter:setCollisionResponse(responses[responseIndex])
     emitter:warm(1.2)
   end
   local function moveCollider()
@@ -52,6 +55,7 @@ function A.install()
     if smoke then
       local width,height=love.graphics.getDimensions()
       mx=width/2+math.sin(time*0.8)*180;my=height*0.38+math.cos(time*1.1)*55
+      responseIndex=math.floor(time/0.28)%#responses+1;emitter:setCollisionResponse(responses[responseIndex])
     end
     moveCollider();accumulator=accumulator+dt
     local steps=0
@@ -82,8 +86,9 @@ function A.install()
     g.setFont(text);g.setColor(palette.teal)
     local names={'circle','box','capsule'}
     local measured=love.timer.getFPS();local fps=measured>0 and (measured..' FPS') or 'FPS …'
-    g.print(('%s  ·  stateful  ·  %s particles  ·  %s'):format(names[selected],emitter:getBufferSize(),fps),29,63)
-    g.setColor(palette.blue);g.print('1 Circle   2 Box   3 Capsule   Move mouse   R Reset   Esc',29,height-33)
+    g.print(('%s  ·  %s  ·  stateful  ·  %s particles  ·  %s'):format(
+      names[selected],responses[responseIndex],emitter:getBufferSize(),fps),29,63)
+    g.setColor(palette.blue);g.print('1 Circle   2 Box   3 Capsule   A Response   Move mouse   R Reset   Esc',29,height-33)
     if gif then gif:draw(frames) end
     if capture and frames>=70 and not requested then
       requested=true;g.captureScreenshot(function(data)
@@ -95,6 +100,7 @@ function A.install()
   function love.keypressed(key)
     if key=='escape' then love.event.quit()
     elseif key=='r' then loadEmitter()
+    elseif key=='a' then responseIndex=responseIndex%#responses+1;emitter:setCollisionResponse(responses[responseIndex])
     else for i=1,3 do if key==tostring(i) then selected=i end end end
   end
   function love.quit()

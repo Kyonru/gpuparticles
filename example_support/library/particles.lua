@@ -139,6 +139,7 @@ function builders.sprays(self,w,h)
     local c=base(w,h);c.seed=70+i;c.rate=0;c.max=2600;c.position={spec[2],h*0.72};c.direction=-math.pi/2;c.spread=spec[3]
     c.speed={spec[4]*0.5,spec[4]*1.8};c.gravity={0,260};c.damping=i==2 and 1.8 or 0.2;c.lifetime={0.7,1.8};c.sizes=i==2 and {8,13,5,0} or {3,7,0}
     c.colors={rgba(spec[1],0.95),rgba(spec[1],0.7),rgba(spec[1],0)};c.collision={type='plane',y=h*0.82,radius=2,bounce=i==3 and 0.55 or 0.1,friction=0.2}
+    c.collisionResponse=i==1 and 'disappear' or i==2 and 'slide' or 'bounce'
     add(self,c):emit(700)
   end
   self.burstEvery=1.5

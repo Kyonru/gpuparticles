@@ -48,6 +48,31 @@ function M.run()
   assert(not pcall(e.setCircleCollider,e,0,0,10),'analytic setters must refuse collision without silent promotion');e:release()
   print('Circle exact-center normal / shader sharing / uniform isolation / environment coexistence / analytic rejection PASS')
 
+  local expected={
+    slide={88,100,0,7.5},stop={88,100,0,0},
+    respawn={80,99,100,10},
+  }
+  for _,mode in ipairs{'slide','stop','disappear','respawn'} do
+    e=gpu.newEmitter{max=1,lifetime=10,position={80,99},speed=math.sqrt(10100),direction=math.atan2(10,100),
+      collisionResponse=mode,circleCollider={x=100,y=100,radius=10,particleRadius=2,bounce=0.5,friction=0.25}}
+    e:emit(1);e:update(0.1);x,y,vx,vy=state(e)
+    if mode=='disappear' then assert(x>1e19,'disappear response must move a collided particle out of rendering')
+    else
+      local wanted=expected[mode];near(x,wanted[1]);near(y,wanted[2]);near(vx,wanted[3]);near(vy,wanted[4])
+    end
+    e:release()
+  end
+  e=gpu.newEmitter{max=1,lifetime=10,position={80,99},speed=math.sqrt(10100),direction=math.atan2(10,100),
+    circleCollider={x=100,y=100,radius=10,particleRadius=2}}
+  local resources={e.stateA,e.instances,e.simShader}
+  e:setCollisionResponse('slide')
+  assert(e.config.collisionResponse=='slide' and e.stateA==resources[1] and e.instances==resources[2] and e.simShader==resources[3],
+    'collision response changes must preserve GPU resources')
+  assert(not pcall(e.setCollisionResponse,e,'explode'),'invalid collision responses must fail clearly')
+  e:release()
+  assert(not pcall(gpu.newEmitter,{collisionResponse='explode'}),'invalid construction response must fail clearly')
+  print('Collision slide / stop / disappear / respawn / live response setter PASS')
+
   e=gpu.newEmitter{max=1,lifetime=10,position={80,100},speed=100,direction=0,
     boxCollider={x=100,y=100,width=20,height=20,particleRadius=2,bounce=0.5,friction=0.25}}
   assert(e:getMode()=='stateful','box requires automatic stateful selection')

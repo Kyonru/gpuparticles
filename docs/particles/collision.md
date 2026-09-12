@@ -12,6 +12,29 @@ Collision requires current particle state, so `mode='auto'` selects the stateful
 | A moving gameplay obstacle | Circle, box, or capsule |
 | Approximate contact within one emitter | Self-collision |
 
+## Choose a contact response
+
+`collisionResponse` applies to the emitter's static field and all its moving colliders:
+
+```lua
+local emitter = gpu.newEmitter {
+  collisionResponse = 'slide',
+  collision = {type='plane', y=600, radius=3, friction=0.08},
+}
+
+emitter:setCollisionResponse('bounce') -- uniform-only runtime change
+```
+
+| Response | Result |
+| --- | --- |
+| `bounce` | Reflect inward normal velocity using bounce; damp tangential velocity using friction |
+| `slide` | Remove inward normal velocity; retain tangential motion with friction |
+| `stop` | Zero velocity at contact; later forces can move the particle again |
+| `disappear` | Hide the particle until its ring slot naturally recycles |
+| `respawn` | Restore the particle's recorded spawn position and initial velocity |
+
+`bounce` is the default. These responses run entirely in the simulation shader and do not create Lua collision events. Sticking or attaching to a surface requires persistent contact and collider identity state and remains planned in the [roadmap](https://github.com/Kyonru/gpuparticles/blob/main/ROADMAP.md).
+
 ## Floor plane
 
 ```lua

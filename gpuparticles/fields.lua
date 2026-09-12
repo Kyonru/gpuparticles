@@ -1,5 +1,6 @@
 -- Texture ownership stays with the caller, except for our packed attractor LUT.
 local M={}
+local collisionActions={bounce=0,slide=1,stop=2,disappear=3,respawn=4}
 function M.new(e)
   local data=love.image.newImageData(1,1,'rgba32f')
   data:setPixel(0,0,0,0,0,0)
@@ -22,6 +23,7 @@ function M.new(e)
     collisionEncoding={collision.scale or 1,collision.bias or 0},
     collisionResponse={collision.radius or 0,collision.bounce or 0.5,collision.friction or 0,0},
     collisionTexel={1,1},
+    collisionAction=collisionActions[e.config.collisionResponse],
     circle={0,0,0,0},circleResponse={0,0.5,0,0},
     box={0,0,0,0},boxResponse={0,0.5,0,0},
     capsule={0,0,0,0},capsuleResponse={24,0,0.5,0},capsuleEnabled=false,
@@ -60,6 +62,7 @@ function M.sendCollision(e,shader)
   shader:send('u_collision',f.collision);shader:send('u_collisionType',f.collisionType)
   shader:send('u_collisionRegion',f.collisionRegion);shader:send('u_collisionTexel',f.collisionTexel)
   shader:send('u_collisionEncoding',f.collisionEncoding);shader:send('u_collisionResponse',f.collisionResponse)
+  if shader:hasUniform('u_collisionAction') then shader:send('u_collisionAction',f.collisionAction) end
 end
 function M.send(e,shader)
   local f=e.fields

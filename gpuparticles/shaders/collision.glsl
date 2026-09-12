@@ -11,9 +11,10 @@ uniform vec4 u_boxResponse; // particle radius, bounce, friction, enabled
 uniform vec4 u_capsule; // segment start.xy, end.xy
 uniform vec4 u_capsuleResponse; // obstacle radius, particle radius, bounce, friction
 uniform bool u_capsuleEnabled;
+uniform int u_collisionAction;
 float distanceSample(vec2 uv) { return Texel(u_collision,uv).r*u_collisionEncoding.x+u_collisionEncoding.y; }
-void collide(inout vec2 p,inout vec2 velocity) {
-    if (u_collisionType==0 && u_circle.w==0.0 && u_boxResponse.w==0.0 && !u_capsuleEnabled) return;
+bool collideWithAction(inout vec2 p,inout vec2 velocity,int action) {
+    if (u_collisionType==0 && u_circle.w==0.0 && u_boxResponse.w==0.0 && !u_capsuleEnabled) return false;
     float distance=1.0e30;
     vec2 normal=vec2(0,-1);
     vec4 response=u_collisionResponse;
@@ -72,8 +73,17 @@ void collide(inout vec2 p,inout vec2 velocity) {
     if (penetration>0.0) {
         p+=normal*penetration;
         float vn=dot(velocity,normal);
-        if (vn<0.0) velocity-=(1.0+response.y)*vn*normal;
-        vec2 tangent=velocity-dot(velocity,normal)*normal;
-        velocity-=tangent*response.z;
+        if (action==0) {
+            if (vn<0.0) velocity-=(1.0+response.y)*vn*normal;
+            vec2 tangent=velocity-dot(velocity,normal)*normal;
+            velocity-=tangent*response.z;
+        } else if (action==1) {
+            if (vn<0.0) velocity-=vn*normal;
+            velocity-=velocity*response.z;
+        } else velocity=vec2(0.0);
+        return true;
     }
+    return false;
 }
+bool collide(inout vec2 p,inout vec2 velocity) { return collideWithAction(p,velocity,u_collisionAction); }
+void projectCollision(inout vec2 p,inout vec2 velocity) { collideWithAction(p,velocity,0); }

@@ -47,7 +47,7 @@ This example injects a seeded helix displacement with `gpu.forces.custom`, then 
 love particle-gpu/examples/colliders
 ```
 
-Press **1**, **2**, or **3** to attach a circle, axis-aligned box, or rotating capsule to the mouse. The example keeps the same stateful particle stream while each collider moves through uniforms.
+Press **1**, **2**, or **3** to attach a circle, axis-aligned box, or rotating capsule to the mouse. Press **A** to cycle bounce, slide, stop, disappear, and respawn. The example keeps the same stateful particle stream while collider geometry and response change through uniforms.
 
 ![Circle, box, and capsule collision example](../assets/images/colliders.gif)
 

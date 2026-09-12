@@ -35,6 +35,7 @@ local function build(layer,definition,owned)
   if layer.attractor.enabled then c.attractors={copy(layer.attractor)} end
   if layer.selfCollision and layer.selfCollision.enabled then c.selfCollision=copy(layer.selfCollision) end
   local response=layer.response
+  c.collisionResponse=response.mode
   if layer.ground.enabled then c.collision={type='plane',y=layer.ground.y,radius=response.radius,bounce=response.bounce,friction=response.friction} end
   if layer.circle.enabled then c.circleCollider={x=layer.circle.x,y=layer.circle.y,radius=layer.circle.radius,
     particleRadius=response.radius,bounce=response.bounce,friction=response.friction} end

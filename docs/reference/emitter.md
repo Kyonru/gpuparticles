@@ -34,6 +34,7 @@ Create an emitter with `gpu.newEmitter(config)`. Setters and control methods ret
 | `setBoxCollider()` | Disable the box obstacle |
 | `setCapsuleCollider(x1,y1,x2,y2,radius)` | Enable or move an oriented capsule obstacle |
 | `setCapsuleCollider()` | Disable the capsule obstacle |
+| `setCollisionResponse(mode)` | Select bounce, slide, stop, disappear, or respawn |
 | `setOffset(x,y)` | Change billboard origin offset |
 | `setQuads(...)` | Set lifetime sprite-sheet frames; no arguments clears |
 | `setInsertMode(mode)` | Use top, bottom, or random ring placement |

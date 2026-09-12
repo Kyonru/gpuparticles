@@ -2,6 +2,7 @@ local prefix=(...):gsub('setters$','')
 local config,curves,timeline=require(prefix..'config'),require(prefix..'curves'),require(prefix..'timeline')
 local M={}
 local unpack=unpack or table.unpack
+local collisionActions={bounce=0,slide=1,stop=2,disappear=3,respawn=4}
 local function refresh(e,recordsChanged)
   if e.native then require(prefix..'native').configure(e)
   elseif recordsChanged then e.driver.refresh(e) end
@@ -17,6 +18,13 @@ local function curveChanged(e)
   return e
 end
 function M.install(E)
+  function E:setCollisionResponse(mode)
+    self:_check()
+    assert(collisionActions[mode]~=nil,'gpuparticles: collision response must be bounce, slide, stop, disappear or respawn')
+    self.config.collisionResponse=mode
+    if self.fields then self.fields.collisionAction=collisionActions[mode] end
+    return self
+  end
   function E:setCircleCollider(x,y,radius)
     self:_check()
     assert(self.mode=='stateful','gpuparticles: setCircleCollider requires an emitter constructed with circleCollider or stateful mode')

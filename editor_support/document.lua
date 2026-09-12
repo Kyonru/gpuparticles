@@ -37,7 +37,7 @@ function D.layer(name)
     flow={enabled=false,strength=100,frequency=2},
     selfCollision={enabled=false,radius=3,bounce=0.2,strength=0.8,iterations=1},
     ground={enabled=false,y=540},circle={enabled=false,x=480,y=320,radius=70},
-    response={radius=2,bounce=0.35,friction=0.08}}
+    response={radius=2,bounce=0.35,friction=0.08,mode='bounce'}}
 end
 function D.new() return {version=D.version,name='Untitled effect',duration=6,loop=true,width=960,height=640,layers={D.layer()}} end
 function D.validate(doc)
@@ -54,6 +54,7 @@ function D.validate(doc)
     -- Additive defaults keep existing version-one projects usable.
     l.sprite=l.sprite or D.copy(schema.sprite);l.appearance=l.appearance or D.copy(schema.appearance)
     l.selfCollision=l.selfCollision or D.copy(schema.selfCollision)
+    l.response=l.response or D.copy(schema.response);l.response.mode=l.response.mode or 'bounce'
     Assets.validate(l.sprite);embedded=embedded+#l.sprite.png
     keys(l.appearance,schema.appearance,'appearance')
     local f=l.appearance
@@ -104,6 +105,8 @@ function D.validate(doc)
     number(l.attractor.strength,-10000000,10000000,'Attractor strength');number(l.attractor.softening,1,300,'Attractor softening')
     number(l.ground.y,-2000,3000,'Floor Y');number(l.circle.radius,1,300,'Circle radius')
     number(l.response.radius,0,40,'Particle radius');number(l.response.bounce,0,1,'Bounce');number(l.response.friction,0,1,'Friction')
+    assert(({bounce=true,slide=true,stop=true,disappear=true,respawn=true})[l.response.mode],
+      'Invalid collision response.')
   end
   assert(total<=D.maxParticles,'The composition exceeds the 500,000 particle capacity limit.')
   assert(embedded<=6000000,'Embedded textures exceed the 6 MB project budget.')

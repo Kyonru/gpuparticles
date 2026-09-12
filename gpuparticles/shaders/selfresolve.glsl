@@ -39,6 +39,6 @@ vec4 effect(vec4 color,Image tex,vec2 tc,vec2 sc) {
     // Averaging stabilizes dense clusters; this is a visual approximation, not a rigid-body solver.
     vec2 p=state.xy+correction/max(contacts,1.0);
     vec2 velocity=state.zw+impulse/max(contacts,1.0);
-    collide(p,velocity);
+    projectCollision(p,velocity);
     return vec4(p,velocity);
 }

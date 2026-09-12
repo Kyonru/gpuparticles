@@ -47,6 +47,11 @@ vec4 effect(vec4 color,Image tex,vec2 tc,vec2 sc) {
     vec2 velocity=(state.zw+acceleration*stepTime)*exp(-damping*stepTime);
     vec2 p=state.xy+velocity*stepTime;
     p+=forceDisplacement(seed,clock.x)-forceDisplacement(seed,max(clock.x-stepTime,0.0));
-    collide(p,velocity);
+    bool collisionHit=collide(p,velocity);
+    if (collisionHit && u_collisionAction==3) p=vec2(1.0e20);
+    if (collisionHit && u_collisionAction==4) {
+        p=motion.xy+particleOrigin(spawn,style);
+        velocity=motion.zw;
+    }
     return vec4(p,velocity);
 }

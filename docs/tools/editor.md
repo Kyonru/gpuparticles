@@ -13,7 +13,7 @@ love particle-gpu editor
 The editor supports up to 12 layers. Each layer selects its cheapest backend independently and shows that backend in the preview.
 
 - **Emitter** controls capacity, rate, seed, lifetime, position, direction, speed, and spawn area.
-- **Motion** adds acceleration, damping, curl, turbulence, an attractor, a flow field, floor/circle collision, and optional self-collision.
+- **Motion** adds acceleration, damping, curl, turbulence, an attractor, a flow field, floor/circle collision, contact responses, and optional self-collision.
 - **Style** edits color and size curves, variation, rotation, spin, and blend mode.
 - **Texture** imports PNG files, configures regular sprite sheets, selects generated shapes, and includes four pixel-art sheets.
 - **Effects** applies pixel grids, dissolve, outlines, palette levels, tint, distortion, and glow to a layer.

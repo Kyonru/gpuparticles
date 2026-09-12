@@ -132,7 +132,7 @@ self_mutations = [
     ('inactive particle exclusion', 'gpuparticles/shaders/selfresolve.glsl',
      'if (neighbor.z<0.5) continue;', 'if (neighbor.z<0.0) continue;', 'inactive neighbor exclusion', 'self-collision-test'),
     ('particle collision environment projection', 'gpuparticles/shaders/selfresolve.glsl',
-     'collide(p,velocity);', 'vec2 beforeCollision=p;collide(p,velocity);p=beforeCollision;', 'self collision must reapply environment projection', 'self-collision-test'),
+        'projectCollision(p,velocity);', 'vec2 beforeCollision=p;projectCollision(p,velocity);p=beforeCollision;', 'self collision must reapply environment projection', 'self-collision-test'),
 ]
 
 
@@ -390,6 +390,9 @@ if options.mutations:
         ('capsule collision projection', 'gpuparticles/shaders/collision.glsl',
          'float capsuleDistance=separation-u_capsuleResponse.x;', 'float capsuleDistance=1.0e30;',
          'collider expected 88.000000, got 90.000000'),
+        ('collision slide response', 'gpuparticles/shaders/collision.glsl',
+         '} else if (action==1) {', '} else if (action==99) {',
+         'collider expected 7.500000'),
     ]
     for mutation in mutations + editor_mutations + waterfall_mutations + self_mutations + volume_api_mutations:
         mutate(*mutation)

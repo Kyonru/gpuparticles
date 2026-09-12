@@ -109,6 +109,7 @@ function I.draw(app,x,top,w,bottom)
     toggle('Circle obstacle',{'circle','enabled'})
     if l.circle.enabled then number('Circle X',{'circle','x'},-2000,3000,5,0);number('Circle Y',{'circle','y'},-2000,3000,5,0);number('Radius',{'circle','radius'},1,300,2,0) end
     if l.circle.enabled or l.ground.enabled then
+      select('On contact',{'response','mode'},{'bounce','slide','stop','disappear','respawn'})
       number('Particle radius',{'response','radius'},0,40,0.5,1);number('Bounce',{'response','bounce'},0,1,0.05,2);number('Friction',{'response','friction'},0,1,0.05,2)
     end
   elseif m.tab=='Style' then

@@ -21,6 +21,7 @@ Use gpuparticles when the effect needs something the native system does not prov
 - more than eight color or size stops;
 - curl noise, turbulence, attractors, or GPU flow fields;
 - collision with floors, heightfields, signed-distance fields, or moving circles, boxes, and capsules;
+- selectable collision responses: bounce, slide, stop, disappear, and respawn;
 - optional approximate particle-to-particle contact;
 - water that spreads and accumulates, smoke that advects and rises, or materials that react.
 
@@ -150,3 +151,5 @@ Read the [documentation](https://kyonru.github.io/gpuparticles/) for installatio
 - Volume simulation is a stylized grid model rather than engineering fluid dynamics.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, documentation builds, verification, and pull-request guidance. Licensed under the [MIT License](LICENSE).
+
+Planned particle, volume, editor, and compatibility work is tracked in [ROADMAP.md](ROADMAP.md).

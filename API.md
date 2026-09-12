@@ -34,6 +34,7 @@ For persistent water, smoke, editable terrain, custom volume shaders, and therma
 | `forces` | `{}` | Force descriptors below |
 | `selfCollision` | disabled | Optional equal-radius particle contacts; see below; maximum 24000 slots |
 | `circleCollider`, `boxCollider`, `capsuleCollider` | disabled | Optional movable uniform obstacles; each selects stateful mode |
+| `collisionResponse` | `'bounce'` | Emitter-wide contact action: bounce, slide, stop, disappear, or respawn |
 
 `texture`, `collision`, `flowField`, and `attractors` are optional. The library does not take ownership of caller textures or quads. Construct after LÖVE graphics initialization.
 
@@ -71,6 +72,7 @@ All setters and controls return the emitter for chaining. `update`, `draw`, and 
 | `setBoxCollider()` | Disable the box |
 | `setCapsuleCollider(x1,y1,x2,y2,radius)` | Move/resize/rotate a capsule segment obstacle; O(1) uniforms |
 | `setCapsuleCollider()` | Disable the capsule |
+| `setCollisionResponse(mode)` | Change the emitter-wide contact action through one uniform update |
 | `setOffset(x,y)` | Billboard offset uniform |
 | `setQuads(q1,q2,...)` | Quads or one list; upload atlas LUT; no arguments clears it |
 | `setInsertMode(mode)` | Change ring placement/cursor, without sorting |

@@ -77,6 +77,7 @@ function M.normalize(input)
   c.emissionArea = c.emissionArea or {distribution = 'none', x = 0, y = 0, angle = 0}
   c.seed = M.number(c.seed or 1, 'seed')
   c.blendMode, c.insertMode = c.blendMode or 'add', c.insertMode or 'top'
+  c.collisionResponse = c.collisionResponse or 'bounce'
   c.emitterLifetime = c.emitterLifetime or -1
   c.forces = c.forces or {}
   assert(c.max<=16777216,'gpuparticles: max exceeds exact float particle indices')
@@ -95,6 +96,8 @@ function M.normalize(input)
     for i=1,4 do M.number(color[i],'color') end
   end
   assert(c.insertMode=='top' or c.insertMode=='bottom' or c.insertMode=='random','gpuparticles: invalid insertMode')
+  assert(({bounce=true,slide=true,stop=true,disappear=true,respawn=true})[c.collisionResponse],
+    'gpuparticles: collisionResponse must be bounce, slide, stop, disappear or respawn')
   assert(type(c.forces)=='table','gpuparticles: forces must be an array')
   if c.warmStep then M.number(c.warmStep,'warmStep',0.000001) end
   if c.flowField then

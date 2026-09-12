@@ -5,8 +5,10 @@ local R=require('editor_support.runtime')
 local S=require('editor_support.storage')
 local T={}
 function T.run()
-  local old=D.new();old.layers[1].selfCollision=nil
-  assert(not S.decode(J.encode(old)).layers[1].selfCollision.enabled,'old projects must default to self collision off')
+  local old=D.new();old.layers[1].selfCollision=nil;old.layers[1].response.mode=nil
+  local migrated=S.decode(J.encode(old))
+  assert(not migrated.layers[1].selfCollision.enabled,'old projects must default to self collision off')
+  assert(migrated.layers[1].response.mode=='bounce','old projects must default to the bounce collision response')
   local app=App.new();local m=app.model;m:replace(D.new());m.playing=false;m.tab='Motion'
   local function widget(id)
     m.scroll=0;app:draw()
@@ -18,7 +20,13 @@ function T.run()
   local function click(id)
     local w=widget(id);local x,y=w.x+w.w/2,w.y+w.h/2;app:mousepressed(x,y,1);app:mousereleased(x,y,1)
   end
-  local capacity=m:layer().emitter.max;local history=#m.undoStack
+  local capacity=m:layer().emitter.max
+  m:change(function(_,layer) layer.ground.enabled=true end)
+  click('response.mode');while m.pending>0 or m.seekTarget do m:update(0.2) end
+  assert(m:layer().response.mode=='slide' and m.runtime.emitters[1].config.collisionResponse=='slide',
+    'editor collision response must reach the runtime emitter')
+  m:change(function(_,layer) layer.ground.enabled=false;layer.response.mode='bounce' end)
+  local history=#m.undoStack
   assert(widget('selfCollision.enabled') and m.scroll==0,'self collision must be visible at the top of Motion')
   click('selfCollision.enabled')
   assert(m:layer().selfCollision.enabled and m:layer().emitter.max==2048,'editor self collision must enforce its advertised capacity')
