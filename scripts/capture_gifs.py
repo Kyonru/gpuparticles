@@ -9,6 +9,7 @@ import subprocess
 parser = argparse.ArgumentParser()
 parser.add_argument('--love', default=shutil.which('love') or '/Applications/love.app/Contents/MacOS/love')
 parser.add_argument('--ffmpeg', default=shutil.which('ffmpeg') or 'ffmpeg')
+parser.add_argument('--only', action='append', help='Capture only the named output; repeat as needed')
 options = parser.parse_args()
 root = Path(__file__).resolve().parents[1]
 
@@ -16,12 +17,20 @@ examples = [
     ('comparison-mouse', 'comparison', ('--mouse-collision',)),
     ('colliders', 'colliders', ()),
     ('custom-shaders', 'custom-shaders', ()),
+    ('sdf-collision-groups', 'sdf-groups', ()),
     ('waterfall-plants', 'waterfall', ('--plant-collision',)),
     ('waterfall-volume-mouse', 'waterfall', ('--water-volume', '--mouse-collision')),
     ('volume-smoke-smooth', 'volume', ('--preset=smoke', '--smooth')),
     ('volume-steam-pixel', 'volume', ('--preset=steam',)),
     ('volume-water-pixel', 'volume', ('--preset=water',)),
 ]
+
+if options.only:
+    requested = set(options.only)
+    examples = [example for example in examples if example[0] in requested]
+    missing = requested.difference(example[0] for example in examples)
+    if missing:
+        parser.error('unknown GIF name: ' + ', '.join(sorted(missing)))
 
 for name, project, arguments in examples:
     command = [options.love, str(root / 'examples' / project), '--smoke', '--gif', f'--gif-name={name}', *arguments]

@@ -60,6 +60,60 @@ collision = {
 
 The red channel stores signed distance in world pixels after scale and bias. Positive values are outside the solid. Its gradient supplies the contact normal, allowing caves, islands, and arbitrary silhouettes.
 
+### Generate an SDF at load time
+
+An SDF texel stores the shortest distance to the surface. The sign identifies the side: positive is open space, zero is the boundary, and negative is solid. Store world-pixel distances directly in a float image:
+
+```lua
+local function circleSdf(x, y, cx, cy, radius)
+  local dx, dy = x-cx, y-cy
+  return math.sqrt(dx*dx + dy*dy) - radius
+end
+
+local function makeSdf(worldWidth, worldHeight)
+  local tw, th = 480, 320
+  local data = love.image.newImageData(tw, th, 'rgba32f')
+  data:mapPixel(function(column, row)
+    local x = (column+0.5) / tw * worldWidth
+    local y = (row+0.5) / th * worldHeight
+    local floor = worldHeight-64-y
+    local pillar = circleSdf(x, y, 480, 420, 72)
+    return math.min(floor, pillar), 0, 0, 1 -- union
+  end)
+  local image = love.graphics.newImage(data)
+  data:release()
+  image:setFilter('linear', 'linear')
+  image:setWrap('clamp', 'clamp')
+  return image
+end
+```
+
+Pass the resulting image as `collision.texture` with `scale=1` and `bias=0`. Release it after every emitter using it has been released.
+
+Combine primitive distances before storing them:
+
+| Shape operation | Distance expression |
+| --- | --- |
+| Union: either shape is solid | `math.min(a, b)` |
+| Intersection: both are solid | `math.max(a, b)` |
+| Subtract B from A | `math.max(a, -b)` |
+
+For a normalized image where red `0.5` is the boundary and the represented distance range is ±128 pixels, use `scale=256` and `bias=-128`.
+
+### SDF practices
+
+- Generate static terrain once during loading. Do not rebuild an `ImageData` every frame.
+- Derive the visible geometry and SDF from the same shape data so their boundaries agree.
+- Use linear filtering for continuous distance interpolation and clamp wrapping at the edges.
+- Include enough empty margin outside obstacles for the particle radius and texture-gradient samples.
+- Increase texture resolution around thin features. Features narrower than about two texels are unreliable.
+- Keep `origin` and `size` aligned with the simulation coordinate system, including camera transforms.
+- Use heightfields for ordinary ground without caves or overhangs; they need less texture data.
+
+The [waterfall](../tools/examples.md#waterfall) uses one SDF assembled from several rotated rounded rectangles. The [collision-groups example](../tools/examples.md#sdf-collision-groups) combines a floor, pillar, and shelf, then shares the field across several emitters.
+
+![Static SDF terrain shared by selective collision groups](../assets/images/sdf-collision-groups.gif)
+
 ## Moving circle, box, and capsule
 
 Reserve a moving obstacle in the initial configuration:
@@ -95,6 +149,44 @@ Calling a collider setter with no arguments disables that shape. Boxes remain ax
 All three setters only change uniforms. They do not upload particle data, rebuild shaders, or read state back to the CPU. Coordinates must be in simulation space: undo camera translation, scale, or viewport transforms before sending pointer coordinates. Colliders do not transfer their velocity and can skip particles when moved too far between simulation steps.
 
 ![Particles colliding with a moving capsule](../assets/images/colliders.gif)
+
+## Players, enemies, and selective collision
+
+An emitter is the current collision-filtering boundary. Particles in the same emitter share its static field and moving colliders. Split particles by behavior when only some should react:
+
+| Emitter group | Static SDF | Player circle | Enemy shapes |
+| --- | :---: | :---: | :---: |
+| Ambient dust | Yes | No | No |
+| Player sparks | Yes | Yes | No |
+| Enemy debris | Yes | No | Yes |
+
+```lua
+local function common(color)
+  return {
+    max=6000, rate=1200, lifetime={2,4},
+    colors=color,
+    collision={type='sdf', texture=levelSdf, size={levelWidth,levelHeight}},
+  }
+end
+
+local ambient = gpu.newEmitter(common(ambientColors))
+
+local playerConfig = common(playerColors)
+playerConfig.circleCollider = {radius=32, enabled=false}
+local playerFx = gpu.newEmitter(playerConfig)
+
+function love.update(dt)
+  playerFx:setCircleCollider(player.x, player.y, player.radius)
+  ambient:update(dt)
+  playerFx:update(dt)
+end
+```
+
+Share the SDF texture rather than creating a copy per emitter. Each stateful emitter still owns separate particle-state canvases and runs its own simulation pass, so group by collision behavior instead of creating an emitter for every actor.
+
+The current API supports one circle, one box, and one capsule per emitter. For several stationary enemies, include them in the shared SDF. For a few moving enemies, assign the available moving shapes to the relevant emitter group. A large crowd of independently moving colliders needs future collider-array support; creating dozens of matching emitters would multiply simulation and draw cost.
+
+Keep gameplay authority on the CPU. GPU particle collision should produce the visual response, while damage, hit detection, pickups, and AI use the game’s normal collision system. Reading particle contacts back every frame stalls the GPU.
 
 ## Particle-to-particle collision
 

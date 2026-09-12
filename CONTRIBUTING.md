@@ -41,6 +41,8 @@ Animated examples are captured directly from LÖVE and encoded with `ffmpeg`. Re
 
 ```sh
 python3 scripts/capture_gifs.py
+# Regenerate one preview while iterating:
+python3 scripts/capture_gifs.py --only sdf-collision-groups
 ```
 
 The script writes 24-frame, 12 FPS loops to both `previews/` and `docs/assets/images/`, then removes its temporary PNG frames.

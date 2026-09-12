@@ -39,6 +39,23 @@ Press **1**, **2**, or **3** to attach a circle, axis-aligned box, or rotating c
 
 ![Circle, box, and capsule collision example](../assets/images/colliders.gif)
 
+## SDF collision groups
+
+```sh
+love particle-gpu/examples/sdf-groups
+# or: love particle-gpu sdf-groups
+```
+
+This scene combines a floor, circular pillar, and rounded shelf into one signed distance field. Three particle emitters share that static terrain while using different moving-object filters:
+
+- beige particles collide only with the SDF;
+- peach particles also collide with the mouse-controlled player circle;
+- teal particles also collide with an animated enemy box and capsule.
+
+Press **P** or **E** to toggle the player and enemy collision groups. The example demonstrates why emitters should be split by collision behavior rather than by individual actor.
+
+![SDF terrain with player and enemy particle collision groups](../assets/images/sdf-collision-groups.gif)
+
 ## Native versus GPU
 
 ```sh

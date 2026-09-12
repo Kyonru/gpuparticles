@@ -134,6 +134,7 @@ love . waterfall               # collision and persistent water
 love . volume                  # water, smoke, and steam
 love . custom-shaders          # custom GLSL movement and fragment glow
 love . colliders               # moving circles, boxes, and capsules
+love . sdf-groups              # shared SDF with selective player/enemy collision
 love . bench                   # local performance measurements
 ```
 

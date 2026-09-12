@@ -214,6 +214,17 @@ def collider_demo():
         raise RuntimeError(f'colliders: exit {result.returncode}, required render/capture markers: {required}')
 
 
+def sdf_groups_demo():
+    result = subprocess.run(
+        [options.love, str(root), 'sdf-groups', '--smoke'],
+        text=True, capture_output=True, timeout=90,
+    )
+    output = result.stdout + result.stderr
+    print(output, end='')
+    if result.returncode != 0 or 'SDF groups standalone render PASS' not in output:
+        raise RuntimeError(f'sdf-groups: unexpected exit {result.returncode}')
+
+
 def portability():
     with tempfile.TemporaryDirectory(prefix='gpuparticles-standalone-') as folder:
         destination = Path(folder)
@@ -312,6 +323,7 @@ if options.demos_only or options.waterfall_only:
         demo('comparison', '--self-collision', '--benchmark')
         custom_shader_demo()
         collider_demo()
+        sdf_groups_demo()
     demo('waterfall', '--mouse-collision')
     demo('waterfall', '--plant-collision')
     demo('waterfall', '--self-collision')
