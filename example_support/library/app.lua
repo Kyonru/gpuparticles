@@ -11,11 +11,12 @@ function A.install()
   local sidebar=252
   local index,scene,frames,cycleFrames=1,nil,0,0
   local titleFont,textFont,smallFont
-  local smoke=false
+  local smoke,capture,requested,captured=false,false,false,false
   for _,value in ipairs(arg or {}) do
     if value=='--smoke' then smoke=true end
-    local requested=value:match('^%-%-preset=([%w%-]+)$')
-    if requested then for i,item in ipairs(catalog) do if item.id==requested then index=i end end end
+    if value=='--capture' then capture=true end
+    local preset=value:match('^%-%-preset=([%w%-]+)$')
+    if preset then for i,item in ipairs(catalog) do if item.id==preset then index=i end end end
   end
   local gif=GifCapture.new('effect-library',{start=24,every=5,count=24})
 
@@ -49,12 +50,18 @@ function A.install()
     local width,height=dimensions();local mx,my=love.mouse.getPosition()
     if scene.setPointer then scene:setPointer(mx-sidebar,my,mx>=sidebar and mx<=sidebar+width and my>=0 and my<=height) end
     scene:update(dt)
+    if gif and (scene.kind=='fire' or scene.kind=='weather') and (cycleFrames==8 or cycleFrames==16) then scene:action() end
+    if gif and scene.kind=='explosions' and cycleFrames==12 then scene:burstAt(width*0.68,height*0.42) end
     if smoke then
-      local interval=gif and 24 or 8
-      if cycleFrames>=interval then
-        if index==#catalog then
-          if not gif or gif.done then print('Effect library standalone render PASS');love.event.quit() end
-        else select(index+1) end
+      if capture then
+        if captured then print('Effect library standalone render PASS');love.event.quit() end
+      else
+        local interval=gif and 24 or 8
+        if cycleFrames>=interval then
+          if index==#catalog then
+            if not gif or gif.done then print('Effect library standalone render PASS');love.event.quit() end
+          else select(index+1) end
+        end
       end
     end
   end
@@ -72,7 +79,7 @@ function A.install()
       g.print(('%02d  %s'):format(i,item.title),20,y)
       y=y+32
     end
-    g.setColor(palette.blue);g.print('Up/Down Browse   Space Burst',20,height-50);g.print('R Reset   Esc Quit',20,height-30)
+    g.setColor(palette.blue);g.print('Up/Down Browse   Space Action',20,height-50);g.print('R Reset   Esc Quit',20,height-30)
   end
 
   function love.draw()
@@ -88,17 +95,25 @@ function A.install()
     g.setColor(palette.blue);g.print(item.api,sidebar+32,94)
     g.setColor(palette.deep[1],palette.deep[2],palette.deep[3],0.86);g.rectangle('fill',sidebar+18,height-48,width-sidebar-36,30,5,5)
     g.setColor(palette.beige)
-    local control=item.id=='terrain' and 'LMB paint · RMB erase' or item.id=='smoke' and 'Move mouse to stir' or item.id=='water' and 'Move mouse to block water' or item.id=='steam' and 'Click to add heat' or 'Click or Space to emit'
+    local control=scene.controls and scene:controls() or item.id=='terrain' and 'LMB paint · RMB erase' or item.id=='smoke' and 'Move mouse to stir' or item.id=='water' and 'Move mouse to block water' or item.id=='steam' and 'Click to add heat' or 'Click or Space to emit'
     local measured=love.timer.getFPS();local fps=measured>0 and measured..' FPS' or 'FPS ...'
     g.print(control..'  ·  '..fps,sidebar+30,height-39)
     if gif then gif:draw(frames) end
+    local captureFrame=item.id=='steam' and 180 or 60
+    if capture and frames>=captureFrame and not requested then
+      requested=true
+      g.captureScreenshot(function(data)
+        local file='library-'..item.id..'.png';data:encode('png',file);data:release()
+        print('LIBRARY_CAPTURE '..love.filesystem.getSaveDirectory()..'/'..file);captured=true
+      end)
+    end
   end
 
   function love.keypressed(key)
     if key=='escape' then love.event.quit()
     elseif key=='down' or key=='right' then select(index+1)
     elseif key=='up' or key=='left' then select(index-1)
-    elseif key=='space' then scene:emit()
+    elseif key=='space' then scene:action()
     elseif key=='r' then loadScene()
     else
       local number=tonumber(key)

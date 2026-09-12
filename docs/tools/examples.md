@@ -10,7 +10,7 @@ love particle-gpu library
 
 Browse fourteen complete recipes with the arrow keys or mouse wheel. The catalog covers fire, explosions, weather, ambient particles, magic, stylized clouds, impact sprays, stateful fields, pixel-art sprite sheets, water, interactive smoke, paintable terrain, thermal reactions, and custom shader treatments.
 
-Each screen names the APIs it uses. Press **Space** for a burst; volume screens show their mouse interaction in the lower bar. The source is divided into particle and volume recipes so individual configurations can be copied without the gallery UI.
+Each screen names the APIs it uses and explains its action in the lower bar. Cycle fire or weather layers, click to place explosions, compare the labeled force zones, or follow the marked heater as water converts into steam. The source is divided into particle and volume recipes so individual configurations can be copied without the gallery UI.
 
 ![Browsable particle and volume effect recipes](../assets/images/effect-library.gif)
 

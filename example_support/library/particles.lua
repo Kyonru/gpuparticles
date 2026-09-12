@@ -39,9 +39,13 @@ end
 
 local function flowTexture()
   return image(96,64,function(x,y)
-    local nx,ny=x/95*2-1,y/63*2-1
-    local length=math.max(math.sqrt(nx*nx+ny*ny),0.12)
-    return -ny/length*90,nx/length*90,0,1
+    local nx,ny=x/95,y/63
+    if nx<0.34 then return 92,math.sin(ny*18)*34,0,1 end
+    if nx<0.68 then
+      local dx,dy=nx-0.51,ny-0.5;local length=math.max(math.sqrt(dx*dx+dy*dy),0.035)
+      return -dy/length*105,dx/length*105,0,1
+    end
+    return 0,0,0,1
   end,'linear','rgba32f')
 end
 
@@ -77,13 +81,14 @@ function builders.fire(self,w,h)
   fire.forces={gpu.forces.turbulence{amplitude={22,7},frequency={5,3}}};add(self,fire)
   local embers=base(w,h);embers.max=5000;embers.rate=650;embers.lifetime={1.4,3.5};embers.speed={70,180}
   embers.spread=1.1;embers.gravity={0,45};embers.sizes={2,3,0};embers.colors={rgba(palette.yellow,1),rgba(palette.pink,0.8),rgba(palette.pink,0)};add(self,embers)
+  self.layerMode=3
 end
 
 function builders.explosions(self,w,h)
   local flash=base(w,h);flash.rate=0;flash.max=3000;flash.position={w*0.5,h*0.48};flash.spread=math.pi*2
-  flash.direction=0;flash.speed={80,280};flash.gravity={0,90};flash.damping=1.1;flash.lifetime={0.45,1.1}
+  flash.direction=0;flash.speed={80,280};flash.gravity={0,90};flash.damping=1.1;flash.lifetime={0.7,1.8}
   flash.sizes={2,9,0};flash.colors={rgba(palette.yellow,1),rgba(palette.pink,0.9),rgba(palette.purple,0)}
-  self.primary=add(self,flash);self.burstEvery=1.15;self.primary:emit(900)
+  self.primary=add(self,flash);self.primary:emit(900)
   local trail=clone(flash);trail.seed=29;trail.max=1800;trail.speed={30,140};trail.lifetime={1.2,2.1};trail.damping=0.25
   trail.colors={rgba(palette.red,0.9),rgba(palette.purple,0.7),rgba(palette.purple,0)};self.secondary=add(self,trail);self.secondary:emit(500)
 end
@@ -95,14 +100,15 @@ function builders.weather(self,w,h)
   local snow=clone(rain);snow.seed=22;snow.max=5000;snow.rate=800;snow.speed={25,55};snow.gravity={0,18};snow.damping=0.25
   snow.lifetime={4,7};snow.sizes={3,7,3};snow.colors={rgba(palette.yellow,0.8),rgba(palette.yellow,0.55),rgba(palette.yellow,0)}
   snow.forces={gpu.forces.turbulence{amplitude={28,5},frequency={1.8,1.2}}};add(self,snow)
+  self.layerMode=3
 end
 
 function builders.ambient(self,w,h)
   local colors={palette.pink,palette.red,palette.yellow,palette.purple}
   for i,color in ipairs(colors) do
-    local c=base(w,h);c.seed=30+i;c.max=2600;c.rate=260;c.lifetime={4,8};c.position={w*(0.15+i*0.18),h*0.55}
-    c.emissionArea={distribution='uniform',x=w*0.12,y=h*0.34};c.direction=-math.pi/2;c.spread=math.pi*2;c.speed={2,18}
-    c.gravity={i==1 and 5 or 0,i==2 and -8 or -2};c.damping=0.7;c.sizes=i==1 and {5,9,4} or {1,4,0}
+    local c=base(w,h);c.seed=30+i;c.max=3000;c.rate=340;c.lifetime={4,8};c.position={w*(0.10+i*0.16),h*0.55}
+    c.emissionArea={distribution='uniform',x=w*0.10,y=h*0.30};c.direction=-math.pi/2;c.spread=math.pi*2;c.speed={2,18}
+    c.gravity={i==1 and 5 or 0,i==2 and -8 or -2};c.damping=0.7;c.sizes=i==1 and {7,13,6} or i==2 and {5,10,4} or {2,5,0}
     c.spin={-2,2};c.rotation={0,math.pi*2};c.colors={rgba(color,0),rgba(color,0.72),rgba(color,0)}
     c.forces={gpu.forces.turbulence{amplitude={12+i*3,8},frequency={1+i*0.2,1.5}}};add(self,c)
   end
@@ -134,11 +140,11 @@ function builders.clouds(self,w,h)
 end
 
 function builders.sprays(self,w,h)
-  local specs={{palette.pink,w*0.28,0.9,82},{palette.red,w*0.5,0.35,38},{palette.yellow,w*0.72,0.62,120}}
+  local specs={{palette.pink,w*0.28,0.9,82},{palette.red,w*0.5,0.65,70},{palette.yellow,w*0.72,0.62,120}}
   for i,spec in ipairs(specs) do
     local c=base(w,h);c.seed=70+i;c.rate=0;c.max=2600;c.position={spec[2],h*0.72};c.direction=-math.pi/2;c.spread=spec[3]
-    c.speed={spec[4]*0.5,spec[4]*1.8};c.gravity={0,260};c.damping=i==2 and 1.8 or 0.2;c.lifetime={0.7,1.8};c.sizes=i==2 and {8,13,5,0} or {3,7,0}
-    c.colors={rgba(spec[1],0.95),rgba(spec[1],0.7),rgba(spec[1],0)};c.collision={type='plane',y=h*0.82,radius=2,bounce=i==3 and 0.55 or 0.1,friction=0.2}
+    c.speed={spec[4]*0.5,spec[4]*1.8};c.gravity={0,260};c.damping=i==2 and 1.2 or 0.2;c.lifetime={0.7,1.8};c.sizes=i==1 and {8,16,5,0} or i==2 and {18,32,12,0} or {7,14,4,0}
+    c.colors={rgba(spec[1],0.95),rgba(spec[1],0.7),rgba(spec[1],0)};c.collision={type='plane',y=h*0.82,radius=i==2 and 6 or 4,bounce=i==3 and 0.55 or 0.1,friction=0.2}
     c.collisionResponse=i==1 and 'disappear' or i==2 and 'slide' or 'bounce'
     add(self,c):emit(700)
   end
@@ -147,10 +153,11 @@ end
 
 function builders.fields(self,w,h)
   local flow=flowTexture();self.owned[#self.owned+1]=flow
-  local c=base(w,h);c.max=5000;c.rate=1100;c.lifetime={3,5};c.position={w*0.23,h*0.5};c.spread=math.pi*2;c.speed={15,45}
+  local c=base(w,h);c.max=5000;c.rate=1100;c.lifetime={3,5};c.position={w*0.08,h*0.5};c.emissionArea={distribution='uniform',x=8,y=h*0.28};c.spread=0.4;c.direction=0;c.speed={8,24}
   c.flowField={texture=flow,size={w,h},strength=1};c.gravity={0,0};c.damping=0.15;c.colors={rgba(palette.purple,0.8),rgba(palette.red,0.7),rgba(palette.purple,0)};add(self,c)
-  local attract=base(w,h);attract.max=5000;attract.rate=1000;attract.lifetime={2.5,4};attract.position={w*0.78,h*0.5};attract.spread=math.pi*2
-  attract.speed={80,150};attract.gravity={0,0};attract.damping=0.1;attract.attractors={{x=w*0.78,y=h*0.5,strength=900000,softening=55}}
+  local vortex=clone(c);vortex.seed=89;vortex.position={w*0.51,h*0.5};vortex.emissionArea={distribution='borderellipse',x=w*0.12,y=h*0.18};vortex.spread=math.pi*2;vortex.speed={12,35};vortex.colors={rgba(palette.yellow,0.8),rgba(palette.pink,0.7),rgba(palette.yellow,0)};add(self,vortex)
+  local attract=base(w,h);attract.max=5000;attract.rate=1200;attract.lifetime={3.5,5};attract.position={w*0.84,h*0.5};attract.emissionArea={distribution='borderellipse',x=w*0.12,y=h*0.22};attract.spread=math.pi*2
+  attract.speed={4,18};attract.gravity={0,0};attract.damping=0.08;attract.attractors={{x=w*0.84,y=h*0.5,strength=520000,softening=42}}
   attract.colors={rgba(palette.pink,0.9),rgba(palette.yellow,0.65),rgba(palette.pink,0)};add(self,attract)
 end
 
@@ -163,8 +170,8 @@ function builders.pixel(self,w,h)
 end
 
 function builders.shaders(self,w,h)
-  local c=base(w,h);c.max=16000;c.rate=4500;c.lifetime={1.8,3.4};c.position={w*0.5,h*0.72};c.spread=0.8;c.speed={60,150}
-  c.gravity={0,-25};c.sizes={3,13,4,0};c.colors={rgba(palette.yellow,0.9),rgba(palette.pink,0.8),rgba(palette.red,0)}
+  local c=base(w,h);c.max=16000;c.rate=6200;c.lifetime={1.8,3.4};c.position={w*0.5,h*0.72};c.spread=0.8;c.speed={60,150}
+  c.gravity={0,-25};c.sizes={6,20,7,0};c.colors={rgba(palette.yellow,0.9),rgba(palette.pink,0.8),rgba(palette.red,0)}
   c.forces={gpu.forces.curl{amplitude=36,frequency=0.8}};add(self,c)
   self.postCanvas=love.graphics.newCanvas(w,h,{dpiscale=1,msaa=0});self.postCanvas:setFilter('linear','linear')
   self.postShader=love.graphics.newShader(assert(love.filesystem.read(prefix..'example_support/library/showcase.glsl')))
@@ -175,6 +182,8 @@ function P.new(kind,width,height)
   local self=setmetatable({kind=kind,width=width,height=height,time=0,emitters={},owned={}},Scene)
   assert(builders[kind],'unknown particle library recipe: '..tostring(kind))(self,width,height)
   for _,emitter in ipairs(self.emitters) do emitter:warm(1.2) end
+  if kind=='explosions' then self:burstAt()
+  elseif kind=='sprays' then self:emit() end
   return self
 end
 
@@ -191,18 +200,53 @@ function Scene:update(dt)
   end
 end
 
+local layerNames={fire={'FLAME','EMBERS','BOTH'},weather={'RAIN','SNOW','BOTH'}}
+
+function Scene:cycleLayers()
+  self.layerMode=self.layerMode%3+1
+end
+
+function Scene:burstAt(x,y)
+  x,y=x or self.width*0.5,y or self.height*0.48
+  self.primary:setPosition(x,y);self.secondary:setPosition(x,y)
+  self.primary:emit(900);self.secondary:emit(500)
+end
+
 function Scene:draw(x,y)
   local g=love.graphics
   if self.postCanvas then
-    g.push('all');g.setCanvas(self.postCanvas);g.clear(0,0,0,0)
+    g.push('all');g.setScissor();g.setCanvas(self.postCanvas);g.clear(0,0,0,0)
     for _,emitter in ipairs(self.emitters) do emitter:draw() end
     g.setCanvas();self.postShader:send('u_time',self.time);g.setShader(self.postShader)
     g.setColor(1,1,1,1);g.setBlendMode('alpha','premultiplied');g.draw(self.postCanvas,x,y);g.pop()
-  else for _,emitter in ipairs(self.emitters) do emitter:draw(x,y) end end
+  else
+    for i,emitter in ipairs(self.emitters) do
+      if not self.layerMode or self.layerMode==3 or self.layerMode==i then emitter:draw(x,y) end
+    end
+    if self.kind=='fields' then
+      g.push('all');g.translate(x,y);g.setLineWidth(1)
+      local labels={{'FLOW',self.width*0.17,palette.purple},{'VORTEX',self.width*0.51,palette.yellow},{'ATTRACTOR',self.width*0.84,palette.pink}}
+      for _,label in ipairs(labels) do
+        g.setColor(label[3]);g.printf(label[1],label[2]-70,128,140,'center');g.circle('line',label[2],self.height*0.5,12)
+      end
+      g.pop()
+    end
+  end
 end
 
 function Scene:emit() for _,emitter in ipairs(self.emitters) do emitter:emit(math.min(700,emitter:getBufferSize())) end end
-function Scene:mousepressed() self:emit() end
+function Scene:action(x,y)
+  if self.kind=='fire' or self.kind=='weather' then self:cycleLayers()
+  elseif self.kind=='explosions' then self:burstAt(x,y)
+  else self:emit() end
+end
+function Scene:controls()
+  if self.kind=='fire' or self.kind=='weather' then return 'Showing '..layerNames[self.kind][self.layerMode]..' · click or Space to cycle' end
+  if self.kind=='explosions' then return 'Click to explode at pointer · Space for center' end
+  if self.kind=='fields' then return 'Three stateful force zones · Space adds particles' end
+  return 'Click or Space to emit'
+end
+function Scene:mousepressed(x,y,button) if button==1 then self:action(x,y) end end
 function Scene:mousereleased() return self end
 
 function Scene:release()

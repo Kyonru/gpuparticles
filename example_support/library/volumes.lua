@@ -40,10 +40,11 @@ function V.new(kind,width,height,automated)
     world:setWind(25,-3)
   elseif kind=='steam' then
     self.water=world:addMaterial{name='water',model='water',cooling=0.03,color={palette.blue[1],palette.blue[2],palette.blue[3],0.9}}
-    self.material=world:addMaterial{name='steam',model='gas',buoyancy=110,dissipation=0.13,cooling=0.08,
-      color={palette.beige[1],palette.beige[2],palette.beige[3],0.78}}
-    self.source=world:newSource{material=self.water,position={width*0.5,70},radius=13,rate=3300,temperature=1.9}
-    world:addReaction{from=self.water,to=self.material,temperatureAbove=1,rate=0.9}
+    self.material=world:addMaterial{name='steam',model='gas',buoyancy=150,dissipation=0.08,cooling=0.06,
+      color={palette.beige[1],palette.beige[2],palette.beige[3],0.94}}
+    self.source=world:newSource{material=self.water,position={width*0.5,70},radius=13,rate=3300,temperature=0.15}
+    world:addReaction{from=self.water,to=self.material,temperatureAbove=0.45,rate=4}
+    world:setWind(32,-4)
   else error('unknown volume library recipe: '..tostring(kind)) end
 
   self.terrainShader=love.graphics.newShader([[#pragma language glsl3
@@ -81,7 +82,7 @@ function Scene:update(dt)
     elseif love.mouse.isDown(1) then self.world:paintTerrain(p.x,p.y,22,true)
     elseif love.mouse.isDown(2) then self.world:paintTerrain(p.x,p.y,22,false) end
   elseif self.kind=='steam' then
-    self.world:addHeat(self.width*0.5,self.height*0.72,52,dt*3,self.water)
+    self.world:addHeat(self.width*0.5,self.height-100,65,dt*12,self.water)
   end
   self.world:update(dt)
 end
@@ -95,6 +96,13 @@ function Scene:draw(x,y)
   g.draw(self.world.terrain,0,0,0,self.world.cell[1],self.world.cell[2]);g.setShader()
   if self.kind=='water' or self.kind=='smoke' then
     g.setColor(palette.peach);g.circle('line',self.pointer.x,self.pointer.y,self.kind=='water' and 42 or 28)
+  elseif self.kind=='steam' then
+    g.setColor(palette.blue);g.printf('COOL WATER',self.width*0.5-90,112,180,'center')
+    g.setColor(palette.peach[1],palette.peach[2],palette.peach[3],0.18);g.circle('fill',self.width*0.5,self.height-100,65)
+    g.setColor(palette.peach);g.circle('line',self.width*0.5,self.height-100,65)
+    g.printf('HEAT: WATER TO STEAM',self.width*0.5-120,self.height-104,240,'center')
+    g.line(self.width*0.5+52,self.height-142,self.width*0.68,self.height*0.48)
+    g.printf('STEAM RISES',self.width*0.68-70,self.height*0.44,140,'center')
   end
   g.pop()
 end
@@ -106,6 +114,11 @@ function Scene:mousepressed(x,y,button)
 end
 function Scene:mousereleased() return self end
 function Scene:emit() if self.source then self.source:emit(800) end end
+function Scene:action() self:emit() end
+function Scene:controls()
+  if self.kind=='steam' then return 'Click to add heat · blue falls, beige steam rises' end
+  return nil
+end
 function Scene:release()
   if self.world then self.world:release() end
   if self.terrainShader then self.terrainShader:release() end

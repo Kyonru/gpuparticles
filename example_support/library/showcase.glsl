@@ -13,13 +13,18 @@ float noise(vec2 p) {
   return fract(sin(dot(floor(p),vec2(127.1,311.7)))*43758.5453);
 }
 
+float coverage(vec4 sampleColor) {
+  return clamp(max(sampleColor.a,max(sampleColor.r,max(sampleColor.g,sampleColor.b))),0.0,1.0);
+}
+
 vec4 effect(vec4 color,Image tex,vec2 tc,vec2 sc) {
   vec2 warped=tc+vec2(sin(tc.y*32.0+u_time*2.0),cos(tc.x*27.0-u_time*1.7))*0.004;
   vec4 base=Texel(tex,warped);
+  float mask=coverage(base);
   float nearby=0.0;
   for (int x=-1;x<=1;x++) for (int y=-1;y<=1;y++)
-    nearby=max(nearby,Texel(tex,warped+vec2(x,y)*u_texel*2.0).a);
-  float outline=max(nearby-base.a,0.0);
+    nearby=max(nearby,coverage(Texel(tex,warped+vec2(x,y)*u_texel*2.0)));
+  float outline=max(nearby-mask,0.0);
   float dissolve=smoothstep(0.30,0.38,noise(sc*0.18+u_time*4.0));
   vec3 yellow=vec3(1.0,0.835,0.118);
   vec3 pink=vec3(1.0,0.275,0.478);
@@ -27,6 +32,6 @@ vec4 effect(vec4 color,Image tex,vec2 tc,vec2 sc) {
   float ramp=0.5+0.5*sin(u_time+base.r*4.0+tc.y*7.0);
   vec3 palette=mix(mix(purple,pink,ramp),yellow,base.g*0.45);
   float glow=nearby*0.35;
-  return vec4(palette*(base.a*dissolve+glow)+yellow*outline,base.a*dissolve+outline+glow*0.5)*color;
+  return vec4(palette*(mask*dissolve+glow)+yellow*outline,mask*dissolve+outline+glow*0.5)*color;
 }
 #endif
