@@ -51,6 +51,8 @@ f.custom {
 
 Stateful code receives the current position `p`, velocity, age, and seed and returns acceleration. Marking the force stateful makes `mode='auto'` select the simulation backend.
 
+The runnable [`custom-shaders` example](../tools/examples.md#custom-shaders) combines custom analytic movement with a separate LÖVE fragment shader.
+
 ## Flow fields
 
 ```lua

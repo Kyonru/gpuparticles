@@ -52,7 +52,7 @@ function M.install(selected,automated)
     g.setColor(0.85,0.9,1,1);g.print(effects.names[index]:upper(),24,24)
     g.setColor(0.48,0.68,0.72);g.print(('%s · %s · %s particles'):format(
       emitter:getMode(),emitter:getBackend(),emitter:getBufferSize()),24,45)
-    local controls='Left/Right Effect   Space Burst   R Reset   C Compare   W Waterfall   V Volumes'
+    local controls='Left/Right Effect   Space Burst   R Reset   X Shaders   C Compare   W Waterfall   V Volumes'
     if hasEditor then controls=controls..'   E Editor' end
     g.setColor(0.48,0.62,0.69);g.print(controls..'   Esc',24,g.getHeight()-28)
     local name=effects.names[index]
@@ -68,6 +68,7 @@ function M.install(selected,automated)
       require(prefix..'example_support.'..(key=='c' and 'comparison' or 'waterfall')..'.app').install()
       love.load()
     elseif key=='r' then load() end
+    if key=='x' then release();require(prefix..'example_support.custom_shaders.app').install();love.load() end
     if key=='e' and hasEditor then release();require('editor_support.app').install();love.load() end
     if key=='v' then release();require(prefix..'example_support.volume.app').install();love.load() end
   end

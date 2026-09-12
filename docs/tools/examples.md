@@ -19,6 +19,16 @@ love particle-gpu/examples/sdf
 
 The example runner asserts that every effect selected the expected mode.
 
+## Custom shaders
+
+```sh
+love particle-gpu/examples/custom-shaders
+```
+
+This example injects a seeded helix displacement with `gpu.forces.custom`, then draws the emitter through a regular LÖVE fragment shader for color separation and glow. Press **G** to disable the fragment pass and compare it with the raw analytic particles.
+
+![Custom analytic movement with fragment glow](../assets/images/custom-shaders.png)
+
 ## Native versus GPU
 
 ```sh

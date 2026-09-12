@@ -132,6 +132,7 @@ love . editor                  # layered Particle Studio and Lua export
 love . comparison              # native/GPU FPS comparison
 love . waterfall               # collision and persistent water
 love . volume                  # water, smoke, and steam
+love . custom-shaders          # custom GLSL movement and fragment glow
 love . bench                   # local performance measurements
 ```
 

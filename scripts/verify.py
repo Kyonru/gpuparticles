@@ -190,6 +190,18 @@ def demo(name, *arguments):
         raise RuntimeError(f'{name}: exit {result.returncode}, required render/capture markers: {required}')
 
 
+def custom_shader_demo():
+    result = subprocess.run(
+        [options.love, str(root / 'examples' / 'custom-shaders'), '--smoke', '--capture'],
+        text=True, capture_output=True, timeout=90,
+    )
+    output = result.stdout + result.stderr
+    print(output, end='')
+    required = ('Custom shaders standalone render PASS', 'CUSTOM_SHADERS_CAPTURE ')
+    if result.returncode != 0 or any(marker not in output for marker in required):
+        raise RuntimeError(f'custom-shaders: exit {result.returncode}, required render/capture markers: {required}')
+
+
 def portability():
     with tempfile.TemporaryDirectory(prefix='gpuparticles-standalone-') as folder:
         destination = Path(folder)
@@ -286,6 +298,7 @@ if options.demos_only or options.waterfall_only:
         demo('comparison', '--benchmark')
         demo('comparison', '--mouse-collision')
         demo('comparison', '--self-collision', '--benchmark')
+        custom_shader_demo()
     demo('waterfall', '--mouse-collision')
     demo('waterfall', '--plant-collision')
     demo('waterfall', '--self-collision')
