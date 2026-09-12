@@ -12,5 +12,5 @@ return {
   {id='smoke',title='Interactive smoke',group='VOLUMES',volume=true,note='Velocity, pressure, temperature, wind, and mouse impulses drive gas.',api='gas · setWind · addForce · heat'},
   {id='terrain',title='Paintable volume terrain',group='VOLUMES',volume=true,note='Left paint adds solids; right paint erases them while water keeps moving.',api='paintTerrain · persistent water · GPU field edits'},
   {id='steam',title='Water-to-steam reaction',group='VOLUMES',volume=true,note='Cool water falls into the marked heater, converts, then rises as steam.',api='addReaction · addHeat · two materials'},
-  {id='shaders',title='Particle shader treatments',group='RENDERING',note='A post shader combines glow, outline, dissolve, distortion, and palette motion.',api='Canvas · custom fragment shader · animated uniforms'},
+  {id='shaders',title='Particle shader treatments',group='RENDERING',note='An aurora palette separates glow, outline, dissolve, distortion, and color motion.',api='Canvas · custom fragment shader · animated uniforms'},
 }

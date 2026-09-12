@@ -26,12 +26,15 @@ vec4 effect(vec4 color,Image tex,vec2 tc,vec2 sc) {
     nearby=max(nearby,coverage(Texel(tex,warped+vec2(x,y)*u_texel*2.0)));
   float outline=max(nearby-mask,0.0);
   float dissolve=smoothstep(0.30,0.38,noise(sc*0.18+u_time*4.0));
-  vec3 yellow=vec3(1.0,0.835,0.118);
-  vec3 pink=vec3(1.0,0.275,0.478);
-  vec3 purple=vec3(0.314,0.012,0.753);
+  vec3 aqua=vec3(0.0,0.961,0.831);
+  vec3 blue=vec3(0.0,0.733,0.976);
+  vec3 lime=vec3(0.557,0.941,0.353);
+  vec3 ice=vec3(0.969,1.0,0.969);
   float ramp=0.5+0.5*sin(u_time+base.r*4.0+tc.y*7.0);
-  vec3 palette=mix(mix(purple,pink,ramp),yellow,base.g*0.45);
+  vec3 palette=mix(blue,aqua,ramp);
+  palette=mix(palette,lime,smoothstep(0.15,0.95,base.g)*0.38);
   float glow=nearby*0.35;
-  return vec4(palette*(mask*dissolve+glow)+yellow*outline,mask*dissolve+outline+glow*0.5)*color;
+  vec3 treated=palette*mask*dissolve+aqua*glow*0.72+ice*outline;
+  return vec4(treated,mask*dissolve+outline+glow*0.5)*color;
 }
 #endif
