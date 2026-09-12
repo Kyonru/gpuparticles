@@ -16,7 +16,7 @@ Three layers make the waterfall:
 
 1. Shader-animated ribbons form the continuous water curtain.
 2. Stateful GPU droplets collide with a signed-distance field containing the rocks and pool surface.
-3. Analytic spray and mist decorate authored impact locations.
+3. Analytic blue spray rises from each impact. Thin mist emitters follow the angle of the ledges and pool instead of floating around point sources.
 
 **F** switches to optional **water volume**. This runs a separate, persistent water grid across the entire scene: water falls from the source, spreads over rocks, fills low areas, and rises as more arrives. It does not require particle self-collision. Place the mouse circle against the right end of the first ledge (around **674, 306**, radius **55**) to obstruct the outlet. Water collects upstream and finds another route; moving the circle releases the obstruction. A circle suspended in open air redirects water around its sides. A temporary pool needs supporting geometry.
 
@@ -33,6 +33,8 @@ The four foreground rocks are solid; the old y=694 artwork surface is excluded. 
 This is a coarse, compressible cellular approximation, not a Navier–Stokes or incompressible-liquid solver. Pressure is approximated by extra mass in filled cells; occupied screen area is therefore not an exact volume measurement. Sloping/mounded surfaces, cell-sized edges, and delayed redistribution are expected under strong inflow. It has no velocity advection, surface tension, particle splashes, or leaf-level water collision. Thin gaps and obstacles smaller than a cell are unresolved. Work scales with grid size and relaxation count, not all pairs of particles; the HUD reports window FPS for the current mode. The existing catch-up cap still slows simulation under load.
 
 **1/2/3** toggle those layers. **D** shows the collision field, **Space** pauses, **R** restarts, **H** hides the HUD, and **Esc** exits. Hidden layers continue to simulate.
+
+The in-scene control strip stays intentionally short. These layer, debug, reset, radius, and exit controls remain available even when they are omitted from the strip.
 
 **S** toggles self-collision for the main droplet stream. Both modes use **24000 slots at 6000 droplets per simulated second**, with the same lifetime, seed, and spawn settings. Self-collision adds a **1.5 px contact radius** and one solver iteration alongside the rock and mouse collisions. Toggling restarts and warms only the droplets; scenery, spray, mist, wind, pause, and layer controls remain as set. **R** preserves the selected self-collision mode. The HUD shows contact status, droplet capacity, emission rate, and window FPS. Live count follows particle lifetimes; 24000 is the buffer capacity. For isolated timings, use the [comparison's S mode](../comparison/README.md).
 

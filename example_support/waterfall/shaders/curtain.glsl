@@ -26,7 +26,7 @@ vec4 effect(vec4 color,Image tex,vec2 uv,vec2 screen) {
     float ribbons=pow(0.5+0.5*sin(uv.x*94.0+n*4.0+sin(uv.y*9.0-u_time*3.0)),10.0);
     float broken=smoothstep(0.12,0.78,n+fine*0.2);
     float alpha=edge*(0.23+broken*0.47+ribbons*0.3)*smoothstep(0.5,3.0,distance);
-    vec3 water=mix(vec3(0.404,0.635,0.773),vec3(0.608,0.808,0.757),clamp(n*0.6+ribbons*0.7+fine*0.12,0.0,1.0));
+    vec3 water=mix(vec3(0.188,0.569,0.839),vec3(0.592,0.855,1.0),clamp(n*0.6+ribbons*0.7+fine*0.12,0.0,1.0));
     return vec4(water,alpha)*color;
 }
 #endif

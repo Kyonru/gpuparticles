@@ -13,9 +13,9 @@ local function droplets(terrain,selfCollision)
     position={580,96},emissionArea={distribution='uniform',x=27,y=4},
     direction=math.pi/2,spread=0.08,speed={95,145},gravity={0,480},damping=0.06,
     sizes={1.4,2.8,1.4,0},sizeVariation=0.5,
-    colors={{palette.purple[1],palette.purple[2],palette.purple[3],0.32},
-      {palette.red[1],palette.red[2],palette.red[3],0.52},
-      {palette.pink[1],palette.pink[2],palette.pink[3],0}},blendMode='alpha',
+    colors={{palette.waterLight[1],palette.waterLight[2],palette.waterLight[3],0.38},
+      {palette.water[1],palette.water[2],palette.water[3],0.58},
+      {palette.waterDeep[1],palette.waterDeep[2],palette.waterDeep[3],0}},blendMode='alpha',
     collision={type='sdf',texture=terrain.field,size={Terrain.width,Terrain.height},radius=1.5,bounce=0.10,friction=0.025},
     circleCollider={radius=45,particleRadius=1.5,bounce=0.15,friction=0.025,enabled=false},
     selfCollision=selfCollision and {radius=1.5,bounce=0.1,strength=0.8,iterations=1} or nil,
@@ -32,25 +32,32 @@ function S.new(options)
   end
   self.drops=droplets(self.terrain,self.selfCollision);self.emitters[1]=self.drops
   assert(self.drops:getMode()=='stateful','waterfall drops require GPU state')
-  local impacts={{596,331,220},{751,504,190},{630,690,700}}
+  -- Each impact carries its surface angle and mist span. Decorative particles begin
+  -- on the contact plane instead of forming free-floating clouds around it.
+  local impacts={
+    {x=596,y=327,rate=180,angle=0.22,span=23,mistSpan=31},
+    {x=751,y=495,rate=160,angle=-0.40,span=25,mistSpan=38},
+    {x=630,y=687,rate=430,angle=0,span=52,mistSpan=96},
+  }
   for i,impact in ipairs(impacts) do
     self.spray[i]=emitter{
-      max=math.ceil(impact[3]*0.9),rate=impact[3],lifetime={0.35,0.85},seed=80+i,
-      position={impact[1],impact[2]},emissionArea={distribution='uniform',x=i==3 and 43 or 17,y=2},
-      direction=-math.pi/2,spread=2.5,speed={35,125},gravity={0,300},damping=0.15,
-      sizes={1.3,2.2,0},colors={{palette.yellow[1],palette.yellow[2],palette.yellow[3],0.68},
-        {palette.pink[1],palette.pink[2],palette.pink[3],0.25},
-        {palette.purple[1],palette.purple[2],palette.purple[3],0}},blendMode='alpha',
+      max=math.ceil(impact.rate*0.9),rate=impact.rate,lifetime={0.35,0.78},seed=80+i,
+      position={impact.x,impact.y},emissionArea={distribution='uniform',x=impact.span,y=1,angle=impact.angle},
+      direction=-math.pi/2,spread=2.15,speed={30,105},gravity={0,280},damping=0.18,
+      sizes={1.2,2.0,0},colors={{palette.foam[1],palette.foam[2],palette.foam[3],0.72},
+        {palette.waterLight[1],palette.waterLight[2],palette.waterLight[3],0.34},
+        {palette.water[1],palette.water[2],palette.water[3],0}},blendMode='alpha',
     }
     self.mist[i]=emitter{
-      max=i==3 and 1800 or 400,rate=i==3 and 550 or 110,lifetime={1.5,3.0},seed=140+i,
-      position={impact[1],impact[2]-7},emissionArea={distribution='uniform',x=i==3 and 48 or 15,y=4},
-      direction=-math.pi/2,spread=2.2,speed={6,24},gravity={4,-8},damping=0.6,
-      sizes={14,49,87},sizeVariation=0.5,
-      colors={{palette.purple[1],palette.purple[2],palette.purple[3],0},
-        {palette.red[1],palette.red[2],palette.red[3],0.045},
-        {palette.pink[1],palette.pink[2],palette.pink[3],0}},blendMode='alpha',
-      forces={gpu.forces.turbulence{amplitude={9,3},frequency={1.5,1.2}}},
+      max=i==3 and 900 or 280,rate=i==3 and 320 or 90,lifetime={0.8,1.7},seed=140+i,
+      position={impact.x,impact.y-3},
+      emissionArea={distribution='uniform',x=impact.mistSpan,y=1.5,angle=impact.angle},
+      direction=-math.pi/2,spread=math.pi,speed={2,10},gravity={0,7},damping=1.1,
+      sizes={10,25,38},sizeVariation=0.35,
+      colors={{palette.waterDeep[1],palette.waterDeep[2],palette.waterDeep[3],0},
+        {palette.water[1],palette.water[2],palette.water[3],0.14},
+        {palette.waterLight[1],palette.waterLight[2],palette.waterLight[3],0}},blendMode='alpha',
+      forces={gpu.forces.turbulence{amplitude={3.5,0.8},frequency={1.25,0.9}}},
     }
     assert(self.spray[i]:getMode()=='analytic' and self.mist[i]:getMode()=='analytic','impact decoration must remain analytic')
   end

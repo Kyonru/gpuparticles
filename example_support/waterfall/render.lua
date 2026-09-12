@@ -48,8 +48,8 @@ function R.new(terrain)
     g.setColor(palette.teal[1],palette.teal[2],palette.teal[3],0.05);g.polygon('fill',660,0,742,0,944,H,306,H)
     g.setColor(palette.blue[1],palette.blue[2],palette.blue[3],0.05);g.polygon('fill',780,0,812,0,1050,H,454,H)
     -- Distant trunks and canyon silhouettes are scenery, separate from the four collidable foreground rocks.
-    for i=0,34 do
-      local x=i*43+math.sin(i*4)*20
+    for i=0,18 do
+      local x=i*72+math.sin(i*4)*18
       local top=62+math.sin(i*2.9)*30
       g.setColor(palette.teal[1],palette.teal[2],palette.teal[3],0.25);g.rectangle('fill',x,top,3,520)
       g.setColor(palette.blue[1],palette.blue[2],palette.blue[3],0.18)
@@ -147,19 +147,21 @@ function R:hud(scene)
   g.setFont(self.small);g.setColor(palette.teal)
   local backend=scene.drops:getBackend()
   local contacts=backend~='gpu' and 'UNAVAILABLE' or scene.selfCollision and 'ON' or 'OFF'
-  local diagnostic=scene.layers.field and ('FIELD · CORAL SOLID / TEAL AIR · %d FPS'):format(love.timer.getFPS())
-    or scene.fluid and ('VOLUME %d × %d · INFLOW %s · %d FPS'):format(
-      scene.fluid.columns,scene.fluid.rows,scene.inflow and 'ON' or 'OFF',love.timer.getFPS())
-    or ('%s · %dK DROPS · CONTACTS %s · %d FPS'):format(
-      backend=='gpu' and 'GPU' or 'NATIVE',math.floor(scene.drops.config.max/1000),contacts,love.timer.getFPS())
+  local diagnostic=scene.layers.field and ('COLLISION FIELD · %d FPS'):format(love.timer.getFPS())
+    or scene.fluid and ('VOLUME %d × %d · %d FPS'):format(scene.fluid.columns,scene.fluid.rows,love.timer.getFPS())
+    or ('%s · %dK · %d FPS'):format(backend=='gpu' and 'GPU' or 'NATIVE',
+      math.floor(scene.drops.config.max/1000),love.timer.getFPS())
   g.printf(diagnostic,850,45,382,'right')
   local controls=scene.fluid
-    and ('1 Water   D Field   F Particles   V Inflow %s   C Circle   Wheel Size   W Wind   Space %s   R Reset   H Hide   Esc'):format(
+    and ('F Particles   V Inflow %s   C Collider   W Wind   Space %s   H Hide'):format(
       scene.inflow and 'on' or 'off',scene.paused and 'Resume' or 'Pause')
-    or ('1 Curtain   2 Drops   3 Mist   D Field   F Volume   S Contacts %s   C Circle   Wheel Size   W Wind   Space %s   R Reset   H Hide   Esc'):format(
+    or ('F Volume   S Contacts %s   C Collider   W Wind   Space %s   H Hide'):format(
       contacts:lower(),scene.paused and 'Resume' or 'Pause')
-  g.setColor(palette.deep[1],palette.deep[2],palette.deep[3],0.88);g.rectangle('fill',35,739,1210,41,6,6)
-  g.setFont(self.small);g.setColor(palette.blue);g.printf(controls,49,754,1182,'center')
+  g.setFont(self.small)
+  local width=g.getFont():getWidth(controls)+34
+  local left=(W-width)/2
+  g.setColor(palette.deep[1],palette.deep[2],palette.deep[3],0.88);g.rectangle('fill',left,747,width,34,6,6)
+  g.setColor(palette.waterLight);g.printf(controls,left+17,758,width-34,'center')
 end
 function R:release() for _,resource in ipairs(self.owned) do resource:release() end end
 return R
