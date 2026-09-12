@@ -61,19 +61,13 @@ end
 local function preview(app,L)
   local u,m,g=app.ui,app.model,love.graphics;local r=L.preview
   u:text('LIVE PREVIEW',r.x+20,r.y+16,'muted',11)
-  u:button('grid','Grid',r.x+r.w-166,r.y+8,62,40,function() m.grid=not m.grid end,m.grid)
   u:button('restart','Replay',r.x+r.w-96,r.y+8,82,40,function() m:seek(0) end)
   local x,y,scale=V.viewport(L);local area=V.previewRect(L);local bounds=V.bounds(L)
   g.setScissor(area.x,area.y,area.w,area.h);g.push('all');g.translate(x,y);g.scale(scale)
   U.color('canvas');g.rectangle('fill',bounds.x,bounds.y,bounds.w,bounds.h)
-  if m.grid then
-    g.setColor(0.11,0.12,0.13,0.55);g.setLineWidth(1/scale)
-    for i=math.ceil(bounds.x/40)*40,bounds.x+bounds.w,40 do g.line(i,bounds.y,i,bounds.y+bounds.h) end
-    for j=math.ceil(bounds.y/40)*40,bounds.y+bounds.h,40 do g.line(bounds.x,j,bounds.x+bounds.w,j) end
-  end
   g.setColor(1,1,1,1);m.runtime:draw(0,0,bounds)
   local l=m:layer();local c=l.emitter
-  g.setColor(0.98,0.65,0.29,0.5);g.setLineWidth(1/scale)
+  U.color('peach',0.7);g.setLineWidth(1/scale)
   if l.ground.enabled then g.line(bounds.x,l.ground.y,bounds.x+bounds.w,l.ground.y) end
   if l.circle.enabled then g.circle('line',l.circle.x,l.circle.y,l.circle.radius) end
   if l.attractor.enabled then g.circle('line',l.attractor.x,l.attractor.y,14);g.line(l.attractor.x-20,l.attractor.y,l.attractor.x+20,l.attractor.y) end
@@ -82,12 +76,12 @@ local function preview(app,L)
   g.line(c.position[1]-16/scale,c.position[2],c.position[1]+16/scale,c.position[2]);g.line(c.position[1],c.position[2]-16/scale,c.position[1],c.position[2]+16/scale)
   g.line(c.position[1],c.position[2],c.position[1]+math.cos(c.direction)*50,c.position[2]+math.sin(c.direction)*50)
   if c.spread>0 and c.spread<math.pi*1.9 then
-    g.setColor(0.98,0.65,0.29,0.28)
+    U.color('peach',0.38)
     for _,sign in ipairs{-1,1} do local angle=c.direction+sign*c.spread/2;g.line(c.position[1],c.position[2],c.position[1]+math.cos(angle)*72,c.position[2]+math.sin(angle)*72) end
   end
   if c.emissionArea.distribution~='none' then
     local emission=c.emissionArea
-    g.push();g.translate(c.position[1],c.position[2]);g.rotate(emission.angle);g.setColor(0.98,0.65,0.29,0.22)
+    g.push();g.translate(c.position[1],c.position[2]);g.rotate(emission.angle);U.color('peach',0.34)
     if emission.distribution=='uniform' or emission.distribution=='borderrectangle' then g.rectangle('line',-emission.x,-emission.y,emission.x*2,emission.y*2)
     else g.ellipse('line',0,0,math.max(1,emission.x),math.max(1,emission.y)) end
     g.pop()

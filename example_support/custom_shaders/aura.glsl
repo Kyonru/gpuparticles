@@ -29,7 +29,7 @@ vec4 effect(vec4 color, Image tex, vec2 tc, vec2 sc) {
         core.g,
         Texel(tex,tc-vec2(u_texel.x*2.0,0.0)).b
     );
-    vec3 glowColor=halo.rgb*vec3(0.22,0.72,1.35)*u_glow;
+    vec3 glowColor=halo.rgb*vec3(0.608,0.808,0.757)*u_glow;
     float alpha=max(core.a,halo.a*u_glow*0.72);
     return vec4(split+glowColor,alpha)*color;
 }

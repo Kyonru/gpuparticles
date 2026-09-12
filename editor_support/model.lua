@@ -6,7 +6,7 @@ local M={};M.__index=M
 function M.new(options)
   options=options or {}
   local self=setmetatable({doc=Presets.make(options.preset or 1),selected=2,undoStack={},redoStack={},dirty=false,
-    tab='Emitter',scroll=0,colorStop=1,sizeStop=1,burstStop=1,playing=true,speed=1,grid=true,solo=nil,
+    tab='Emitter',scroll=0,colorStop=1,sizeStop=1,burstStop=1,playing=true,speed=1,solo=nil,
     status='Ready. Drag an emitter in the preview, or choose a property.',statusTime=0,pending=0,builds=0},M)
   self.selected=math.min(self.selected,#self.doc.layers);self:rebuild(1.8);return self
 end

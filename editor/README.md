@@ -38,7 +38,7 @@ Drag in the preview to position the selected emitter. Hold **Shift** to move its
 
 The bottom timeline shows emission windows, burst diamonds, and the playhead. Drag the playhead to seek. Analytic effects jump through scheduled events; stateful effects replay in batches of at most 32 simulation steps per editor update, keeping the interface responsive. **Project** changes the composition duration and looping. **Burst 256** auditions an unsaved burst; use Timing to author a persistent event.
 
-The preview fills the space between its controls and the timeline. It preserves the effect's proportions and shows extra world space when the panel is taller or wider than the 960 × 640 reference scene. Particles, shader layers, the grid, and dragging all use that same visible area; they are clipped only at its edges. Resizing does not restart playback.
+The preview fills the space between its controls and the timeline. It preserves the effect's proportions and shows extra world space when the panel is taller or wider than the 960 × 640 reference scene. Particles, shader layers, and dragging all use that same visible area; they are clipped only at its edges. Resizing does not restart playback.
 
 ## Textures, pixels, and shaders
 

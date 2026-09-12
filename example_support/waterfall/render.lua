@@ -3,6 +3,8 @@ local R={}
 R.__index=R
 local W,H=1280,800
 local Plants=require((...):gsub('render$','plants'))
+local prefix=(...):gsub('example_support%.waterfall%.render$','')
+local palette=require(prefix..'example_support.palette')
 local function ribbon(points)
   local vertices={}
   for i=1,#points-1 do
@@ -40,35 +42,29 @@ function R.new(terrain)
   self.background=canvas(function()
     for y=0,H-1,2 do
       local t=y/H
-      g.setColor(0.065-0.033*t,0.16-0.067*t,0.19-0.060*t)
+      g.setColor((33-11*t)/255,(54-12*t)/255,(64-12*t)/255)
       g.rectangle('fill',0,y,W,2)
     end
-    g.setColor(0.29,0.49,0.43,0.04);g.polygon('fill',660,0,742,0,944,H,306,H)
-    g.setColor(0.32,0.5,0.44,0.04);g.polygon('fill',780,0,812,0,1050,H,454,H)
+    g.setColor(palette.teal[1],palette.teal[2],palette.teal[3],0.05);g.polygon('fill',660,0,742,0,944,H,306,H)
+    g.setColor(palette.blue[1],palette.blue[2],palette.blue[3],0.05);g.polygon('fill',780,0,812,0,1050,H,454,H)
     -- Distant trunks and canyon silhouettes are scenery, separate from the four collidable foreground rocks.
     for i=0,34 do
       local x=i*43+math.sin(i*4)*20
       local top=62+math.sin(i*2.9)*30
-      g.setColor(0.11,0.22,0.23,0.38);g.rectangle('fill',x,top,3,520)
-      g.setColor(0.09,0.19,0.20,0.32)
+      g.setColor(palette.teal[1],palette.teal[2],palette.teal[3],0.25);g.rectangle('fill',x,top,3,520)
+      g.setColor(palette.blue[1],palette.blue[2],palette.blue[3],0.18)
       for k=0,5 do g.polygon('fill',x+1,top+k*32,x-24+k*2,top+80+k*32,x+25-k*2,top+80+k*32) end
     end
-    g.setColor(0.066,0.125,0.155)
+    g.setColor(palette.blue[1]*0.28,palette.blue[2]*0.28,palette.blue[3]*0.28)
     g.polygon('fill',0,0,388,0,443,94,417,198,462,283,419,442,392,551,417,692,351,800,0,800)
-    g.setColor(0.047,0.107,0.139)
+    g.setColor(palette.blue[1]*0.22,palette.blue[2]*0.22,palette.blue[3]*0.22)
     g.polygon('fill',1280,0,1076,0,1040,134,1075,253,1010,363,1042,442,948,551,941,800,1280,800)
-    g.setColor(0.027,0.072,0.093)
+    g.setColor(palette.ink[1]*0.68,palette.ink[2]*0.68,palette.ink[3]*0.68)
     g.polygon('fill',0,0,271,0,311,155,282,305,331,473,281,622,321,800,0,800)
     g.polygon('fill',1280,0,1160,0,1108,282,1146,444,1103,583,1139,800,1280,800)
-    for i=0,35 do
-      local y=i*25
-      g.setColor(0.18,0.25,0.23,0.12);g.setLineWidth(1)
-      g.line(20,y,136,y-15,262,y-6,316,y-26)
-      g.setColor(0.19,0.29,0.25,0.10);g.line(1103,y+33,1180,y+10,1278,y+22)
-    end
     -- The source shelf meets the first water ribbon.
-    g.setColor(0.07,0.145,0.16);g.polygon('fill',364,71,570,67,618,92,571,114,437,123,392,151)
-    g.setColor(0.18,0.32,0.25);g.line(369,70,568,66,596,83)
+    g.setColor(palette.blue[1]*0.34,palette.blue[2]*0.34,palette.blue[3]*0.34);g.polygon('fill',364,71,570,67,618,92,571,114,437,123,392,151)
+    g.setColor(palette.teal);g.line(369,70,568,66,596,83)
   end)
   self.rock:send('u_overlay',false)
   self.rocks=canvas(function()
@@ -77,9 +73,9 @@ function R.new(terrain)
     g.setShader()
     for _,rock in ipairs(terrain.rocks) do
       g.push();g.translate(rock.x,rock.y);g.rotate(rock.angle)
-      g.setColor(0.21,0.34,0.26,0.7);g.setLineWidth(3)
+      g.setColor(palette.teal[1],palette.teal[2],palette.teal[3],0.62);g.setLineWidth(3)
       g.line(-rock.w/2+rock.radius,-rock.h/2+2,rock.w/2-rock.radius,-rock.h/2+2)
-      g.setColor(0.02,0.05,0.07,0.42);g.setLineWidth(2)
+      g.setColor(palette.ink[1],palette.ink[2],palette.ink[3],0.55);g.setLineWidth(2)
       for i=1,5 do
         local x=-rock.w/2+i*rock.w/6
         g.line(x,-rock.h/2+13,x+7,0,x-1,rock.h/2-8)
@@ -95,7 +91,7 @@ function R.new(terrain)
   for i=1,13 do front[#front+1]={20+i*24,779+math.sin(i)*13,0.6+i%4*0.2,-0.6+i%5*0.2} end
   self.backPlants=own(Plants.new(back));self.frontPlants=own(Plants.new(front))
   self.foregroundCanvas=canvas(function()
-    g.setColor(0.018,0.055,0.064);g.polygon('fill',0,740,93,693,193,742,319,725,411,800,0,800)
+    g.setColor(palette.deep);g.polygon('fill',0,740,93,693,193,742,319,725,411,800,0,800)
   end)
   self.overlay=canvas(function()
     self.rock:send('u_overlay',true);g.setShader(self.rock);g.rectangle('fill',0,0,W,H);g.setShader()
@@ -132,8 +128,8 @@ end
 function R.mouseObstacle(_,mouse)
   if not mouse.enabled or not mouse.inside then return end
   local g=love.graphics
-  g.setColor(0.99,0.73,0.43,0.10);g.circle('fill',mouse.x,mouse.y,mouse.radius)
-  g.setColor(0.99,0.73,0.43,0.9);g.setLineWidth(1.5);g.circle('line',mouse.x,mouse.y,mouse.radius)
+  g.setColor(palette.peach[1],palette.peach[2],palette.peach[3],0.14);g.circle('fill',mouse.x,mouse.y,mouse.radius)
+  g.setColor(palette.peach);g.setLineWidth(1.5);g.circle('line',mouse.x,mouse.y,mouse.radius)
 end
 function R:environment() love.graphics.setColor(1,1,1,1);love.graphics.draw(self.rocks) end
 function R:updatePlants(dt,time,mouse)
@@ -147,8 +143,8 @@ function R:debug()
 end
 function R:hud(scene)
   local g=love.graphics
-  g.setFont(self.title);g.setColor(0.85,0.92,0.85);g.print('Basalt Falls',45,38)
-  g.setFont(self.small);g.setColor(0.58,0.79,0.74)
+  g.setFont(self.title);g.setColor(palette.beige);g.print('Basalt Falls',45,38)
+  g.setFont(self.small);g.setColor(palette.teal)
   local backend=scene.drops:getBackend()
   local contacts=backend~='gpu' and 'UNAVAILABLE' or scene.selfCollision and 'ON' or 'OFF'
   local diagnostic=scene.layers.field and ('FIELD · CORAL SOLID / TEAL AIR · %d FPS'):format(love.timer.getFPS())
@@ -162,8 +158,8 @@ function R:hud(scene)
       scene.inflow and 'on' or 'off',scene.paused and 'Resume' or 'Pause')
     or ('1 Curtain   2 Drops   3 Mist   D Field   F Volume   S Contacts %s   C Circle   Wheel Size   W Wind   Space %s   R Reset   H Hide   Esc'):format(
       contacts:lower(),scene.paused and 'Resume' or 'Pause')
-  g.setColor(0.02,0.06,0.08,0.82);g.rectangle('fill',35,739,1210,41,6,6)
-  g.setFont(self.small);g.setColor(0.60,0.77,0.74);g.printf(controls,49,754,1182,'center')
+  g.setColor(palette.deep[1],palette.deep[2],palette.deep[3],0.88);g.rectangle('fill',35,739,1210,41,6,6)
+  g.setFont(self.small);g.setColor(palette.blue);g.printf(controls,49,754,1182,'center')
 end
 function R:release() for _,resource in ipairs(self.owned) do resource:release() end end
 return R

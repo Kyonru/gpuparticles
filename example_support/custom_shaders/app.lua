@@ -1,5 +1,6 @@
 local prefix=(...):gsub('example_support%.custom_shaders%.app$','')
 local gpu=require(prefix..'gpuparticles')
+local palette=require(prefix..'example_support.palette')
 local A={}
 function A.install()
   local emitter,canvas,shader,title,text
@@ -23,7 +24,10 @@ function A.install()
       max=50000,rate=11000,lifetime={2.4,4.2},seed=77,
       position={width/2,height-92},direction=-math.pi/2,spread=0.42,speed={105,205},
       gravity={0,-12},damping=0.16,sizes={2,7,3,0},blendMode='add',
-      colors={{0.18,0.95,1,0},{0.2,0.9,1,0.9},{0.65,0.25,1,0.72},{1,0.2,0.55,0}},
+      colors={{palette.teal[1],palette.teal[2],palette.teal[3],0},
+        {palette.teal[1],palette.teal[2],palette.teal[3],0.92},
+        {palette.blue[1],palette.blue[2],palette.blue[3],0.76},
+        {palette.peach[1],palette.peach[2],palette.peach[3],0}},
       forces={gpu.forces.custom{
         name='helix',uniforms={amplitude=72,frequency=5.4,lift=16},
         code=[[
@@ -56,21 +60,19 @@ function A.install()
   function love.draw()
     local g=love.graphics
     g.push('all');g.setCanvas(canvas);g.clear(0,0,0,0);emitter:draw();g.setCanvas()
-    g.clear(0.012,0.018,0.032)
-    local width,height=g.getDimensions()
-    g.setColor(0.12,0.34,0.43,0.18);g.setLineWidth(1)
-    for y=104,height-70,48 do g.line(0,y,width,y) end
+    g.clear(palette.ink)
+    local _,height=g.getDimensions()
     shader:send('u_time',elapsed);shader:send('u_glow',1)
     if shaderEnabled then g.setShader(shader) end
     g.setBlendMode('alpha','premultiplied');g.setColor(1,1,1,1);g.draw(canvas);g.setShader()
     g.setBlendMode('alpha','alphamultiply')
-    g.setFont(title);g.setColor(0.88,0.94,1,1);g.print('Custom shaders',28,23)
-    g.setFont(text);g.setColor(0.42,0.77,0.84)
+    g.setFont(title);g.setColor(palette.beige);g.print('Custom shaders',28,23)
+    g.setFont(text);g.setColor(palette.teal)
     local measured=love.timer.getFPS()
     local fps=measured>0 and (measured..' FPS') or 'FPS …'
     g.print(('analytic GLSL movement  ·  fragment shader %s  ·  %s particles  ·  %s'):format(
       shaderEnabled and 'on' or 'off',emitter:getBufferSize(),fps),29,63)
-    g.setColor(0.48,0.66,0.74)
+    g.setColor(palette.blue)
     g.print('G Shader   Space Burst   R Reset   Esc',29,height-33)
     g.pop()
     if capture and frames>=60 and not requested then

@@ -1,5 +1,6 @@
 local prefix=(...):gsub('example_support%.comparison%.selfbench$','')
 local gpu=require(prefix..'gpuparticles')
+local palette=require(prefix..'example_support.palette')
 local Preset=require(prefix..'example_support.comparison.particle_preset')
 local B={}
 local function sync(canvas)
@@ -17,7 +18,7 @@ local function measure(capacity,iterations,texture,target)
       local start=love.timer.getTime()
       for _=1,30 do
         e:update(1/120)
-        if draw then g.clear(0.022,0.043,0.063,1);e:draw() end
+        if draw then g.clear(palette.deep);e:draw() end
       end
       g.pop();sync(draw and target or e.stateA)
       measurements[sample]=(love.timer.getTime()-start)*1000/30

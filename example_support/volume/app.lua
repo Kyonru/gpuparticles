@@ -1,4 +1,6 @@
 local gpu=require((...):gsub('example_support%.volume%.app$','gpuparticles'))
+local prefix=(...):gsub('example_support%.volume%.app$','')
+local palette=require(prefix..'example_support.palette')
 local A={}
 local names={'water','smoke','steam'}
 local W,H=960,480
@@ -31,10 +33,12 @@ function A.install()
       end}
     if not world then print(reason);return end
     local water
-    if index~=2 then water=world:addMaterial{name='water',model='water',cooling=0.03} end
+    if index~=2 then water=world:addMaterial{name='water',model='water',cooling=0.03,
+      color={palette.blue[1],palette.blue[2],palette.blue[3],0.9}} end
     if index~=1 then
       local gas=world:addMaterial{name=names[index],model='gas',buoyancy=120,dissipation=0.18,cooling=0.06,
-        color=index==2 and {0.65,0.75,0.87,0.8} or {0.8,0.9,0.85,0.85},
+        color=index==2 and {palette.teal[1],palette.teal[2],palette.teal[3],0.82}
+          or {palette.beige[1],palette.beige[2],palette.beige[3],0.88},
         force={code='return swirl * vec2(sin(position.y*0.035+time),cos(position.x*0.023+time*0.7)) * min(density,1.0);',uniforms={swirl=24}}}
       if index==2 then source=world:newSource{material=gas,position={420,415},radius=18,rate=2400,temperature=2.8}
       else
@@ -50,7 +54,7 @@ function A.install()
     terrainShader=love.graphics.newShader([[#pragma language glsl3
 vec4 effect(vec4 color,Image tex,vec2 tc,vec2 sc) {
   float d=Texel(tex,tc).r;
-  return d<0.0 ? vec4(0.21,0.30,0.34,1.0) : vec4(0.0);
+  return d<0.0 ? vec4(0.404,0.635,0.773,1.0) : vec4(0.0);
 }]])
     load()
   end
@@ -76,22 +80,19 @@ vec4 effect(vec4 color,Image tex,vec2 tc,vec2 sc) {
   function love.draw()
     local g=love.graphics
     local displayName=names[index]:sub(1,1):upper()..names[index]:sub(2)
-    g.clear(0.025,0.043,0.059);g.setFont(title);g.setColor(0.85,0.92,0.92);g.print(displayName,24,18)
+    g.clear(palette.ink);g.setFont(title);g.setColor(palette.beige);g.print(displayName,24,18)
     g.setFont(font)
-    if not world then g.setColor(0.51,0.70,0.73);g.print('GPU volume canvases unavailable',25,58);return end
+    if not world then g.setColor(palette.teal);g.print('GPU volume canvases unavailable',25,58);return end
     local scale,left,top=viewport()
-    g.setColor(0.62,0.79,0.79)
+    g.setColor(palette.teal)
     g.printf(('%s · %d × %d · %d FPS'):format(world.renderStyle,world.columns,world.rows,love.timer.getFPS()),480,28,g.getWidth()-504,'right')
     g.push('all');g.translate(left,top);g.scale(scale)
     g.setScissor(left,top,W*scale,H*scale)
-    g.setColor(0.018,0.03,0.041);g.rectangle('fill',0,0,W,H)
-    g.setColor(0.10,0.16,0.20,0.35)
-    for x=0,W,48 do g.line(x,0,x,H) end
-    for y=0,H,48 do g.line(0,y,W,y) end
+    g.setColor(palette.deep);g.rectangle('fill',0,0,W,H)
     world:draw()
     g.setShader(terrainShader);g.setColor(1,1,1,1);g.draw(world.terrain,0,0,0,world.cell[1],world.cell[2]);g.setShader()
-    if world.circle[4]==1 then g.setColor(1,0.72,0.4,0.8);g.circle('line',mx,my,radius) end
-    g.pop();g.setFont(font);g.setColor(0.58,0.73,0.76)
+    if world.circle[4]==1 then g.setColor(palette.peach);g.circle('line',mx,my,radius) end
+    g.pop();g.setFont(font);g.setColor(palette.blue)
     local action=index==3 and '   LMB Heat' or index==2 and '   LMB Stir' or ''
     g.print(('1 Water   2 Smoke   3 Steam   F Style   V Inflow %s   C Circle   Wheel Size   Left/Right Wind%s   RMB Terrain   Space Pause   R Reset   Esc'):format(
       inflow and 'on' or 'off',action),24,top+H*scale+16)

@@ -1,4 +1,6 @@
 local directory=(...):gsub('plants$',''):gsub('%.','/')
+local prefix=(...):gsub('example_support%.waterfall%.plants$','')
+local palette=require(prefix..'example_support.palette')
 local P={};P.__index=P
 local format={{'VertexPosition','float',2},{'PlantRoot','float',2},{'PlantData','float',4},{'VertexColor','float',4}}
 local function clamp(v,lo,hi) return math.max(lo,math.min(hi,v)) end
@@ -10,7 +12,8 @@ function P.new(definitions)
     local p={x=d[1],y=d[2],scale=d[3],angle=d[4],phase=i*2.399963,bx=0,by=0,vx=0,vy=0}
     self.plants[i]=p;self.bends[i]={0,0}
     local function vertex(x,y)
-      vertices[#vertices+1]={x,y,p.x,p.y,p.scale,p.angle,p.phase,i-1,0.13,0.29,0.23,1}
+      vertices[#vertices+1]={x,y,p.x,p.y,p.scale,p.angle,p.phase,i-1,
+        palette.teal[1],palette.teal[2],palette.teal[3],1}
     end
     local function triangle(ax,ay,bx,by,cx,cy) vertex(ax,ay);vertex(bx,by);vertex(cx,cy) end
     local stem={{0,0},{4,-22},{1,-54},{-9,-87}}

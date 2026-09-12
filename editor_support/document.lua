@@ -1,6 +1,7 @@
 local D={version=1,maxLayers=12,maxParticles=500000,selfCollisionLimit=2048}
 local utf8=require('utf8')
 local Assets=require('editor_support.assets')
+local palette=require('editor_support.palette')
 function D.copy(value)
   if type(value)~='table' then return value end
   local out={};for k,v in pairs(value) do out[k]=D.copy(v) end;return out
@@ -23,10 +24,12 @@ end
 function D.layer(name)
   return {name=name or 'New emitter',enabled=true,shape='disc',start=0,span=6,bursts={},
     sprite={name='',png='',columns=1,rows=1,frames=1,filter='linear'},
-    appearance={pixelSize=1,dissolve=0,outline=0,outlineColor={0.05,0.08,0.12},levels=0,tint={1,1,1},distortion=0,glow=0,glowRadius=4},
+    appearance={pixelSize=1,dissolve=0,outline=0,outlineColor={palette.ink[1],palette.ink[2],palette.ink[3]},levels=0,tint={1,1,1},distortion=0,glow=0,glowRadius=4},
     emitter={max=6000,rate=1800,lifetime={0.8,1.6},position={480,470},direction=-math.pi/2,spread=0.45,
       speed={90,190},gravity={0,-30},damping=0.4,radialAcceleration=0,tangentialAcceleration=0,
-      sizes={3,8,0},colors={{1,0.7,0.18,0},{1,0.28,0.04,0.65},{0.35,0.06,0.02,0}},
+      sizes={3,8,0},colors={{palette.beige[1],palette.beige[2],palette.beige[3],0},
+        {palette.peach[1],palette.peach[2],palette.peach[3],0.7},
+        {palette.blue[1],palette.blue[2],palette.blue[3],0}},
       sizeVariation=0.4,spin={0,0},rotation={0,0},relativeRotation=false,seed=42,blendMode='add',
       emissionArea={distribution='ellipse',x=18,y=6,angle=0,directionRelative=false}},
     turbulence={enabled=false,amplitude={25,8},frequency={3,5}},curl={enabled=false,amplitude=18,frequency=0.7},

@@ -1,10 +1,14 @@
 -- Shared LÖVE control vocabulary, following the existing hybrid editor's focus pattern.
 local utf8=require('utf8')
+local palette=require('editor_support.palette')
 local U={};U.__index=U
-U.colors={canvas={0.039,0.044,0.049},panel={0.070,0.077,0.083},raised={0.104,0.113,0.120},
-  input={0.048,0.054,0.060},hover={0.145,0.153,0.158},line={0.17,0.18,0.19},
-  ink={0.91,0.91,0.88},secondary={0.64,0.67,0.67},muted={0.42,0.46,0.47},
-  accent={0.98,0.65,0.29},accentDim={0.26,0.19,0.115},danger={0.99,0.46,0.36},dark={0.12,0.085,0.045}}
+U.colors={
+  canvas=palette.ink,panel=palette.beige,raised=palette.teal,
+  input={1,245/255,230/255},hover={103/255,162/255,197/255},line={103/255,162/255,197/255},
+  ink={33/255,54/255,64/255},secondary={51/255,91/255,105/255},muted={78/255,116/255,121/255},
+  accent={52/255,114/255,145/255},accentDim={155/255,206/255,193/255},danger={190/255,85/255,76/255},
+  dark=palette.ink,peach=palette.peach,beige=palette.beige,teal=palette.teal,blue=palette.blue,
+}
 function U.color(name,alpha)
   local c=U.colors[name];love.graphics.setColor(c[1],c[2],c[3],alpha or 1)
 end

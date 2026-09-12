@@ -1,5 +1,6 @@
 local prefix=(...):gsub('example_support%.waterfall%.scene$','')
 local gpu=require(prefix..'gpuparticles')
+local palette=require(prefix..'example_support.palette')
 local Terrain=require(prefix..'example_support.waterfall.terrain')
 local Render=require(prefix..'example_support.waterfall.render')
 local Fluid=require(prefix..'example_support.waterfall.fluid')
@@ -12,7 +13,9 @@ local function droplets(terrain,selfCollision)
     position={580,96},emissionArea={distribution='uniform',x=27,y=4},
     direction=math.pi/2,spread=0.08,speed={95,145},gravity={0,480},damping=0.06,
     sizes={1.4,2.8,1.4,0},sizeVariation=0.5,
-    colors={{0.55,0.87,0.9,0.28},{0.7,0.94,0.95,0.45},{0.53,0.79,0.84,0}},blendMode='alpha',
+    colors={{palette.blue[1],palette.blue[2],palette.blue[3],0.32},
+      {palette.teal[1],palette.teal[2],palette.teal[3],0.52},
+      {palette.beige[1],palette.beige[2],palette.beige[3],0}},blendMode='alpha',
     collision={type='sdf',texture=terrain.field,size={Terrain.width,Terrain.height},radius=1.5,bounce=0.10,friction=0.025},
     circleCollider={radius=45,particleRadius=1.5,bounce=0.15,friction=0.025,enabled=false},
     selfCollision=selfCollision and {radius=1.5,bounce=0.1,strength=0.8,iterations=1} or nil,
@@ -35,14 +38,18 @@ function S.new(options)
       max=math.ceil(impact[3]*0.9),rate=impact[3],lifetime={0.35,0.85},seed=80+i,
       position={impact[1],impact[2]},emissionArea={distribution='uniform',x=i==3 and 43 or 17,y=2},
       direction=-math.pi/2,spread=2.5,speed={35,125},gravity={0,300},damping=0.15,
-      sizes={1.3,2.2,0},colors={{0.76,0.95,0.94,0.65},{0.65,0.88,0.89,0.22},{0.5,0.8,0.85,0}},blendMode='alpha',
+      sizes={1.3,2.2,0},colors={{palette.beige[1],palette.beige[2],palette.beige[3],0.68},
+        {palette.teal[1],palette.teal[2],palette.teal[3],0.25},
+        {palette.blue[1],palette.blue[2],palette.blue[3],0}},blendMode='alpha',
     }
     self.mist[i]=emitter{
       max=i==3 and 1800 or 400,rate=i==3 and 550 or 110,lifetime={1.5,3.0},seed=140+i,
       position={impact[1],impact[2]-7},emissionArea={distribution='uniform',x=i==3 and 48 or 15,y=4},
       direction=-math.pi/2,spread=2.2,speed={6,24},gravity={4,-8},damping=0.6,
       sizes={14,49,87},sizeVariation=0.5,
-      colors={{0.56,0.79,0.79,0},{0.61,0.83,0.82,0.027},{0.55,0.74,0.75,0}},blendMode='alpha',
+      colors={{palette.blue[1],palette.blue[2],palette.blue[3],0},
+        {palette.teal[1],palette.teal[2],palette.teal[3],0.045},
+        {palette.beige[1],palette.beige[2],palette.beige[3],0}},blendMode='alpha',
       forces={gpu.forces.turbulence{amplitude={9,3},frequency={1.5,1.2}}},
     }
     assert(self.spray[i]:getMode()=='analytic' and self.mist[i]:getMode()=='analytic','impact decoration must remain analytic')

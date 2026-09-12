@@ -1,5 +1,6 @@
 local prefix=(...):gsub('example_support%.effects$','')
 local gpu=require(prefix..'gpuparticles')
+local palette=require(prefix..'example_support.palette')
 local M={}
 M.names={'gravity','damping','radial','tangential','turbulence','curl','flow','collision','heightfield','sdf','attractors','custom'}
 local stateful={flow=true,collision=true,heightfield=true,sdf=true,attractors=true,custom=true}
@@ -12,7 +13,9 @@ function M.create(name,width,height)
   end
   local c={max=50000,rate=16000,lifetime={1,3},position={width/2,height-80},direction=-math.pi/2,spread=0.7,
     speed={80,220},gravity={0,-40},damping=0.4,sizes={4,10,0},seed=41,
-    colors={{1,0.8,0.2,1},{1,0.15,0,0.6},{0.2,0.2,0.2,0}}}
+    colors={{palette.beige[1],palette.beige[2],palette.beige[3],1},
+      {palette.peach[1],palette.peach[2],palette.peach[3],0.75},
+      {palette.blue[1],palette.blue[2],palette.blue[3],0}}}
   if name=='gravity' then c.gravity={0,170}
   elseif name=='damping' then c.damping=1.8
   elseif name=='radial' then c.radialAcceleration={80,120};c.spread=math.pi*2;c.position={width/2,height/2}

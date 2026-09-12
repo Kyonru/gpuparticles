@@ -1,5 +1,6 @@
 local prefix=(...):gsub('example_support%.colliders%.app$','')
 local gpu=require(prefix..'gpuparticles')
+local palette=require(prefix..'example_support.palette')
 local A={}
 function A.install()
   local emitter,title,text
@@ -18,7 +19,10 @@ function A.install()
       max=20000,rate=5200,lifetime={2.5,4},seed=29,
       position={width/2,32},emissionArea={distribution='uniform',x=width*0.42,y=0},
       direction=math.pi/2,spread=0.08,speed={35,90},gravity={0,260},damping=0.04,sizes={4,6,3},
-      colors={{0.40,0.64,0.77,0.2},{0.61,0.81,0.76,0.9},{1,0.71,0.65,0.7},{1,0.92,0.83,0}},
+      colors={{palette.blue[1],palette.blue[2],palette.blue[3],0.2},
+        {palette.teal[1],palette.teal[2],palette.teal[3],0.9},
+        {palette.peach[1],palette.peach[2],palette.peach[3],0.7},
+        {palette.beige[1],palette.beige[2],palette.beige[3],0}},
       collision={type='plane',y=height-66,radius=3,bounce=0.25,friction=0.04},
       circleCollider={radius=58,particleRadius=3,bounce=0.35,friction=0.05,enabled=false},
       boxCollider={width=170,height=90,particleRadius=3,bounce=0.35,friction=0.05,enabled=false},
@@ -54,30 +58,30 @@ function A.install()
     if smoke and frames>=100 and (not capture or captured) then print('Colliders standalone render PASS');love.event.quit() end
   end
   local function obstacle(g)
-    g.setColor(1,0.71,0.65,0.14);g.setLineWidth(2)
+    g.setColor(palette.peach[1],palette.peach[2],palette.peach[3],0.14);g.setLineWidth(2)
     if selected==1 then
-      g.circle('fill',mx,my,58);g.setColor(1,0.71,0.65,0.9);g.circle('line',mx,my,58)
+      g.circle('fill',mx,my,58);g.setColor(palette.peach);g.circle('line',mx,my,58)
     elseif selected==2 then
-      g.rectangle('fill',mx-85,my-45,170,90);g.setColor(1,0.71,0.65,0.9);g.rectangle('line',mx-85,my-45,170,90)
+      g.rectangle('fill',mx-85,my-45,170,90);g.setColor(palette.peach);g.rectangle('line',mx-85,my-45,170,90)
     else
       local c=emitter.config.capsuleCollider;local dx,dy=c.x2-c.x1,c.y2-c.y1;local length=math.sqrt(dx*dx+dy*dy)
       local nx,ny=-dy/length*30,dx/length*30
       g.setLineWidth(60);g.line(c.x1,c.y1,c.x2,c.y2);g.circle('fill',c.x1,c.y1,30);g.circle('fill',c.x2,c.y2,30)
-      g.setColor(1,0.71,0.65,0.9);g.setLineWidth(2)
+      g.setColor(palette.peach);g.setLineWidth(2)
       g.line(c.x1+nx,c.y1+ny,c.x2+nx,c.y2+ny);g.line(c.x1-nx,c.y1-ny,c.x2-nx,c.y2-ny)
       g.circle('line',c.x1,c.y1,30);g.circle('line',c.x2,c.y2,30)
     end
   end
   function love.draw()
     local g=love.graphics;local width,height=g.getDimensions()
-    g.clear(0.082,0.157,0.188);emitter:draw();obstacle(g)
-    g.setLineWidth(2);g.setColor(0.61,0.81,0.76,0.8);g.line(0,height-66,width,height-66)
-    g.setFont(title);g.setColor(1,0.92,0.83,1);g.print('Moving colliders',28,23)
-    g.setFont(text);g.setColor(0.61,0.81,0.76)
+    g.clear(palette.ink);emitter:draw();obstacle(g)
+    g.setLineWidth(2);g.setColor(palette.teal);g.line(0,height-66,width,height-66)
+    g.setFont(title);g.setColor(palette.beige);g.print('Moving colliders',28,23)
+    g.setFont(text);g.setColor(palette.teal)
     local names={'circle','box','capsule'}
     local measured=love.timer.getFPS();local fps=measured>0 and (measured..' FPS') or 'FPS …'
     g.print(('%s  ·  stateful  ·  %s particles  ·  %s'):format(names[selected],emitter:getBufferSize(),fps),29,63)
-    g.setColor(0.61,0.81,0.76);g.print('1 Circle   2 Box   3 Capsule   Move mouse   R Reset   Esc',29,height-33)
+    g.setColor(palette.blue);g.print('1 Circle   2 Box   3 Capsule   Move mouse   R Reset   Esc',29,height-33)
     if capture and frames>=70 and not requested then
       requested=true;g.captureScreenshot(function(data)
         local file='colliders.png';data:encode('png',file);data:release()

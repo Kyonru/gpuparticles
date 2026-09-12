@@ -1,5 +1,6 @@
 local prefix=(...):gsub('example_support%.waterfall%.app$','')
 local Scene=require(prefix..'example_support.waterfall.scene')
+local palette=require(prefix..'example_support.palette')
 local M={}
 function M.viewport(width,height)
   local scale=math.min(width/1280,height/800)
@@ -48,7 +49,7 @@ function M.install()
   end
   function love.draw()
     local g=love.graphics
-    g.clear(0.018,0.04,0.055)
+    g.clear(palette.ink)
     local w,h=g.getDimensions()
     local scale,left,top=M.viewport(w,h)
     g.push('all');g.translate(left,top);g.scale(scale)

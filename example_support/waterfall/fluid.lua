@@ -1,5 +1,7 @@
 -- Waterfall settings and compatibility accessors; simulation lives in the public library.
-local gpu=require((...):gsub('example_support%.waterfall%.fluid$','gpuparticles'))
+local prefix=(...):gsub('example_support%.waterfall%.fluid$','')
+local gpu=require(prefix..'gpuparticles')
+local palette=require(prefix..'example_support.palette')
 local F={};F.__index=F;F.step=1/120
 function F.new(options)
   options=options or {}
@@ -8,7 +10,8 @@ function F.new(options)
   if not world then return nil,reason end
   local self=setmetatable({world=world,inflow=true},F)
   local ok,err=xpcall(function()
-    self.material=world:addMaterial{name='water',model='water',cooling=0}
+    self.material=world:addMaterial{name='water',model='water',cooling=0,
+      color={palette.blue[1],palette.blue[2],palette.blue[3],0.9}}
     local source=options.source or {x=580,y=96,width=56,rate=12000}
     self.source=world:newSource{material=self.material,position={source.x,source.y},shape='rectangle',
       width=source.width,height=0,rate=source.rate or 0}

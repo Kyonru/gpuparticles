@@ -1,12 +1,15 @@
 local prefix=(...):gsub('example_support%.comparison%.model$','')
 local gpu=require(prefix..'gpuparticles')
+local palette=require(prefix..'example_support.palette')
 local ParticlePreset=require(prefix..'example_support.comparison.particle_preset')
 local C={}
 C.__index=C
 C.capacities={1000,10000,25000,50000,100000,250000}
 C.particleCapacities=ParticlePreset.capacities
 C.sizes={2,3,6,12,24}
-local colors={{0.45,0.83,0.94,0.55},{0.65,0.93,0.99,0.5},{0.5,0.8,0.92,0}}
+local colors={{palette.blue[1],palette.blue[2],palette.blue[3],0.58},
+  {palette.teal[1],palette.teal[2],palette.teal[3],0.62},
+  {palette.peach[1],palette.peach[2],palette.peach[3],0}}
 function C.new(options)
   options=options or {}
   local self=setmetatable({capacityIndex=options.capacityIndex or 3,sizeIndex=options.selfCollision and 4 or 2,gpuMode=options.selfCollision and 'stateful' or 'analytic',view='both',
@@ -145,14 +148,14 @@ function C:renderTargets()
   g.push('all');g.origin();g.setShader();g.setScissor();g.setColor(1,1,1,1);g.setBlendMode('alpha')
   for _,name in ipairs{'native','gpu'} do
     if self:active(name) then
-      g.setCanvas(self.targets[name]);g.clear(0.022,0.043,0.063,1)
+      g.setCanvas(self.targets[name]);g.clear(palette.deep)
       local start=love.timer.getTime()
       if name=='native' then
         if self.particleCollision then self.native:draw() else g.draw(self.native) end
       else self.gpu:draw() end
       self.samples[name].draw=self.samples[name].draw+(love.timer.getTime()-start)
       if self.particleCollision then
-        g.setColor(0.31,0.45,0.52);g.setLineWidth(1);g.line(0,472,512,472);g.setColor(1,1,1,1)
+        g.setColor(palette.teal);g.setLineWidth(1);g.line(0,472,512,472);g.setColor(1,1,1,1)
       end
     end
   end
