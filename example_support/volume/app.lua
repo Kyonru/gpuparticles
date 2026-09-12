@@ -10,8 +10,8 @@ function A.install()
   local mx,my,previousX,previousY=0,0,0,0
   local function viewport()
     local width,height=love.graphics.getDimensions()
-    local scale=math.max(0.1,math.min((width-48)/W,(height-190)/H))
-    return scale,(width-W*scale)/2,120
+    local scale=math.max(0.1,math.min((width-48)/W,(height-120)/H))
+    return scale,(width-W*scale)/2,68
   end
   for _,value in ipairs(arg or {}) do
     if value=='--smoke' then smoke=true end
@@ -75,13 +75,13 @@ vec4 effect(vec4 color,Image tex,vec2 tc,vec2 sc) {
   end
   function love.draw()
     local g=love.graphics
-    g.clear(0.025,0.043,0.059);g.setFont(title);g.setColor(0.85,0.92,0.92);g.print('Material volumes',24,20)
-    g.setFont(font);g.setColor(0.51,0.70,0.73)
-    g.print('1 Water    2 Smoke    3 Hot water / steam',25,65)
-    if not world then g.print('This device cannot create the required GPU volume canvases.',25,110);return end
+    local displayName=names[index]:sub(1,1):upper()..names[index]:sub(2)
+    g.clear(0.025,0.043,0.059);g.setFont(title);g.setColor(0.85,0.92,0.92);g.print(displayName,24,18)
+    g.setFont(font)
+    if not world then g.setColor(0.51,0.70,0.73);g.print('GPU volume canvases unavailable',25,58);return end
     local scale,left,top=viewport()
-    g.setColor(0.75,0.85,0.83)
-    g.printf(('%s · %s · %d FPS\n%d × %d cells · wind %d px/s'):format(names[index]:upper(),world.renderStyle,love.timer.getFPS(),world.columns,world.rows,wind),480,30,g.getWidth()-504,'right')
+    g.setColor(0.62,0.79,0.79)
+    g.printf(('%s · %d × %d · %d FPS'):format(world.renderStyle,world.columns,world.rows,love.timer.getFPS()),480,28,g.getWidth()-504,'right')
     g.push('all');g.translate(left,top);g.scale(scale)
     g.setScissor(left,top,W*scale,H*scale)
     g.setColor(0.018,0.03,0.041);g.rectangle('fill',0,0,W,H)
@@ -91,11 +91,10 @@ vec4 effect(vec4 color,Image tex,vec2 tc,vec2 sc) {
     world:draw()
     g.setShader(terrainShader);g.setColor(1,1,1,1);g.draw(world.terrain,0,0,0,world.cell[1],world.cell[2]);g.setShader()
     if world.circle[4]==1 then g.setColor(1,0.72,0.4,0.8);g.circle('line',mx,my,radius) end
-    g.pop();g.setFont(font);g.setColor(0.65,0.78,0.80)
-    local y=top+H*scale+15
-    g.print('F Pixel / smooth    V Inflow '..(inflow and 'on' or 'off')..'    SPACE Pause    R Reset    C Circle    Wheel Radius    Left / Right Wind',24,y)
-    g.setColor(0.43,0.61,0.65)
-    g.print('Right drag: build terrain    Shift + right drag: erase    Left drag: '..(index==3 and 'heat water' or 'stir gas')..'    ESC Exit',24,y+24)
+    g.pop();g.setFont(font);g.setColor(0.58,0.73,0.76)
+    local action=index==3 and '   LMB Heat' or index==2 and '   LMB Stir' or ''
+    g.print(('1 Water   2 Smoke   3 Steam   F Style   V Inflow %s   C Circle   Wheel Size   Left/Right Wind%s   RMB Terrain   Space Pause   R Reset   Esc'):format(
+      inflow and 'on' or 'off',action),24,top+H*scale+16)
     if capture and frames>=60 and not requested then
       requested=true
       g.captureScreenshot(function(data)

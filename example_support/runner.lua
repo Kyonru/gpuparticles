@@ -46,13 +46,15 @@ function M.install(selected,automated)
   end
   function love.draw()
     if not emitter then return end
-    love.graphics.clear(0.018,0.022,0.035)
+    local g=love.graphics
+    g.clear(0.018,0.022,0.035)
     emitter:draw()
-    love.graphics.setColor(0.85,0.9,1,1)
-    love.graphics.print(('GPU PARTICLES  /  %s\n%s · %s · capacity %s\nLeft / Right choose effect   Space burst   R restart   Esc quit\nC Native / GPU comparison   W Colliding waterfall'):format(
-      effects.names[index],emitter:getMode(),emitter:getBackend(),emitter:getBufferSize()),24,24)
-    if hasEditor then love.graphics.print('E Particle Studio editor',24,92) end
-    love.graphics.print('V Water / smoke volume API',24,112)
+    g.setColor(0.85,0.9,1,1);g.print(effects.names[index]:upper(),24,24)
+    g.setColor(0.48,0.68,0.72);g.print(('%s · %s · %s particles'):format(
+      emitter:getMode(),emitter:getBackend(),emitter:getBufferSize()),24,45)
+    local controls='Left/Right Effect   Space Burst   R Reset   C Compare   W Waterfall   V Volumes'
+    if hasEditor then controls=controls..'   E Editor' end
+    g.setColor(0.48,0.62,0.69);g.print(controls..'   Esc',24,g.getHeight()-28)
     local name=effects.names[index]
     if name=='collision' then love.graphics.line(0,love.graphics.getHeight()-80,love.graphics.getWidth(),love.graphics.getHeight()-80)
     elseif name=='sdf' then love.graphics.circle('line',love.graphics.getWidth()/2,love.graphics.getHeight()/2,90) end

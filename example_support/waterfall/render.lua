@@ -129,12 +129,11 @@ function R:water(time,mouse)
   for _,mesh in ipairs(self.ribbons) do g.draw(mesh) end
   g.setShader()
 end
-function R:mouseObstacle(mouse)
+function R.mouseObstacle(_,mouse)
   if not mouse.enabled or not mouse.inside then return end
   local g=love.graphics
   g.setColor(0.99,0.73,0.43,0.10);g.circle('fill',mouse.x,mouse.y,mouse.radius)
   g.setColor(0.99,0.73,0.43,0.9);g.setLineWidth(1.5);g.circle('line',mouse.x,mouse.y,mouse.radius)
-  g.setFont(self.small);g.print(('%d px'):format(mouse.radius),mouse.x+mouse.radius+7,mouse.y-6)
 end
 function R:environment() love.graphics.setColor(1,1,1,1);love.graphics.draw(self.rocks) end
 function R:updatePlants(dt,time,mouse)
@@ -148,31 +147,23 @@ function R:debug()
 end
 function R:hud(scene)
   local g=love.graphics
-  g.setFont(self.small);g.setColor(0.47,0.72,0.66);g.print('PARTICLE STUDIES  /  01',48,41)
-  g.setFont(self.title);g.setColor(0.85,0.92,0.85);g.print('Basalt Falls',45,59)
-  g.setFont(self.text);g.setColor(0.53,0.68,0.67);g.print('Water, stone, and a little GPU weather.',48,107)
+  g.setFont(self.title);g.setColor(0.85,0.92,0.85);g.print('Basalt Falls',45,38)
   g.setFont(self.small);g.setColor(0.58,0.79,0.74)
   local backend=scene.drops:getBackend()
   local contacts=backend~='gpu' and 'UNAVAILABLE' or scene.selfCollision and 'ON' or 'OFF'
-  local diagnostic=scene.fluid and ('WATER VOLUME  /  %d × %d GRID\nINFLOW  /  %s\nPARTICLE LAYERS  /  SUSPENDED\nFIXED STEP  /  120 Hz · %d FPS'):format(
-    scene.fluid.columns,scene.fluid.rows,scene.inflow and 'ON' or 'OFF',love.timer.getFPS())
-    or ('DROPLETS  /  %s\nSELF COLLISION  /  %s · %d SLOTS\nSPRAY + MIST  /  ANALYTIC\nFIXED STEP  /  120 Hz · %d FPS'):format(
-      backend=='gpu' and 'GPU COLLISION' or 'NATIVE FALLBACK',contacts,scene.drops.config.max,love.timer.getFPS())
-  g.printf(diagnostic,912,45,320,'right')
-  local legend=scene.fluid and ('1 Water %s    D Collision map %s    ·    Close a gap with the circle; move it away to drain.'):format(
-    scene.layers.curtain and 'on' or 'off',scene.layers.field and 'on' or 'off')
-    or ('1 Curtain %s    2 Droplets %s    3 Spray + mist %s    D Collision map %s'):format(
-      scene.layers.curtain and 'on' or 'off',scene.layers.drops and 'on' or 'off',scene.layers.mist and 'on' or 'off',scene.layers.field and 'on' or 'off')
-  g.setColor(0.02,0.06,0.08,0.8);g.rectangle('fill',35,692,1210,88,6,6)
-  g.setFont(self.text);g.setColor(0.68,0.83,0.79);g.print(legend,49,702)
-  local status=scene.fluid and 'F Water volume on    V Inflow '..(scene.inflow and 'on' or 'off')..'    ·    R Empty and restart'
-    or 'F Water volume '..(scene.volumeUnavailable and 'unavailable on this GPU' or 'off')
-  g.print(status,49,722)
-  g.print(scene.fluid and 'Water stays in the scene. It spreads, rises, and spills around obstacles.' or
-    ('S Self collision %s  /  %d slots · %d droplets/s in both modes'):format(contacts:lower(),scene.drops.config.max,scene.drops.config.rate),49,742)
-  g.setFont(self.small);g.setColor(0.43,0.61,0.60)
-  g.print('C Mouse '..(scene.mouse.enabled and 'on' or 'off')..'    Wheel Radius    SPACE '..(scene.paused and 'Resume' or 'Pause')..'    R Restart    H Hide controls    ESC Exit',49,762)
-  g.printf(scene.layers.field and 'CORAL = SOLID  /  TEAL = AIR' or ('W Wind '..(scene.wind and 'on' or 'off')..' · brush the ferns'),955,762,273,'right')
+  local diagnostic=scene.layers.field and ('FIELD · CORAL SOLID / TEAL AIR · %d FPS'):format(love.timer.getFPS())
+    or scene.fluid and ('VOLUME %d × %d · INFLOW %s · %d FPS'):format(
+      scene.fluid.columns,scene.fluid.rows,scene.inflow and 'ON' or 'OFF',love.timer.getFPS())
+    or ('%s · %dK DROPS · CONTACTS %s · %d FPS'):format(
+      backend=='gpu' and 'GPU' or 'NATIVE',math.floor(scene.drops.config.max/1000),contacts,love.timer.getFPS())
+  g.printf(diagnostic,850,45,382,'right')
+  local controls=scene.fluid
+    and ('1 Water   D Field   F Particles   V Inflow %s   C Circle   Wheel Size   W Wind   Space %s   R Reset   H Hide   Esc'):format(
+      scene.inflow and 'on' or 'off',scene.paused and 'Resume' or 'Pause')
+    or ('1 Curtain   2 Drops   3 Mist   D Field   F Volume   S Contacts %s   C Circle   Wheel Size   W Wind   Space %s   R Reset   H Hide   Esc'):format(
+      contacts:lower(),scene.paused and 'Resume' or 'Pause')
+  g.setColor(0.02,0.06,0.08,0.82);g.rectangle('fill',35,739,1210,41,6,6)
+  g.setFont(self.small);g.setColor(0.60,0.77,0.74);g.printf(controls,49,754,1182,'center')
 end
 function R:release() for _,resource in ipairs(self.owned) do resource:release() end end
 return R

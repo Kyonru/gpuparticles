@@ -8,9 +8,11 @@ local function fps(value) return value and ('%.0f FPS'):format(value) or 'not me
 function V.particleViewport(_,name,width,height)
   width,height=width or love.graphics.getWidth(),height or love.graphics.getHeight()
   local span=(width-76)/2
-  local size=math.min(span-24,math.max(100,height-379))
+  local top=147
+  local bottom=height-94
+  local size=math.min(span-24,math.max(100,bottom-top-62))
   local x=name=='native' and 28 or width/2+10
-  return x+(span-size)/2,177,size
+  return x+(span-size)/2,top,size
 end
 function V:mapPointer(x,y,width,height)
   for _,name in ipairs{'native','gpu'} do
@@ -27,16 +29,16 @@ function V:draw(model)
   local width,height=g.getDimensions()
   g.push('all');g.setShader();g.setColor(1,1,1,1)
   g.clear(0.033,0.047,0.068)
-  g.setFont(self.small);g.setColor(0.44,0.60,0.74)
-  g.print(pair and 'GPU PARTICLES  /  PARTICLE COLLISION COMPARISON' or model.mouseCollision and 'GPU PARTICLES  /  MOUSE COLLISION DEMO' or 'GPU PARTICLES  /  MATCHED COMPARISON',28,22)
-  g.setFont(self.title);g.setColor(0.9,0.94,0.97);g.print(pair and 'Particle contact. Off / on.' or 'The same falling-water preset.',26,40)
-  g.setFont(self.label);g.setColor(0.58,0.69,0.79)
-  g.print(('%s capacity each  ·  %d px  ·  %g s lifetime  ·  %s  ·  VSync off'):format(
-    model.capacity,model.size,model.lifetime,pair and (model.iterations..' contact iteration(s)') or model.mouseCollision and 'GPU collision on' or 'collisions off'),28,79)
+  g.setFont(self.title);g.setColor(0.9,0.94,0.97)
+  g.print(pair and 'Particle contacts' or model.mouseCollision and 'Mouse collision' or 'LÖVE / GPU',28,24)
+  g.setFont(self.small);g.setColor(0.52,0.67,0.78)
+  local detail=pair and ('%s each · %d contact iteration%s'):format(model.capacity,model.iterations,model.iterations==1 and '' or 's')
+    or ('%s each · %d px · %g s · %s'):format(model.capacity,model.size,model.lifetime,model.gpuMode)
+  g.print(detail,28,61)
   local live=model.fps>0 and ('%.0f'):format(model.fps) or '…'
   g.setFont(self.number);g.setColor(0.63,0.94,0.86);g.printf(live,width-187,23,155,'right')
-  g.setFont(self.small);g.setColor(0.48,0.69,0.70);g.printf(model.view=='both' and 'SHARED WINDOW FPS' or 'ISOLATED WINDOW FPS',width-212,65,180,'right')
-  local top,bottom=120,height-143
+  g.setFont(self.small);g.setColor(0.48,0.69,0.70);g.printf(model.view=='both' and 'WINDOW FPS' or 'ISOLATED FPS',width-212,61,180,'right')
+  local top,bottom=90,height-94
   local panelWidth=(width-76)/2
   local panelHeight=bottom-top
   local function panel(name,x,span)
@@ -48,7 +50,7 @@ function V:draw(model)
     local heading=name=='native' and 'LÖVE  /  ParticleSystem' or backend
     if pair then
       local emitter=name=='native' and model.native or model.gpu
-      heading=emitter:getBackend()=='gpu' and ('GPU stateful  /  particle collisions '..(name=='native' and 'OFF' or 'ON')) or 'Native fallback / particle collisions unavailable'
+      heading=emitter:getBackend()=='gpu' and ('GPU stateful  ·  contacts '..(name=='native' and 'OFF' or 'ON')) or 'Native fallback · contacts unavailable'
     end
     g.print(heading,x+15,top+13)
     g.setFont(self.small);g.setColor(0.44,0.58,0.69)
@@ -70,7 +72,7 @@ function V:draw(model)
     end
     g.setFont(self.small);g.setColor(0.49,0.62,0.73)
     local y=bottom-41
-    g.print('CPU UPDATE',x+15,y);g.print('CPU DRAW SUBMISSION',x+span/2,y)
+    g.print('UPDATE',x+15,y);g.print('DRAW SUBMIT',x+span/2,y)
     g.setFont(self.label);g.setColor(unpack(blue))
     g.print(active and time(model.cost[name].update) or '—',x+15,y+15)
     g.print(active and time(model.cost[name].draw) or '—',x+span/2,y+15)
@@ -78,26 +80,22 @@ function V:draw(model)
   panel('native',28,panelWidth);panel('gpu',width/2+10,panelWidth)
   g.setFont(self.label);g.setColor(0.69,0.79,0.86)
   local native=fps(model.results.native);local device=fps(model.results.gpu)
-  local summary='Isolated results    LÖVE '..native..'     /     '..(model.backend=='gpu' and 'GPU ' or 'Fallback ')..device
+  local summary='LÖVE '..native..'     ·     '..(model.backend=='gpu' and 'GPU ' or 'Fallback ')..device
   if pair then
-    summary='Isolated window results    OFF '..native..'     /     ON '..device
-    if model.results.native and model.results.gpu then summary=summary..('    ·    %.2fx frame time'):format(model.results.native/model.results.gpu) end
+    summary='Contacts off '..native..'     ·     on '..device
+    if model.results.native and model.results.gpu then summary=summary..('     ·     %.2fx frame time'):format(model.results.native/model.results.gpu) end
   end
   if model.benchmark then
     local label=pair and ('GPU with particle contact '..(model.view=='native' and 'OFF' or 'ON')) or model.view
     summary=('Benchmarking %s alone… %0.1f / 3.0 s'):format(label,model.benchmark.elapsed)
   end
-  if model.mouseCollision then summary=('Mouse obstacle  /  %d px radius  /  %s'):format(model.pointer.radius,pair and 'Both GPU systems collide with the circle.' or 'GPU collides; native particles pass through.') end
-  g.print(summary,28,height-121)
-  g.setFont(self.small);g.setColor(0.46,0.61,0.72)
-  g.print(pair and 'B isolates each system with one 1/120 s simulation step per frame. CPU timings exclude GPU completion.' or
-    'Side-by-side FPS includes both systems. CPU submission time excludes GPU completion. B measures each system separately.',28,height-96)
-  g.setFont(self.label);g.setColor(0.65,0.77,0.86)
-  g.print('1 Left only   2 Right only   3 Both   B Benchmark   UP / DOWN Count   [ ] Size   S Particle collisions',28,height-66)
-  g.setFont(self.small);g.setColor(0.43,0.57,0.69)
-  g.print('I Contact iterations   M GPU mode   C Mouse collider   Wheel Radius   SPACE '..(model.paused and 'Resume' or 'Pause')..'   R Restart   ESC Exit',28,height-41)
-  g.print(pair and 'Up to 10,000 particles. Preview limits catch-up to two steps/frame and slows under load. Dense piles can still overlap.' or model.mouseCollision and 'Hover either particle panel. B disables the obstacle for a matched benchmark.' or
-    'Same texture and spawn settings; randomness is sampled independently. Press C to try a mouse obstacle.',28,height-22)
+  if model.mouseCollision then summary=('Circle %d px     ·     GPU collides     ·     LÖVE passes through'):format(model.pointer.radius) end
+  g.print(summary,28,height-72)
+  g.setFont(self.small);g.setColor(0.52,0.67,0.77)
+  local controls='1 Left   2 Right   3 Both   B Benchmark   Up/Down Count   [ ] Size   M Mode   C Circle   S Contacts'
+  if pair then controls=controls..'   I Iterations' end
+  controls=controls..'   Space '..(model.paused and 'Resume' or 'Pause')..'   R Reset   Esc'
+  g.print(controls,28,height-38)
   g.pop()
 end
 function V:release() self.title:release();self.number:release();self.label:release();self.small:release() end
