@@ -29,6 +29,35 @@ function M.run()
   assert(H.sum(gas).mass==0,'capsule must reject volume injection')
   world2:setCapsuleCollider();probe:emit(8);assert(H.sum(gas).mass>0,'disabled dynamic colliders must admit volume injection')
   world2:release()
+  local pushWorld=assert(gpu.newVolumeWorld{width=15,height=15,cellSize=1,transportSteps=1})
+  local controlWorld=assert(gpu.newVolumeWorld{width=15,height=15,cellSize=1,transportSteps=1})
+  local pushed=pushWorld:addMaterial{name='pushed water',model='water',flowSpeed=1,spread=0.5,cooling=0}
+  local control=controlWorld:addMaterial{name='control water',model='water',flowSpeed=1,spread=0.5,cooling=0}
+  H.seed(pushed.state,function() return 0.5,0,0,0 end);H.seed(control.state,function() return 0.5,0,0,0 end)
+  pushWorld:setCirclePush(7.5,7.5,5,1.4):update(pushWorld.fixedStep)
+  controlWorld:update(controlWorld.fixedStep)
+  local pushedSum=H.sum(pushed);H.near(pushedSum.mass,112.5,1e-4,'soft water push conserves mass')
+  local pushedData=pushWorld:readback(pushed);local controlData=controlWorld:readback(control)
+  local difference,minInside=0,1e6
+  for py=0,14 do for px=0,14 do
+    local density=pushedData:getPixel(px,py);difference=difference+math.abs(density-0.5)
+    difference=difference-math.abs(controlData:getPixel(px,py)-0.5)
+    if (px+0.5-7.5)^2+(py+0.5-7.5)^2<16 then minInside=math.min(minInside,density) end
+  end end
+  pushedData:release();controlData:release()
+  assert(difference>0.1 and minInside>0.01,'soft water push must move density without carving a masked hole')
+  pushWorld:setCirclePush();assert(pushWorld.push[4]==0)
+  assert(not pcall(pushWorld.setCirclePush,pushWorld,1,1,2,-1),'negative water push must be rejected')
+  pushWorld:reset();controlWorld:reset()
+  local function forceSeed(px,py) return px>=5 and px<=9 and py>=5 and py<=9 and 0.5 or 0,0,0,0 end
+  H.seed(pushed.state,forceSeed);H.seed(control.state,forceSeed)
+  pushWorld:addWaterForce(7.5,7.5,5,120,0):update(pushWorld.fixedStep)
+  controlWorld:update(controlWorld.fixedStep)
+  local forceResult,forceControl=H.sum(pushed),H.sum(control)
+  H.near(forceResult.mass,forceControl.mass,1e-5,'directional water force conserves mass')
+  assert(forceResult.x>forceControl.x+0.05,'directional water force must move density along its vector')
+  assert(pushWorld.waterForce[4]==0,'directional water force must be consumed after one simulation step')
+  pushWorld:release();controlWorld:release()
   w:reset();assert(H.sum(m).mass==0 and w.time==0,'reset must empty the world')
   m:set{flowSpeed=1};a:setPosition(8,12):emit(8)
   local initial=H.sum(m).mass

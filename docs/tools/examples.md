@@ -8,7 +8,7 @@ The repository contains runnable projects for individual forces, collision, the 
 love particle-gpu library
 ```
 
-Browse fourteen complete recipes with the arrow keys or mouse wheel. The catalog covers fire, explosions, weather, ambient particles, magic, stylized clouds, impact sprays, stateful fields, pixel-art sprite sheets, water, interactive smoke, paintable terrain, thermal reactions, and custom shader treatments.
+Browse fifteen complete recipes with the arrow keys or mouse wheel. The catalog covers fire, explosions, weather, ambient particles, magic, stylized clouds, impact sprays, stateful fields, pixel-art sprite sheets, water push, volume collider shapes, interactive smoke, paintable terrain, thermal reactions, and custom shader treatments.
 
 Each screen names the APIs it uses and explains its action in the lower bar. Cycle fire or weather layers, click to place explosions, compare the labeled force zones, or follow the marked heater as water converts into steam. The source is divided into particle and volume recipes so individual configurations can be copied without the gallery UI.
 

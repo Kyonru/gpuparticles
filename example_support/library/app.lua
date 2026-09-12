@@ -95,7 +95,7 @@ function A.install()
     g.setColor(palette.blue);g.print(item.api,sidebar+32,94)
     g.setColor(palette.deep[1],palette.deep[2],palette.deep[3],0.86);g.rectangle('fill',sidebar+18,height-48,width-sidebar-36,30,5,5)
     g.setColor(palette.beige)
-    local control=scene.controls and scene:controls() or item.id=='terrain' and 'LMB paint · RMB erase' or item.id=='smoke' and 'Move mouse to stir' or item.id=='water' and 'Move mouse to block water' or item.id=='steam' and 'Click to add heat' or 'Click or Space to emit'
+    local control=scene.controls and scene:controls() or item.id=='terrain' and 'LMB paint · RMB erase' or item.id=='smoke' and 'Move mouse to stir' or item.id=='steam' and 'Click to add heat' or 'Click or Space to emit'
     local measured=love.timer.getFPS();local fps=measured>0 and measured..' FPS' or 'FPS ...'
     g.print(control..'  ·  '..fps,sidebar+30,height-39)
     if gif then gif:draw(frames) end

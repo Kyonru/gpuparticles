@@ -94,6 +94,12 @@ volume_mutations = [
 ]
 
 volume_api_mutations = [
+    ('soft water push', 'gpuparticles/volume/shaders/water-flux.glsl',
+     'if (u_push.w>0.0 && pushDistance<u_push.z', 'if (u_push.w>1000.0 && pushDistance<u_push.z',
+     'soft water push must move density', 'volume-test'),
+    ('directional water force', 'gpuparticles/volume/shaders/water-flux.glsl',
+     'if (u_waterForce.w>0.5 && forceDistance<u_waterForce.z', 'if (u_waterForce.w>1.5 && forceDistance<u_waterForce.z',
+     'directional water force must move density', 'volume-test'),
     ('gas buoyancy', 'gpuparticles/volume/shaders/gas-force.glsl',
      'force.y-=u_buoyancy', 'force.y+=u_buoyancy', 'hot smoke buoyancy must lift', 'volume-test'),
     ('gas dissipation', 'gpuparticles/volume/shaders/gas-transport.glsl',

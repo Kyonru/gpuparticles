@@ -11,6 +11,7 @@ function W.new(options)
   end
   local self=setmetatable({materials={},sources={},reactions={},owned={},keys={},shaders={},time=0,accumulator=0,
     paused=false,released=false,droppedTime=0,wind=U.vector(options.wind,{0,0},'wind',2),circle={0,0,0,0},
+    push={0,0,0,0},waterForce={0,0,0,0},waterForceVector={0,0},waterForceStep={0,0},
     box={0,0,0,0},boxEnabled=false,capsule={0,0,0,0},capsuleRadius=0,capsuleEnabled=false,
     brush={0,0,0,0},impulse={0,0},
     width=U.number(options.width,1280,'width',1),height=U.number(options.height,800,'height',1),
@@ -89,6 +90,9 @@ function W:_water(dt)
   local m=self.water;if not m then return end
   local flux,transport=m.fluxShader,m.transportShader
   flux:send('u_step',dt/self.fixedStep*m.flowSpeed);flux:send('u_compression',m.compression);flux:send('u_spread',m.spread)
+  self.waterForceStep[1]=self.waterForceVector[1]*self.fixedStep/(self.cell[1]*self.transportSteps)
+  self.waterForceStep[2]=self.waterForceVector[2]*self.fixedStep/(self.cell[2]*self.transportSteps)
+  flux:send('u_waterForceVector',self.waterForceStep)
   transport:send('u_flux',m.flux);transport:send('u_injection',m.injection)
   transport:send('u_injectionScale',1/self.transportSteps)
   transport:send('u_decay',math.exp(-m.dissipation*dt/self.transportSteps))
@@ -96,6 +100,7 @@ function W:_water(dt)
   for _=1,self.transportSteps do
     U.pass(self,flux,m.flux,m.state);U.pass(self,transport,m.next,m.state);U.swap(m)
   end
+  self.waterForce[4]=0
 end
 function W:_gas(dt)
   local gas=self.gas;if not gas then return end
@@ -182,6 +187,24 @@ function W:setCircleCollider(x,y,radius)
   end
   return self
 end
+function W:setCirclePush(x,y,radius,strength)
+  U.alive(self);assert(self.water,'volume push requires a water material')
+  if x==nil then self.push[4]=0
+  else
+    x=U.number(x,nil,'push x');y=U.number(y,nil,'push y')
+    radius=U.number(radius,nil,'push radius',0.001);strength=U.number(strength,1,'push strength',0)
+    self.push[1],self.push[2],self.push[3],self.push[4]=x,y,radius,strength
+  end
+  return self
+end
+function W:addWaterForce(x,y,radius,forceX,forceY)
+  U.alive(self);assert(self.water,'water force requires a water material')
+  self.waterForce[1]=U.number(x,nil,'water force x');self.waterForce[2]=U.number(y,nil,'water force y')
+  self.waterForce[3]=U.number(radius,nil,'water force radius',0.001);self.waterForce[4]=1
+  self.waterForceVector[1]=U.number(forceX,nil,'water force horizontal velocity')
+  self.waterForceVector[2]=U.number(forceY,nil,'water force vertical velocity')
+  return self
+end
 function W:setBoxCollider(x,y,width,height)
   U.alive(self)
   if x==nil then self.boxEnabled=false
@@ -212,7 +235,7 @@ function W:reset()
     for _,m in ipairs(self.materials) do for _,c in ipairs(m.owned) do U.clear(c) end end
     if self.gas then for _,c in ipairs(self.gas.owned) do U.clear(c) end end
   end)
-  self.time,self.accumulator,self.droppedTime=0,0,0;return self
+  self.time,self.accumulator,self.droppedTime=0,0,0;self.waterForce[4]=0;return self
 end
 function W:_brush(x,y,radius)
   self.brush[1]=U.number(x,nil,'brush x');self.brush[2]=U.number(y,nil,'brush y')

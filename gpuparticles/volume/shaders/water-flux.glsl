@@ -1,6 +1,7 @@
 uniform float u_step;
 uniform float u_compression;
 uniform float u_spread;
+uniform vec2 u_waterForceVector;
 // Equilibrium mass in the LOWER cell of a vertical pair, with slight compression.
 float lowerMass(float total) {
   float compression=u_compression;
@@ -31,6 +32,26 @@ vec4 effect(vec4 color,Image state,vec2 tc,vec2 sc) {
     float weights=dot(f,vec4(1.0));
     return weights>0.0 ? f*(0.5*m*u_step/weights) : vec4(0.0);
   }
+  // Bias conservative edge flux without introducing a solid mask. The gather
+  // receives everything sent here, so this moves density instead of clearing it.
+  vec2 pushDelta=(p+0.5)*u_cell-u_push.xy;
+  float pushDistance=length(pushDelta);
+  if (u_push.w>0.0 && pushDistance<u_push.z && pushDistance>0.0001) {
+    vec2 direction=pushDelta/pushDistance;
+    float strength=u_push.w*pow(1.0-pushDistance/u_push.z,2.0);
+    vec4 pushFlow=strength*vec4(max(-direction.x,0.0),max(direction.x,0.0),
+      max(direction.y,0.0),max(-direction.y,0.0));
+    for (int i=0;i<4;i++) if (!solid(neighbors[i])) f[i]+=pushFlow[i];
+  }
+  vec2 forceDelta=(p+0.5)*u_cell-u_waterForce.xy;
+  float forceDistance=length(forceDelta);
+  if (u_waterForce.w>0.5 && forceDistance<u_waterForce.z) {
+    float falloff=pow(1.0-forceDistance/u_waterForce.z,2.0);
+    vec2 directional=u_waterForceVector*falloff;
+    vec4 forceFlow=vec4(max(-directional.x,0.0),max(directional.x,0.0),
+      max(directional.y,0.0),max(-directional.y,0.0));
+    for (int i=0;i<4;i++) if (!solid(neighbors[i])) f[i]+=forceFlow[i];
+  }
   for (int i=0;i<4;i++) {
     vec2 n=neighbors[i];
     if (i==3 && p.y<0.5) { f[i]=max(0.0,m-1.0);continue; } // open top: explicit overflow
@@ -38,9 +59,9 @@ vec4 effect(vec4 color,Image state,vec2 tc,vec2 sc) {
     float other=mass(state,n);
     // Falling streams keep their width. Lateral equalization acts on supported water.
     float support=solid(p+vec2(0,1)) ? 1.0 : smoothstep(0.8,1.05,mass(state,p+vec2(0,1)));
-    if (i<2) f[i]=max(0.0,(m-other)*(0.0005+support*(u_spread-0.0005)));
-    else if (i==2) f[i]=max(0.0,lowerMass(m+other)-other);
-    else f[i]=max(0.0,m-lowerMass(m+other));
+    if (i<2) f[i]+=max(0.0,(m-other)*(0.0005+support*(u_spread-0.0005)));
+    else if (i==2) f[i]+=max(0.0,lowerMass(m+other)-other);
+    else f[i]+=max(0.0,m-lowerMass(m+other));
   }
   f*=u_step;
   float total=dot(f,vec4(1.0));

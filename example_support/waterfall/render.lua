@@ -125,11 +125,17 @@ function R:water(time,mouse)
   for _,mesh in ipairs(self.ribbons) do g.draw(mesh) end
   g.setShader()
 end
-function R.mouseObstacle(_,mouse)
+function R.mouseObstacle(_,mouse,push)
   if not mouse.enabled or not mouse.inside then return end
   local g=love.graphics
-  g.setColor(palette.peach[1],palette.peach[2],palette.peach[3],0.14);g.circle('fill',mouse.x,mouse.y,mouse.radius)
-  g.setColor(palette.peach);g.setLineWidth(1.5);g.circle('line',mouse.x,mouse.y,mouse.radius)
+  if push then
+    g.setColor(palette.water[1],palette.water[2],palette.water[3],0.12);g.circle('fill',mouse.x,mouse.y,mouse.radius)
+    g.setColor(palette.waterLight);g.setLineWidth(1.5)
+    g.circle('line',mouse.x,mouse.y,mouse.radius);g.circle('line',mouse.x,mouse.y,mouse.radius*0.62)
+  else
+    g.setColor(palette.peach[1],palette.peach[2],palette.peach[3],0.14);g.circle('fill',mouse.x,mouse.y,mouse.radius)
+    g.setColor(palette.peach);g.setLineWidth(1.5);g.circle('line',mouse.x,mouse.y,mouse.radius)
+  end
 end
 function R:environment() love.graphics.setColor(1,1,1,1);love.graphics.draw(self.rocks) end
 function R:updatePlants(dt,time,mouse)
@@ -153,7 +159,7 @@ function R:hud(scene)
       math.floor(scene.drops.config.max/1000),love.timer.getFPS())
   g.printf(diagnostic,850,45,382,'right')
   local controls=scene.fluid
-    and ('F Particles   V Inflow %s   C Collider   W Wind   Space %s   H Hide'):format(
+    and ('F Particles   V Inflow %s   C Push   W Wind   Space %s   H Hide'):format(
       scene.inflow and 'on' or 'off',scene.paused and 'Resume' or 'Pause')
     or ('F Volume   S Contacts %s   C Collider   W Wind   Space %s   H Hide'):format(
       contacts:lower(),scene.paused and 'Resume' or 'Pause')

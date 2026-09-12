@@ -68,7 +68,8 @@ end
 function S:setWaterVolume(enabled)
   if enabled and not self.fluid then
     local reason
-    self.fluid,reason=Fluid.new{transportSteps=3,distance=function(x,y) return self.terrain:rockDistance(x,y) end}
+    self.fluid,reason=Fluid.new{transportSteps=3,interaction='push',pushStrength=1.35,
+      distance=function(x,y) return self.terrain:rockDistance(x,y) end}
     self.volumeUnavailable=reason
     if self.fluid then self.fluid.inflow=self.inflow
     elseif not self.volumeWarned then print(reason);self.volumeWarned=true end
@@ -145,7 +146,7 @@ function S:draw(hud)
   if self.layers.field then
     if self.fluid then self.fluid:draw(true) else self.render:debug() end
   end
-  self.render:mouseObstacle(self.mouse)
+  self.render:mouseObstacle(self.mouse,self.fluid~=nil)
   if hud~=false and self.showHud then self.render:hud(self) end
   g.pop()
 end

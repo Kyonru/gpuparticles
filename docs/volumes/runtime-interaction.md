@@ -15,6 +15,23 @@ world:setCapsuleCollider() -- disable
 
 Water is displaced from covered cells and gas is excluded. Boxes stay axis-aligned; capsule endpoints can move and rotate freely. The three shapes can be enabled together. Transform screen or mouse coordinates into world coordinates before calling them.
 
+## Soft water push
+
+```lua
+world:setCirclePush(x, y, radius, strength)
+world:setCirclePush() -- disable
+```
+
+This biases water flux away from the circle with a smooth falloff. The circle never becomes solid, and every outgoing amount is gathered by a neighboring cell, so the operation conserves mass and does not cut a collider-shaped hole. A strong sustained push can still form a natural low-density depression. Use a solid collider when an object must block water or form a dam.
+
+For directional interaction, apply a one-time flux impulse in world pixels per second:
+
+```lua
+world:addWaterForce(x, y, radius, forceX, forceY)
+```
+
+Call it while dragging to stir water from pointer velocity, or use it for pumps, wind, explosions, and character movement. The current liquid model stores density rather than velocity, so the impulse biases the next transport step and does not retain inertia after that step. It conserves mass and never creates solid space.
+
 ## Paint terrain
 
 ```lua

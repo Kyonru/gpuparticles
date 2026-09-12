@@ -28,10 +28,18 @@ function V.new(kind,width,height,automated)
   self.world,self.error=world,reason
   if not world then return self end
 
-  if kind=='water' or kind=='terrain' then
+  if kind=='water' or kind=='terrain' or kind=='colliders' then
     self.material=world:addMaterial{name='water',model='water',flowSpeed=1,spread=0.5,
       color={palette.blue[1],palette.blue[2],palette.blue[3],0.9}}
-    self.source=world:newSource{material=self.material,shape='rectangle',position={width*0.5,28},width=38,height=2,rate=7500}
+    self.source=world:newSource{material=self.material,shape='rectangle',position={width*0.5,28},
+      width=kind=='colliders' and 150 or 38,height=2,rate=7500}
+    if kind=='colliders' then
+      self.colliders={
+        circle={x=width*0.27,y=height*0.43,radius=32},
+        box={x=width*0.51,y=height*0.52,width=78,height=48},
+        capsule={x1=width*0.70,y1=height*0.42,x2=width*0.84,y2=height*0.55,radius=20},
+      }
+    end
   elseif kind=='smoke' then
     self.material=world:addMaterial{name='smoke',model='gas',buoyancy=80,dissipation=0.12,cooling=0.12,
       color={palette.teal[1],palette.teal[2],palette.teal[3],0.75},
@@ -66,12 +74,18 @@ function Scene:update(dt)
   self.time=self.time+dt
   local p=self.pointer
   if self.automated then
-    self:setPointer(self.width*0.5+math.sin(self.time*0.9)*self.width*0.25,
-      self.height*0.46+math.cos(self.time*1.2)*55,true)
+    local travel=self.kind=='water' and self.width*0.09 or self.width*0.25
+    local centerY=self.kind=='water' and self.height*0.60 or self.height*0.46
+    self:setPointer(self.width*0.5+math.sin(self.time*0.9)*travel,
+      centerY+math.cos(self.time*1.2)*35,true)
     p=self.pointer
   end
   if self.kind=='water' then
-    self.world:setCircleCollider(p.x,p.y,42)
+    if p.inside then
+      self.world:setCirclePush(p.x,p.y,68,1.15)
+      local vx,vy=(p.x-p.previousX)/math.max(dt,1/240),(p.y-p.previousY)/math.max(dt,1/240)
+      self.world:addWaterForce(p.x,p.y,76,vx*0.32,vy*0.32)
+    else self.world:setCirclePush() end
   elseif self.kind=='smoke' then
     self.world:setCircleCollider(p.x,p.y,28)
     local vx,vy=(p.x-p.previousX)/math.max(dt,1/240),(p.y-p.previousY)/math.max(dt,1/240)
@@ -83,6 +97,16 @@ function Scene:update(dt)
     elseif love.mouse.isDown(2) then self.world:paintTerrain(p.x,p.y,22,false) end
   elseif self.kind=='steam' then
     self.world:addHeat(self.width*0.5,self.height-100,65,dt*12,self.water)
+  elseif self.kind=='colliders' then
+    local motion=math.sin(self.time*1.15)*34
+    local c,b,k=self.colliders.circle,self.colliders.box,self.colliders.capsule
+    c.x,c.y,c.radius=self.width*0.27,self.height*0.43+motion,32
+    b.x,b.y,b.width,b.height=self.width*0.51,self.height*0.52-motion*0.55,78,48
+    k.x1,k.y1=self.width*0.70,self.height*0.42-motion*0.35
+    k.x2,k.y2,k.radius=self.width*0.84,self.height*0.55+motion*0.35,20
+    self.world:setCircleCollider(c.x,c.y,c.radius)
+    self.world:setBoxCollider(b.x,b.y,b.width,b.height)
+    self.world:setCapsuleCollider(k.x1,k.y1,k.x2,k.y2,k.radius)
   end
   self.world:update(dt)
 end
@@ -94,8 +118,23 @@ function Scene:draw(x,y)
   self.world:draw()
   g.setShader(self.terrainShader);g.setColor(palette.blue[1],palette.blue[2],palette.blue[3],0.4)
   g.draw(self.world.terrain,0,0,0,self.world.cell[1],self.world.cell[2]);g.setShader()
-  if self.kind=='water' or self.kind=='smoke' then
-    g.setColor(palette.peach);g.circle('line',self.pointer.x,self.pointer.y,self.kind=='water' and 42 or 28)
+  if self.kind=='water' then
+    g.setColor(palette.waterLight);g.circle('line',self.pointer.x,self.pointer.y,68)
+    g.setColor(palette.water[1],palette.water[2],palette.water[3],0.7);g.circle('line',self.pointer.x,self.pointer.y,42)
+  elseif self.kind=='smoke' then
+    g.setColor(palette.peach);g.circle('line',self.pointer.x,self.pointer.y,28)
+  elseif self.kind=='colliders' then
+    local c,b,k=self.colliders.circle,self.colliders.box,self.colliders.capsule
+    g.setColor(palette.peach);g.setLineWidth(2);g.circle('line',c.x,c.y,c.radius)
+    g.rectangle('line',b.x-b.width/2,b.y-b.height/2,b.width,b.height,5,5)
+    local dx,dy=k.x2-k.x1,k.y2-k.y1;local length=math.sqrt(dx*dx+dy*dy)
+    local nx,ny=-dy/length*k.radius,dx/length*k.radius
+    g.line(k.x1+nx,k.y1+ny,k.x2+nx,k.y2+ny);g.line(k.x1-nx,k.y1-ny,k.x2-nx,k.y2-ny)
+    g.circle('line',k.x1,k.y1,k.radius);g.circle('line',k.x2,k.y2,k.radius)
+    g.setColor(palette.waterLight)
+    g.printf('CIRCLE',c.x-55,c.y-c.radius-24,110,'center')
+    g.printf('BOX',b.x-55,b.y-b.height/2-24,110,'center')
+    g.printf('CAPSULE',(k.x1+k.x2)/2-60,math.min(k.y1,k.y2)-k.radius-24,120,'center')
   elseif self.kind=='steam' then
     g.setColor(palette.blue);g.printf('COOL WATER',self.width*0.5-90,112,180,'center')
     g.setColor(palette.peach[1],palette.peach[2],palette.peach[3],0.18);g.circle('fill',self.width*0.5,self.height-100,65)
@@ -117,6 +156,8 @@ function Scene:emit() if self.source then self.source:emit(800) end end
 function Scene:action() self:emit() end
 function Scene:controls()
   if self.kind=='steam' then return 'Click to add heat · blue falls, beige steam rises' end
+  if self.kind=='water' then return 'Move mouse to push and stir · no solid mask or deleted density' end
+  if self.kind=='colliders' then return 'Circle · box · capsule exclude and redirect the volume' end
   return nil
 end
 function Scene:release()

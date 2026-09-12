@@ -2,7 +2,7 @@
 
 A volume stores material in world cells, so water can spread, collect, and remain after individual particles would expire.
 
-![Pixel-art water collecting around a mouse obstacle](../assets/images/waterfall-volume-mouse.gif)
+![Pixel-art water responding to a soft mouse push](../assets/images/waterfall-volume-mouse.gif)
 
 ## Build a basin
 
@@ -83,7 +83,7 @@ function love.update(dt)
 end
 ```
 
-The obstacle displaces covered water into nearby free cells. A blocked stream accumulates where terrain contains it and drains after the obstacle moves.
+Solid colliders displace covered water into nearby free cells. A blocked stream accumulates where terrain contains it and drains after the obstacle moves. Use `setCirclePush` when interaction should move water without creating a solid cavity.
 
 ## Add another source
 

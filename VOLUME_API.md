@@ -105,6 +105,8 @@ Moving/resizing circular sources counts coverage in Lua over their bounding regi
 | `setWind(x,y)` | Change gas wind target; no effect on cellular water |
 | `setCircleCollider(x,y,radius)` | Move/resize the circular obstacle |
 | `setCircleCollider()` | Disable the circle |
+| `setCirclePush(x, y, radius, strength)` | Bias water flow radially without creating a solid mask; requires water |
+| `setCirclePush()` | Disable the soft water push |
 | `setBoxCollider(x,y,width,height)` | Move/resize an axis-aligned box obstacle |
 | `setBoxCollider()` | Disable the box |
 | `setCapsuleCollider(x1,y1,x2,y2,radius)` | Move/resize/rotate a capsule obstacle |
@@ -113,6 +115,7 @@ Moving/resizing circular sources counts coverage in Lua over their bounding regi
 | `resetTerrain()` | Restore original terrain |
 | `addHeat(x,y,radius,amount,material?)` | Temperature delta with radial falloff, clamped to 0–1000; omit material to affect all |
 | `addForce(x,y,radius,vx,vy)` | One-time gas **velocity impulse** in px/s with radial falloff; requires gas |
+| `addWaterForce(x,y,radius,forceX,forceY)` | One-time conservative water flux impulse in px/s with radial falloff; requires water |
 | `setRenderStyle('pixel' or 'smooth')` | Change only appearance |
 | `pause()` / `start()` | Pause/resume simulation |
 | `reset()` | Clear material, velocity, pressure, and clocks; retain sources, terrain edits, controls, and pause state |

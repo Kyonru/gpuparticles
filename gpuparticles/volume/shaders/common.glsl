@@ -2,6 +2,8 @@ uniform vec2 u_grid;
 uniform vec2 u_cell;
 uniform Image u_terrain;
 uniform vec4 u_circle;
+uniform vec4 u_push; // xy center, z radius, w strength; never marks cells solid
+uniform vec4 u_waterForce; // xy center, z radius, w enabled
 uniform vec4 u_box;
 uniform bool u_boxEnabled;
 uniform vec4 u_capsule;

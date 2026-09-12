@@ -8,7 +8,7 @@ GPU particles, collision, and material volumes for **LÖVE 11.x**. No compute sh
 
 gpuparticles keeps spawn records and simulation state on the GPU. Simple effects draw hundreds of thousands of particles with one instanced call; stateful effects add environment collision, mouse obstacles, attractors, and flow fields. A separate grid simulation provides accumulating water, rising smoke, editable terrain, and thermal reactions.
 
-![A persistent waterfall redirected by a circular mouse obstacle](previews/waterfall-volume-mouse.gif)
+![A persistent waterfall stirred by a soft circular mouse push](previews/waterfall-volume-mouse.gif)
 
 ## When should I use it?
 
@@ -130,7 +130,7 @@ function love.quit() world:release() end
 ```sh
 love .                         # effect browser
 love . editor                  # layered Particle Studio and Lua export
-love . library                 # browsable collection of fourteen effect recipes
+love . library                 # browsable collection of fifteen effect recipes
 love . comparison              # native/GPU FPS comparison
 love . waterfall               # collision and persistent water
 love . volume                  # water, smoke, and steam
