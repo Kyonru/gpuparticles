@@ -30,6 +30,10 @@ Create an emitter with `gpu.newEmitter(config)`. Setters and control methods ret
 | `setPosition(x,y)` | Change the emitter origin |
 | `setCircleCollider(x,y,radius)` | Enable or move a stateful circle obstacle |
 | `setCircleCollider()` | Disable the circle obstacle |
+| `setBoxCollider(x,y,width,height)` | Enable or move an axis-aligned box obstacle |
+| `setBoxCollider()` | Disable the box obstacle |
+| `setCapsuleCollider(x1,y1,x2,y2,radius)` | Enable or move an oriented capsule obstacle |
+| `setCapsuleCollider()` | Disable the capsule obstacle |
 | `setOffset(x,y)` | Change billboard origin offset |
 | `setQuads(...)` | Set lifetime sprite-sheet frames; no arguments clears |
 | `setInsertMode(mode)` | Use top, bottom, or random ring placement |

@@ -202,6 +202,18 @@ def custom_shader_demo():
         raise RuntimeError(f'custom-shaders: exit {result.returncode}, required render/capture markers: {required}')
 
 
+def collider_demo():
+    result = subprocess.run(
+        [options.love, str(root / 'examples' / 'colliders'), '--smoke', '--capture'],
+        text=True, capture_output=True, timeout=90,
+    )
+    output = result.stdout + result.stderr
+    print(output, end='')
+    required = ('Colliders standalone render PASS', 'COLLIDERS_CAPTURE ')
+    if result.returncode != 0 or any(marker not in output for marker in required):
+        raise RuntimeError(f'colliders: exit {result.returncode}, required render/capture markers: {required}')
+
+
 def portability():
     with tempfile.TemporaryDirectory(prefix='gpuparticles-standalone-') as folder:
         destination = Path(folder)
@@ -299,6 +311,7 @@ if options.demos_only or options.waterfall_only:
         demo('comparison', '--mouse-collision')
         demo('comparison', '--self-collision', '--benchmark')
         custom_shader_demo()
+        collider_demo()
     demo('waterfall', '--mouse-collision')
     demo('waterfall', '--plant-collision')
     demo('waterfall', '--self-collision')
@@ -346,7 +359,13 @@ if options.mutations:
          'comparison expected', 'comparison-test'),
         ('circle collision projection', 'gpuparticles/shaders/collision.glsl',
          'float circleDistance=separation-u_circle.z;', 'float circleDistance=1.0e30;',
-         'circle expected 88.000000, got 90.000000'),
+         'collider expected 88.000000, got 90.000000'),
+        ('box collision projection', 'gpuparticles/shaders/collision.glsl',
+         'vec2 q=abs(local)-u_box.zw;', 'vec2 q=abs(local)+u_box.zw;',
+         'collider expected 88.000000, got 90.000000'),
+        ('capsule collision projection', 'gpuparticles/shaders/collision.glsl',
+         'float capsuleDistance=separation-u_capsuleResponse.x;', 'float capsuleDistance=1.0e30;',
+         'collider expected 88.000000, got 90.000000'),
     ]
     for mutation in mutations + editor_mutations + waterfall_mutations + self_mutations + volume_api_mutations:
         mutate(*mutation)

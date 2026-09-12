@@ -42,7 +42,9 @@ end
 function U.send(s,name,value) if s:hasUniform(name) then s:send(name,value) end end
 function U.bind(w,s)
   U.send(s,'u_grid',w.grid);U.send(s,'u_cell',w.cell);U.send(s,'u_terrain',w.terrain)
-  U.send(s,'u_circle',w.circle);U.send(s,'u_time',w.time)
+  U.send(s,'u_circle',w.circle);U.send(s,'u_box',w.box);U.send(s,'u_boxEnabled',w.boxEnabled)
+  U.send(s,'u_capsule',w.capsule);U.send(s,'u_capsuleRadius',w.capsuleRadius);U.send(s,'u_capsuleEnabled',w.capsuleEnabled)
+  U.send(s,'u_time',w.time)
   love.graphics.setShader(s)
 end
 function U.pass(w,s,target,input)

@@ -2,13 +2,29 @@ uniform vec2 u_grid;
 uniform vec2 u_cell;
 uniform Image u_terrain;
 uniform vec4 u_circle;
+uniform vec4 u_box;
+uniform bool u_boxEnabled;
+uniform vec4 u_capsule;
+uniform float u_capsuleRadius;
+uniform bool u_capsuleEnabled;
 uniform float u_time;
 bool inside(vec2 p) { return all(greaterThanEqual(p,vec2(0.0))) && all(lessThan(p,u_grid)); }
 vec2 uv(vec2 p) { return (p+0.5)/u_grid; }
 float circleDistance(vec2 p) {
   return u_circle.w>0.5 ? length((p+0.5)*u_cell-u_circle.xy)-u_circle.z : 1.0e6;
 }
-float obstacleDistance(vec2 p) { return min(Texel(u_terrain,uv(p)).r,circleDistance(p)); }
+float boxDistance(vec2 p) {
+  vec2 q=abs((p+0.5)*u_cell-u_box.xy)-u_box.zw;
+  return u_boxEnabled ? length(max(q,vec2(0.0)))+min(max(q.x,q.y),0.0) : 1.0e6;
+}
+float capsuleDistance(vec2 p) {
+  vec2 world=(p+0.5)*u_cell,a=u_capsule.xy,segment=u_capsule.zw-a;
+  float length2=dot(segment,segment);
+  float along=length2>0.00001 ? clamp(dot(world-a,segment)/length2,0.0,1.0) : 0.0;
+  return u_capsuleEnabled ? length(world-(a+segment*along))-u_capsuleRadius : 1.0e6;
+}
+float dynamicDistance(vec2 p) { return min(circleDistance(p),min(boxDistance(p),capsuleDistance(p))); }
+float obstacleDistance(vec2 p) { return min(Texel(u_terrain,uv(p)).r,dynamicDistance(p)); }
 bool solid(vec2 p) { return !inside(p) || obstacleDistance(p)<0.0; }
 bool gasSolid(vec2 p) { return solid(p); }
 vec4 at(Image field,vec2 p) { return inside(p) ? Texel(field,uv(p)) : vec4(0.0); }

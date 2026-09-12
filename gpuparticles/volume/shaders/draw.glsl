@@ -30,6 +30,6 @@ vec4 effect(vec4 color,Image state,vec2 tc,vec2 sc) {
     appearance.a*=u_smooth ? smoothstep(0.008,0.12,s.r) : smoothstep(-0.09,0.09,edge)*min(1.0,s.r*10.0);
   }
   appearance=customShade(appearance,s.r,s.b/max(s.r,0.000001),world,u_time);
-  appearance.a*=u_circle.w>0.5 ? smoothstep(-0.5,1.0,length(world-u_circle.xy)-u_circle.z) : 1.0;
+  appearance.a*=smoothstep(-0.5,1.0,dynamicDistance(p));
   return appearance;
 }

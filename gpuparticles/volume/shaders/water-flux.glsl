@@ -19,12 +19,12 @@ vec4 effect(vec4 color,Image state,vec2 tc,vec2 sc) {
   if (m<=0.0) return f;
   if (obstacleDistance(p)<0.0) {
     // Moving obstacles displace existing mass outward, even through their interior.
-    // Free cells never send into a solid cell. Nothing is cleared when the circle moves.
+    // Free cells never send into a solid cell. Dynamic obstacles retain covered material.
     for (int i=0;i<4;i++) {
-      bool movingCircle=circleDistance(p)<0.0;
-      if (inside(neighbors[i]) && (!movingCircle || Texel(u_terrain,uv(neighbors[i])).r>=0.0)) {
-        float current=movingCircle ? circleDistance(p) : obstacleDistance(p);
-        float next=movingCircle ? circleDistance(neighbors[i]) : obstacleDistance(neighbors[i]);
+      bool movingObstacle=dynamicDistance(p)<0.0;
+      if (inside(neighbors[i]) && (!movingObstacle || Texel(u_terrain,uv(neighbors[i])).r>=0.0)) {
+        float current=movingObstacle ? dynamicDistance(p) : obstacleDistance(p);
+        float next=movingObstacle ? dynamicDistance(neighbors[i]) : obstacleDistance(neighbors[i]);
         f[i]=max(0.0,next-current);
       }
     }

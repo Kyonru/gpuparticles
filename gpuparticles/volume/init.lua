@@ -10,7 +10,9 @@ function W.new(options)
     return nil,'gpuparticles volume requires GLSL 3, high precision pixel shaders, and rgba32f canvases'
   end
   local self=setmetatable({materials={},sources={},reactions={},owned={},keys={},shaders={},time=0,accumulator=0,
-    paused=false,released=false,droppedTime=0,wind=U.vector(options.wind,{0,0},'wind',2),circle={0,0,0,0},brush={0,0,0,0},impulse={0,0},
+    paused=false,released=false,droppedTime=0,wind=U.vector(options.wind,{0,0},'wind',2),circle={0,0,0,0},
+    box={0,0,0,0},boxEnabled=false,capsule={0,0,0,0},capsuleRadius=0,capsuleEnabled=false,
+    brush={0,0,0,0},impulse={0,0},
     width=U.number(options.width,1280,'width',1),height=U.number(options.height,800,'height',1),
     cellSize=U.number(options.cellSize,8,'cell size',0.25),
     fixedStep=U.number(options.fixedStep,1/120,'fixed step',1/1000,1/30),
@@ -177,6 +179,27 @@ function W:setCircleCollider(x,y,radius)
   else
     x=U.number(x,nil,'circle x');y=U.number(y,nil,'circle y');radius=U.number(radius,nil,'circle radius',0)
     self.circle[1],self.circle[2],self.circle[3],self.circle[4]=x,y,radius,1
+  end
+  return self
+end
+function W:setBoxCollider(x,y,width,height)
+  U.alive(self)
+  if x==nil then self.boxEnabled=false
+  else
+    x=U.number(x,nil,'box x');y=U.number(y,nil,'box y')
+    width=U.number(width,nil,'box width',0.001);height=U.number(height,nil,'box height',0.001)
+    self.box[1],self.box[2],self.box[3],self.box[4],self.boxEnabled=x,y,width*0.5,height*0.5,true
+  end
+  return self
+end
+function W:setCapsuleCollider(x1,y1,x2,y2,radius)
+  U.alive(self)
+  if x1==nil then self.capsuleEnabled=false
+  else
+    x1=U.number(x1,nil,'capsule start x');y1=U.number(y1,nil,'capsule start y')
+    x2=U.number(x2,nil,'capsule end x');y2=U.number(y2,nil,'capsule end y')
+    self.capsuleRadius=U.number(radius,nil,'capsule radius',0.001)
+    self.capsule[1],self.capsule[2],self.capsule[3],self.capsule[4],self.capsuleEnabled=x1,y1,x2,y2,true
   end
   return self
 end

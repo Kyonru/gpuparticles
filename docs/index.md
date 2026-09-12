@@ -1,20 +1,10 @@
 <div class="gp-hero">
-  <div>
-    <p class="gp-kicker">LÖVE 11.x · GLSL 3 · no compute shaders</p>
-    <h1>Particles that stay on the GPU.</h1>
-    <p class="gp-lede">Draw immense analytic effects, add stateful collision when motion needs memory, or simulate persistent water and smoke on a grid. One standalone Lua library chooses the cheapest suitable path.</p>
-    <div class="gp-actions">
-      <a class="md-button md-button--primary" href="getting-started/first-effect/">Build an effect</a>
-      <a class="md-button" href="getting-started/choose-a-system/">Choose a system</a>
-    </div>
-  </div>
-  <div class="gp-field" role="img" aria-label="Diagram of an analytic particle arc, state texture cells, and a persistent volume basin">
-    <span class="gp-field__label gp-field__label--analytic">A · trajectory</span>
-    <span class="gp-field__label gp-field__label--state">B · state texture</span>
-    <span class="gp-field__label gp-field__label--volume">V · material grid</span>
-    <span class="gp-arc"></span>
-    <span class="gp-state" aria-hidden="true"><i style="--i:1"></i><i style="--i:2"></i><i style="--i:3"></i><i style="--i:4"></i><i style="--i:5"></i><i style="--i:6"></i><i style="--i:7"></i><i style="--i:8"></i></span>
-    <span class="gp-basin"></span>
+  <p class="gp-kicker">LÖVE 11.x · GLSL 3 · no compute shaders</p>
+  <h1>Particles that stay on the GPU.</h1>
+  <p class="gp-lede">Draw immense analytic effects, add stateful collision when motion needs memory, or simulate persistent water and smoke on a grid. One standalone Lua library chooses the cheapest suitable path.</p>
+  <div class="gp-actions">
+    <a class="md-button md-button--primary" href="getting-started/first-effect/">Build an effect</a>
+    <a class="md-button" href="getting-started/choose-a-system/">Choose a system</a>
   </div>
 </div>
 
@@ -43,7 +33,7 @@
 | You want | Use | Why |
 | --- | --- | --- |
 | Sparks, embers, trails, rain, stylized smoke | Analytic emitter | Lowest update cost; deterministic closed-form motion |
-| Particles hitting a floor, SDF, heightfield, or mouse circle | Stateful emitter | Each particle retains its current position and velocity |
+| Particles hitting a floor, SDF, heightfield, circle, box, or capsule | Stateful emitter | Each particle retains its current position and velocity |
 | Approximate particles pushing one another | Stateful + self-collision | Optional bounded visual contact solver |
 | A waterfall that spreads and accumulates in a basin | Water volume | Density persists in cells instead of expiring by lifetime |
 | Smoke that rises, advects, cools, and dissipates | Gas volume | Shared velocity and pressure fields model bulk motion |

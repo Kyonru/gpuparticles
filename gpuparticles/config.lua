@@ -31,6 +31,27 @@ function M.circleCollider(c)
   assert(c.enabled==nil or type(c.enabled)=='boolean','gpuparticles: circle enabled must be boolean')
   return c
 end
+function M.boxCollider(c)
+  assert(type(c)=='table','gpuparticles: boxCollider must be a table')
+  c.x=M.number(c.x or 0,'box center x');c.y=M.number(c.y or 0,'box center y')
+  c.width=M.number(c.width or 80,'box width',0.000001);c.height=M.number(c.height or 80,'box height',0.000001)
+  c.particleRadius=M.number(c.particleRadius or 0,'box particle radius',0)
+  c.bounce=M.number(c.bounce or 0.5,'box bounce',0);c.friction=M.number(c.friction or 0,'box friction',0)
+  assert(c.bounce<=1 and c.friction<=1,'gpuparticles: box bounce and friction must be between 0 and 1')
+  assert(c.enabled==nil or type(c.enabled)=='boolean','gpuparticles: box enabled must be boolean')
+  return c
+end
+function M.capsuleCollider(c)
+  assert(type(c)=='table','gpuparticles: capsuleCollider must be a table')
+  c.x1=M.number(c.x1 or 0,'capsule start x');c.y1=M.number(c.y1 or 0,'capsule start y')
+  c.x2=M.number(c.x2 or 40,'capsule end x');c.y2=M.number(c.y2 or 0,'capsule end y')
+  c.radius=M.number(c.radius or 24,'capsule radius',0.000001)
+  c.particleRadius=M.number(c.particleRadius or 0,'capsule particle radius',0)
+  c.bounce=M.number(c.bounce or 0.5,'capsule bounce',0);c.friction=M.number(c.friction or 0,'capsule friction',0)
+  assert(c.bounce<=1 and c.friction<=1,'gpuparticles: capsule bounce and friction must be between 0 and 1')
+  assert(c.enabled==nil or type(c.enabled)=='boolean','gpuparticles: capsule enabled must be boolean')
+  return c
+end
 function M.normalize(input)
   local c = M.copy(input or {})
   c.max = M.number(c.max or 1000, 'max', 1)
@@ -99,6 +120,8 @@ function M.normalize(input)
     end
   end
   if c.circleCollider then M.circleCollider(c.circleCollider) end
+  if c.boxCollider then M.boxCollider(c.boxCollider) end
+  if c.capsuleCollider then M.capsuleCollider(c.capsuleCollider) end
   if c.selfCollision==true then c.selfCollision={} end
   if c.selfCollision then
     local s=c.selfCollision

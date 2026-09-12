@@ -20,7 +20,7 @@ Use gpuparticles when the effect needs something the native system does not prov
 - deterministic seeded playback;
 - more than eight color or size stops;
 - curl noise, turbulence, attractors, or GPU flow fields;
-- collision with floors, heightfields, signed-distance fields, or a moving circle;
+- collision with floors, heightfields, signed-distance fields, or moving circles, boxes, and capsules;
 - optional approximate particle-to-particle contact;
 - water that spreads and accumulates, smoke that advects and rises, or materials that react.
 
@@ -133,6 +133,7 @@ love . comparison              # native/GPU FPS comparison
 love . waterfall               # collision and persistent water
 love . volume                  # water, smoke, and steam
 love . custom-shaders          # custom GLSL movement and fragment glow
+love . colliders               # moving circles, boxes, and capsules
 love . bench                   # local performance measurements
 ```
 

@@ -23,6 +23,8 @@ function M.new(e)
     collisionResponse={collision.radius or 0,collision.bounce or 0.5,collision.friction or 0,0},
     collisionTexel={1,1},
     circle={0,0,0,0},circleResponse={0,0.5,0,0},
+    box={0,0,0,0},boxResponse={0,0.5,0,0},
+    capsule={0,0,0,0},capsuleResponse={24,0,0.5,0},capsuleEnabled=false,
   }
   if collision.texture then e.fields.collisionTexel={1/collision.texture:getWidth(),1/collision.texture:getHeight()} end
   if #attractors>0 then
@@ -41,7 +43,20 @@ function M.sendCollision(e,shader)
     f.circle[1],f.circle[2],f.circle[3],f.circle[4]=c.x,c.y,c.radius,c.enabled==false and 0 or 1
     f.circleResponse[1],f.circleResponse[2],f.circleResponse[3]=c.particleRadius,c.bounce,c.friction
   end
+  local b=e.config.boxCollider
+  if b then
+    f.box[1],f.box[2],f.box[3],f.box[4]=b.x,b.y,b.width*0.5,b.height*0.5
+    f.boxResponse[1],f.boxResponse[2],f.boxResponse[3],f.boxResponse[4]=b.particleRadius,b.bounce,b.friction,b.enabled==false and 0 or 1
+  end
+  local capsule=e.config.capsuleCollider
+  if capsule then
+    f.capsule[1],f.capsule[2],f.capsule[3],f.capsule[4]=capsule.x1,capsule.y1,capsule.x2,capsule.y2
+    f.capsuleResponse[1],f.capsuleResponse[2],f.capsuleResponse[3],f.capsuleResponse[4]=capsule.radius,capsule.particleRadius,capsule.bounce,capsule.friction
+    f.capsuleEnabled=capsule.enabled~=false
+  end
   shader:send('u_circle',f.circle);shader:send('u_circleResponse',f.circleResponse)
+  shader:send('u_box',f.box);shader:send('u_boxResponse',f.boxResponse)
+  shader:send('u_capsule',f.capsule);shader:send('u_capsuleResponse',f.capsuleResponse);shader:send('u_capsuleEnabled',f.capsuleEnabled)
   shader:send('u_collision',f.collision);shader:send('u_collisionType',f.collisionType)
   shader:send('u_collisionRegion',f.collisionRegion);shader:send('u_collisionTexel',f.collisionTexel)
   shader:send('u_collisionEncoding',f.collisionEncoding);shader:send('u_collisionResponse',f.collisionResponse)

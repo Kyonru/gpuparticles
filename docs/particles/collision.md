@@ -52,7 +52,7 @@ collision = {
 
 The red channel stores signed distance in world pixels after scale and bias. Positive values are outside the solid. Its gradient supplies the contact normal, allowing caves, islands, and arbitrary silhouettes.
 
-## Mouse circle
+## Moving circle, box, and capsule
 
 Reserve a moving obstacle in the initial configuration:
 
@@ -68,16 +68,25 @@ local emitter = gpu.newEmitter {
     bounce = 0.2,
     friction = 0.03,
   },
+  boxCollider = {width=140, height=70, particleRadius=2, enabled=false},
+  capsuleCollider = {x1=300, y1=250, x2=500, y2=300, radius=24, particleRadius=2, enabled=false},
 }
 
 function love.update(dt)
   local x, y = love.mouse.getPosition()
   emitter:setCircleCollider(x, y, 45)
+  -- Or move another reserved shape:
+  -- emitter:setBoxCollider(x, y, 140, 70)
+  -- emitter:setCapsuleCollider(x-70, y-20, x+70, y+20, 24)
   emitter:update(dt)
 end
 ```
 
-Calling `setCircleCollider()` with no arguments disables it. Coordinates must be in simulation space: undo camera translation, scale, or viewport transforms before sending mouse coordinates. The collider does not transfer mouse velocity and can skip particles when moved farther than its diameter between simulation steps.
+Calling a collider setter with no arguments disables that shape. Boxes remain axis-aligned; capsule endpoints can describe any orientation. One collider of each shape can coexist with the texture/plane collision field. The deepest penetration wins when shapes overlap.
+
+All three setters only change uniforms. They do not upload particle data, rebuild shaders, or read state back to the CPU. Coordinates must be in simulation space: undo camera translation, scale, or viewport transforms before sending pointer coordinates. Colliders do not transfer their velocity and can skip particles when moved too far between simulation steps.
+
+![Particles colliding with a moving capsule](../assets/images/colliders.png)
 
 ## Particle-to-particle collision
 

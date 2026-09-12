@@ -22,6 +22,8 @@ function love.load()
   local stateful=gpu.newEmitter{max=16,collision={type='plane',y=64},position={32,32},sizes={16},lifetime=1}
   assert(stateful:getMode()=='stateful' and stateful:getBackend()=='native')
   stateful:setCircleCollider(32,32,20);stateful:setCircleCollider()
+  stateful:setBoxCollider(32,32,20,10);stateful:setBoxCollider()
+  stateful:setCapsuleCollider(20,32,44,32,8);stateful:setCapsuleCollider()
   stateful:emit(8);stateful:update(0.1)
   love.graphics.setCanvas(canvas);love.graphics.clear(0,0,0,0);stateful:draw();love.graphics.setCanvas()
   data=canvas:newImageData();local r=data:getPixel(32,32);assert(r>0,'stateful capability fallback must draw')

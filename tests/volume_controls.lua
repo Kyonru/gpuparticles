@@ -22,6 +22,12 @@ function M.run()
   assert(not pcall(w.update,w,-1) and not pcall(a.setRate,a,0/0),'invalid API numbers must be rejected')
   local world2=assert(gpu.newVolumeWorld{width=8,height=8})
   assert(not pcall(world2.newSource,world2,{material=m}),'cross-world source references must be rejected')
+  local gas=world2:addMaterial{name='smoke',model='gas',buoyancy=0,dissipation=0,cooling=0}
+  local probe=world2:newSource{material=gas,position={4,4},rate=0}
+  world2:setBoxCollider(4,4,4,4);probe:emit(8);assert(H.sum(gas).mass==0,'box must reject volume injection')
+  world2:setBoxCollider();world2:setCapsuleCollider(2,4,6,4,2);probe:emit(8)
+  assert(H.sum(gas).mass==0,'capsule must reject volume injection')
+  world2:setCapsuleCollider();probe:emit(8);assert(H.sum(gas).mass>0,'disabled dynamic colliders must admit volume injection')
   world2:release()
   w:reset();assert(H.sum(m).mass==0 and w.time==0,'reset must empty the world')
   m:set{flowSpeed=1};a:setPosition(8,12):emit(8)
@@ -36,6 +42,6 @@ function M.run()
   local state=m.state;w:release();w:release()
   assert(not pcall(state.getWidth,state) and a.released and b.released and m.released,'world release must release owned handles')
   assert(not pcall(a.start,a),'released source must reject mutation')
-  print('Volume sources / runtime controls / fixed clock / validation / terrain editing / release PASS')
+  print('Volume sources / dynamic colliders / runtime controls / fixed clock / validation / terrain editing / release PASS')
 end
 return M

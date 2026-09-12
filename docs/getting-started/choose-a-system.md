@@ -48,7 +48,7 @@ This makes volumes suitable for pools, redirected waterfalls, smoke filling a ro
 
 ## What `auto` checks
 
-Any configured collision, circle collider, nonempty attractor list, flow field, self-collision, or custom force marked `stateful=true` selects stateful mode. Everything else remains analytic. Explicit `mode='analytic'` rejects stateful features with a clear error.
+Any configured collision, dynamic collider, nonempty attractor list, flow field, self-collision, or custom force marked `stateful=true` selects stateful mode. Dynamic colliders can be circles, axis-aligned boxes, or capsules. Everything else remains analytic. Explicit `mode='analytic'` rejects stateful features with a clear error.
 
 Always assert the expected mode in examples and tests:
 

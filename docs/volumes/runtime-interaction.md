@@ -2,14 +2,18 @@
 
 Volume controls mutate GPU fields without reading every cell into Lua. Coordinates are local to the world, independent of `draw(x, y)` translation.
 
-## Circle obstacle
+## Moving obstacles
 
 ```lua
 world:setCircleCollider(x, y, radius)
 world:setCircleCollider() -- disable
+world:setBoxCollider(x, y, width, height)
+world:setBoxCollider() -- disable
+world:setCapsuleCollider(x1, y1, x2, y2, radius)
+world:setCapsuleCollider() -- disable
 ```
 
-Water is displaced from covered cells and gas is excluded. Transform screen or mouse coordinates into world coordinates before calling it.
+Water is displaced from covered cells and gas is excluded. Boxes stay axis-aligned; capsule endpoints can move and rotate freely. The three shapes can be enabled together. Transform screen or mouse coordinates into world coordinates before calling them.
 
 ## Paint terrain
 

@@ -29,6 +29,16 @@ This example injects a seeded helix displacement with `gpu.forces.custom`, then 
 
 ![Custom analytic movement with fragment glow](../assets/images/custom-shaders.png)
 
+## Moving colliders
+
+```sh
+love particle-gpu/examples/colliders
+```
+
+Press **1**, **2**, or **3** to attach a circle, axis-aligned box, or rotating capsule to the mouse. The example keeps the same stateful particle stream while each collider moves through uniforms.
+
+![Circle, box, and capsule collision example](../assets/images/colliders.png)
+
 ## Native versus GPU
 
 ```sh

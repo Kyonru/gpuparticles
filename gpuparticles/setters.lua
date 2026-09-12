@@ -30,6 +30,28 @@ function M.install(E)
     c.x,c.y,c.radius,c.enabled=x,y,radius,true
     return self
   end
+  function E:setBoxCollider(x,y,width,height)
+    self:_check()
+    assert(self.mode=='stateful','gpuparticles: setBoxCollider requires an emitter constructed with boxCollider or stateful mode')
+    local c=self.config.boxCollider
+    if x==nil then if c then c.enabled=false end;return self end
+    config.number(x,'box center x');config.number(y,'box center y')
+    config.number(width,'box width',0.000001);config.number(height,'box height',0.000001)
+    if not c then c=config.boxCollider({});self.config.boxCollider=c end
+    c.x,c.y,c.width,c.height,c.enabled=x,y,width,height,true
+    return self
+  end
+  function E:setCapsuleCollider(x1,y1,x2,y2,radius)
+    self:_check()
+    assert(self.mode=='stateful','gpuparticles: setCapsuleCollider requires an emitter constructed with capsuleCollider or stateful mode')
+    local c=self.config.capsuleCollider
+    if x1==nil then if c then c.enabled=false end;return self end
+    config.number(x1,'capsule start x');config.number(y1,'capsule start y')
+    config.number(x2,'capsule end x');config.number(y2,'capsule end y');config.number(radius,'capsule radius',0.000001)
+    if not c then c=config.capsuleCollider({});self.config.capsuleCollider=c end
+    c.x1,c.y1,c.x2,c.y2,c.radius,c.enabled=x1,y1,x2,y2,radius,true
+    return self
+  end
   function E:setColors(...)
     self:_check()
     local args={...}

@@ -27,6 +27,8 @@ end
 function love.update(dt)
   if not world then return end
   world:setCircleCollider(love.mouse.getX(), love.mouse.getY(), 50)
+  -- Or: world:setBoxCollider(x,y,width,height)
+  -- Or: world:setCapsuleCollider(x1,y1,x2,y2,radius)
   world:update(dt)
 end
 function love.draw() if world then world:draw() end end
@@ -58,7 +60,7 @@ Requires GLSL 3, high-precision pixel shaders, and `rgba32f` canvases; no instan
 
 ## Materials
 
-`world:addMaterial(config)` returns a material. A world supports **8 materials**, with **one water material** and remaining slots for gases. Names must be unique. All gases share velocity/pressure and contribute buoyancy and custom forces. Materials share terrain, circle collision, and reaction rules. Gas can occupy water cells; gas/liquid pressure coupling and bubbles are not simulated.
+`world:addMaterial(config)` returns a material. A world supports **8 materials**, with **one water material** and remaining slots for gases. Names must be unique. All gases share velocity/pressure and contribute buoyancy and custom forces. Materials share terrain, circle/box/capsule collision, and reaction rules. Gas can occupy water cells; gas/liquid pressure coupling and bubbles are not simulated.
 
 | Field | Models | Default | Meaning |
 |---|---|---|---|
@@ -103,6 +105,10 @@ Moving/resizing circular sources counts coverage in Lua over their bounding regi
 | `setWind(x,y)` | Change gas wind target; no effect on cellular water |
 | `setCircleCollider(x,y,radius)` | Move/resize the circular obstacle |
 | `setCircleCollider()` | Disable the circle |
+| `setBoxCollider(x,y,width,height)` | Move/resize an axis-aligned box obstacle |
+| `setBoxCollider()` | Disable the box |
+| `setCapsuleCollider(x1,y1,x2,y2,radius)` | Move/resize/rotate a capsule obstacle |
+| `setCapsuleCollider()` | Disable the capsule |
 | `paintTerrain(x,y,radius,solid)` | Add solid terrain when true, erase when false |
 | `resetTerrain()` | Restore original terrain |
 | `addHeat(x,y,radius,amount,material?)` | Temperature delta with radial falloff, clamped to 0–1000; omit material to affect all |

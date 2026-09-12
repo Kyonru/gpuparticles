@@ -4,7 +4,7 @@ function M.run()
   local methods={'setColors','setSizes','setSizeVariation','setSpeed','setSpread','setDirection','setLinearAcceleration',
     'setRadialAcceleration','setTangentialAcceleration','setLinearDamping','setSpin','setSpinVariation','setRotation',
     'setRelativeRotation','setEmissionArea','setEmitterLifetime','setParticleLifetime','setOffset','setQuads','setInsertMode',
-    'setBufferSize','emit','start','stop','pause','reset','getCount'}
+    'setCircleCollider','setBoxCollider','setCapsuleCollider','setBufferSize','emit','start','stop','pause','reset','getCount'}
   for _,mode in ipairs{'analytic','stateful'} do
     local e=gpu.newEmitter{max=8,mode=mode,rate=4,lifetime=1}
     for _,method in ipairs(methods) do assert(type(e[method])=='function','missing '..method) end

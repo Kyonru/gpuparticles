@@ -33,6 +33,7 @@ For persistent water, smoke, editable terrain, custom volume shaders, and therma
 | `seed` | `1` | Private deterministic record generator seed |
 | `forces` | `{}` | Force descriptors below |
 | `selfCollision` | disabled | Optional equal-radius particle contacts; see below; maximum 24000 slots |
+| `circleCollider`, `boxCollider`, `capsuleCollider` | disabled | Optional movable uniform obstacles; each selects stateful mode |
 
 `texture`, `collision`, `flowField`, and `attractors` are optional. The library does not take ownership of caller textures or quads. Construct after LÖVE graphics initialization.
 
@@ -66,6 +67,10 @@ All setters and controls return the emitter for chaining. `update`, `draw`, and 
 | `setPosition(x,y)` | Origin uniform; burst records keep their captured origin |
 | `setCircleCollider(x,y,radius)` | Move/resize and enable a circular obstacle in simulation coordinates; O(1), no uploads or shader rebuild |
 | `setCircleCollider()` | Disable the circle; keep its configured bounce/friction |
+| `setBoxCollider(x,y,width,height)` | Move/resize and enable an axis-aligned box obstacle; O(1) uniforms |
+| `setBoxCollider()` | Disable the box |
+| `setCapsuleCollider(x1,y1,x2,y2,radius)` | Move/resize/rotate a capsule segment obstacle; O(1) uniforms |
+| `setCapsuleCollider()` | Disable the capsule |
 | `setOffset(x,y)` | Billboard offset uniform |
 | `setQuads(q1,q2,...)` | Quads or one list; upload atlas LUT; no arguments clears it |
 | `setInsertMode(mode)` | Change ring placement/cursor, without sorting |
@@ -195,19 +200,24 @@ The plane is horizontal, solid below `y`. A heightfield's red channel encodes `h
 
 Penetration projects the particle center to the surface plus `radius`. `bounce` is restitution (default 0.5); `friction` removes that fraction of tangent velocity (default 0). Particle visual size does not automatically change collision radius.
 
-### Moving circular obstacle
+### Moving uniform obstacles
 
 ```lua
 local emitter = require('gpuparticles').newEmitter {
   max=20000, rate=5000, lifetime=3,
   position={400,40}, direction=math.pi/2, speed=100, gravity={0,300},
   circleCollider={x=400, y=250, radius=45, particleRadius=2, bounce=0.2, friction=0.03},
+  boxCollider={x=240, y=320, width=120, height=60, particleRadius=2, enabled=false},
+  capsuleCollider={x1=520, y1=280, x2=650, y2=340, radius=24, particleRadius=2, enabled=false},
   -- An existing collision plane, heightfield, or SDF may also be configured.
 }
 local accumulator=0
 function love.update(dt)
   local x,y=love.mouse.getPosition()
   emitter:setCircleCollider(x,y,45)
+  -- Alternatives:
+  -- emitter:setBoxCollider(x,y,120,60)
+  -- emitter:setCapsuleCollider(x-60,y-20,x+60,y+20,24)
   accumulator=accumulator+math.min(dt,0.1)
   while accumulator>=1/120 do
     emitter:update(1/120)
@@ -216,13 +226,13 @@ function love.update(dt)
 end
 ```
 
-`circleCollider` automatically selects stateful mode. `enabled=false` reserves it without enabling contact. `x,y` default to zero, obstacle `radius` to 40, `particleRadius` to zero, `bounce` to 0.5, and `friction` to zero. Radius must be positive; particle radius nonnegative; bounce/friction in [0,1].
+Any dynamic collider automatically selects stateful mode. `enabled=false` reserves it without enabling contact. Circles use a center and radius. Boxes use a center with positive width and height and stay axis-aligned. Capsules use two segment endpoints and a positive radius, so moving the endpoints also rotates and resizes the obstacle. `particleRadius` defaults to zero, `bounce` to 0.5, and `friction` to zero.
 
-The shader evaluates `length(position-center)-radius`, projects penetrating particle centers outside, and applies restitution/friction. A circle can coexist with `collision`; the deeper contact determines the projection and response. This remains discrete collision, so rapid mouse motion can skip particles and overlapping obstacles can require subsequent steps to resolve. Mouse velocity is not transferred to particles.
+The shader evaluates the signed distance to each enabled shape, chooses the deepest contact, projects the particle outside, and applies restitution/friction. One circle, one box, and one capsule can coexist with each other and with `collision`. This remains discrete collision, so rapid obstacle motion can skip particles and overlapping obstacles can require subsequent steps to resolve. Obstacle velocity is not transferred to particles.
 
-`setCircleCollider` changes scalar uniforms without reading particle state, uploading spawn records, or rebuilding collision textures. Its first use on an explicitly stateful emitter allocates a small configuration table; subsequent movement is allocation-free. Analytic emitters reject the setter; construct with `circleCollider` or explicit stateful mode. The native fallback accepts the setter but omits collision.
+The three setters change scalar uniforms without reading particle state, uploading spawn records, or rebuilding collision textures. Their first use on an explicitly stateful emitter allocates a small configuration table; subsequent movement is allocation-free. Analytic emitters reject them; construct with a dynamic collider or explicit stateful mode. The native fallback accepts the setters but omits collision.
 
-Coordinates must be in the emitter's simulation space: undo any camera, draw translation, or viewport scaling before passing mouse coordinates. The comparison and waterfall examples include this mapping and wheel-controlled radius changes. Calling `setCircleCollider()` disables contact when the pointer leaves the viewport.
+Coordinates must be in the emitter's simulation space: undo any camera, draw translation, or viewport scaling before passing pointer coordinates. Calling a setter with no arguments disables that shape. Run `love . colliders` for a mouse-driven comparison.
 
 ### Custom acceleration
 

@@ -15,6 +15,10 @@
 | `setWind(x,y)` | Change gas target velocity |
 | `setCircleCollider(x,y,radius)` | Enable or move the circle obstacle |
 | `setCircleCollider()` | Disable the circle obstacle |
+| `setBoxCollider(x,y,width,height)` | Enable or move an axis-aligned box obstacle |
+| `setBoxCollider()` | Disable the box obstacle |
+| `setCapsuleCollider(x1,y1,x2,y2,radius)` | Enable or move an oriented capsule obstacle |
+| `setCapsuleCollider()` | Disable the capsule obstacle |
 | `paintTerrain(x,y,radius,solid)` | Add or erase solid terrain |
 | `resetTerrain()` | Restore construction terrain |
 | `addHeat(x,y,radius,amount,material?)` | Add temperature with radial falloff |
