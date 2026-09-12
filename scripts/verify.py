@@ -225,6 +225,17 @@ def sdf_groups_demo():
         raise RuntimeError(f'sdf-groups: unexpected exit {result.returncode}')
 
 
+def effect_library_demo():
+    result = subprocess.run(
+        [options.love, str(root), 'library', '--smoke'],
+        text=True, capture_output=True, timeout=90,
+    )
+    output = result.stdout + result.stderr
+    print(output, end='')
+    if result.returncode != 0 or 'Effect library standalone render PASS' not in output:
+        raise RuntimeError(f'library: unexpected exit {result.returncode}')
+
+
 def portability():
     with tempfile.TemporaryDirectory(prefix='gpuparticles-standalone-') as folder:
         destination = Path(folder)
@@ -324,6 +335,7 @@ if options.demos_only or options.waterfall_only:
         custom_shader_demo()
         collider_demo()
         sdf_groups_demo()
+        effect_library_demo()
     demo('waterfall', '--mouse-collision')
     demo('waterfall', '--plant-collision')
     demo('waterfall', '--self-collision')

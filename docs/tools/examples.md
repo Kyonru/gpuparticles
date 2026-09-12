@@ -2,6 +2,18 @@
 
 The repository contains runnable projects for individual forces, collision, the editor, persistent materials, and performance comparisons.
 
+## Effect library
+
+```sh
+love particle-gpu library
+```
+
+Browse fourteen complete recipes with the arrow keys or mouse wheel. The catalog covers fire, explosions, weather, ambient particles, magic, stylized clouds, impact sprays, stateful fields, pixel-art sprite sheets, water, interactive smoke, paintable terrain, thermal reactions, and custom shader treatments.
+
+Each screen names the APIs it uses. Press **Space** for a burst; volume screens show their mouse interaction in the lower bar. The source is divided into particle and volume recipes so individual configurations can be copied without the gallery UI.
+
+![Browsable particle and volume effect recipes](../assets/images/effect-library.gif)
+
 ## Effect browser
 
 ```sh

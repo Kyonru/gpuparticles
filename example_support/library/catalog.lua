@@ -1,0 +1,16 @@
+return {
+  {id='fire',title='Fire, sparks & embers',group='PARTICLES',note='Layer a soft flame emitter with a faster ember emitter.',api='turbulence · additive blend · two analytic emitters'},
+  {id='explosions',title='Explosions & fireworks',group='PARTICLES',note='Burst-only ring buffers recycle without rewriting the full mesh.',api='emit(n) · radial spread · deterministic bursts'},
+  {id='weather',title='Rain & snow',group='WEATHER',note='Share a scene while keeping each material in a cheap analytic emitter.',api='emissionArea · gravity · turbulence'},
+  {id='ambient',title='Dust, leaves, pollen & motes',group='WEATHER',note='Slow seeded layers prevent ambient particles from swaying together.',api='spin · lifetime curves · four analytic layers'},
+  {id='magic',title='Magic, portals & orbiters',group='MAGIC',note='Closed-form custom GLSL creates orbit and spiral motion without state.',api='forces.custom · seeded phase · analytic mode'},
+  {id='clouds',title='Smoke, steam & clouds',group='ATMOSPHERE',note='Large soft sprites and low alpha create inexpensive stylized gases.',api='soft texture · turbulence · alpha blend'},
+  {id='sprays',title='Blood, slime & debris',group='IMPACTS',note='Reuse one burst recipe with different drag, spread, and bounce.',api='emit(n) · plane collision · stateful mode'},
+  {id='fields',title='Flow fields, vortices & attractors',group='MOTION',note='Current-position forces use state textures and select stateful mode.',api='flowField · attractors · float textures'},
+  {id='pixel',title='Pixel-art sprite sheets',group='RENDERING',note='Nearest-filtered generated frames advance over particle lifetime.',api='texture · setQuads · nearest filtering'},
+  {id='water',title='Accumulating water',group='VOLUMES',volume=true,note='A persistent density grid spreads, pools, and moves around the mouse.',api='newVolumeWorld · water · circle collider'},
+  {id='smoke',title='Interactive smoke',group='VOLUMES',volume=true,note='Velocity, pressure, temperature, wind, and mouse impulses drive gas.',api='gas · setWind · addForce · heat'},
+  {id='terrain',title='Paintable volume terrain',group='VOLUMES',volume=true,note='Left paint adds solids; right paint erases them while water keeps moving.',api='paintTerrain · persistent water · GPU field edits'},
+  {id='steam',title='Water-to-steam reaction',group='VOLUMES',volume=true,note='Heat transfers water density into a buoyant gas material.',api='addReaction · addHeat · two materials'},
+  {id='shaders',title='Particle shader treatments',group='RENDERING',note='A post shader combines glow, outline, dissolve, distortion, and palette motion.',api='Canvas · custom fragment shader · animated uniforms'},
+}

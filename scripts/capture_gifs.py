@@ -17,6 +17,7 @@ examples = [
     ('comparison-mouse', 'comparison', ('--mouse-collision',)),
     ('colliders', 'colliders', ()),
     ('custom-shaders', 'custom-shaders', ()),
+    ('effect-library', 'library', ()),
     ('sdf-collision-groups', 'sdf-groups', ()),
     ('waterfall-plants', 'waterfall', ('--plant-collision',)),
     ('waterfall-volume-mouse', 'waterfall', ('--water-volume', '--mouse-collision')),

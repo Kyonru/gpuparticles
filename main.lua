@@ -9,6 +9,7 @@ for _, value in ipairs(arg or {}) do
   if value=='custom-shaders' then command=value end
   if value=='colliders' then command=value end
   if value=='sdf-groups' then command=value end
+  if value=='library' then command=value end
 end
 if command=='volume-test' then require('tests.volume').install()
 elseif command=='volume' then require('example_support.volume.app').install()
@@ -21,6 +22,7 @@ elseif command == 'comparison' then require('example_support.comparison.app').in
 elseif command == 'custom-shaders' then require('example_support.custom_shaders.app').install()
 elseif command == 'colliders' then require('example_support.colliders.app').install()
 elseif command == 'sdf-groups' then require('example_support.sdf_groups.app').install()
+elseif command == 'library' then require('example_support.library.app').install()
 elseif command == 'comparison-test' then require('tests.comparison').install()
 elseif command == 'waterfall' then require('example_support.waterfall.app').install()
 elseif command == 'waterfall-test' then require('tests.waterfall').install()

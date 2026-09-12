@@ -129,6 +129,7 @@ function love.quit() world:release() end
 ```sh
 love .                         # effect browser
 love . editor                  # layered Particle Studio and Lua export
+love . library                 # browsable collection of fourteen effect recipes
 love . comparison              # native/GPU FPS comparison
 love . waterfall               # collision and persistent water
 love . volume                  # water, smoke, and steam
