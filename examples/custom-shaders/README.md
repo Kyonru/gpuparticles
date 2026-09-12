@@ -13,4 +13,4 @@ love examples/custom-shaders
 
 Press **G** to compare the raw particles with the fragment effect, **Space** for a burst, and **R** to reset. The canvas pass adds fill-rate and texture-sampling cost; the custom analytic movement itself still uses one instanced particle draw and no per-particle CPU update.
 
-![Custom analytic movement with fragment glow](../../previews/custom-shaders.png)
+![Custom analytic movement with fragment glow](../../previews/custom-shaders.gif)

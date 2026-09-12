@@ -1,6 +1,7 @@
 local prefix=(...):gsub('example_support%.comparison%.app$','')
 local Model=require(prefix..'example_support.comparison.model')
 local View=require(prefix..'example_support.comparison.view')
+local GifCapture=require(prefix..'example_support.gif_capture')
 local M={}
 function M.install()
   for _,value in ipairs(arg or {}) do
@@ -20,6 +21,7 @@ function M.install()
     if value:match('^%-%-count=%d+$') then count=tonumber(value:match('%d+$')) end
   end
   mouseDemo=mouseDemo and not benchmark
+  local gif=GifCapture.new(mouseDemo and 'comparison-mouse' or particleDemo and 'comparison-self' or 'comparison')
   function love.load()
     love.window.setMode(1280,800,{resizable=true,minwidth=960,minheight=700,vsync=0})
     love.window.setTitle('LÖVE vs GPU — matched particle comparison')
@@ -39,11 +41,12 @@ function M.install()
     if mouseDemo and smoke and frames==1 then model:clearMeasurement() end
     model:update(dt,(mouseDemo or particleDemo) and smoke and 1/60 or nil);frames=frames+1
     local done=benchmark and model.benchmarkDone or (not benchmark and frames>=(mouseDemo and 120 or 30))
-    if smoke and done and (not capture or captured) then print('Comparison standalone render PASS');love.event.quit() end
+    if smoke and done and (not capture or captured) and (not gif or gif.done) then print('Comparison standalone render PASS');love.event.quit() end
   end
   function love.draw()
     local shownBenchmark,shownFPS=model.benchmark,model.fps
     model:renderTargets();view:draw(model);model:finishFrame()
+    if gif then gif:draw(frames) end
     if capture and not requested and frames>=(mouseDemo and 90 or 5) and (not mouseDemo or shownFPS>0) and (not benchmark or (model.benchmarkDone and not shownBenchmark and shownFPS>0)) then
       requested=true
       love.graphics.captureScreenshot(function(data)

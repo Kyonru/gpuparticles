@@ -10,7 +10,7 @@ All components use a 4 px spacing base, 12–16 px panel insets, a 40 px primary
 
 Component checkpoints:
 
-- Preview: dominant open ink surface, peach emitter gizmos, direct dragging, and no decorative background grid. Fill the drawable panel beneath its 56 px control strip and above its 32 px status strip. Preserve world proportions and expand visible world bounds, keeping particles, shader canvases, and hit testing aligned without an inner letterbox.
+- Preview: dominant dark ink surface, peach emitter gizmos, direct dragging, and no decorative background grid. The surrounding editor uses dark blue surfaces with beige text and teal secondary labels. Fill the drawable panel beneath its 56 px control strip and above its 32 px status strip. Preserve world proportions and expand visible world bounds, keeping particles, shader canvases, and hit testing aligned without an inner letterbox.
 - Layers: narrow supporting column, compact selectable rows, explicit visibility and solo controls, matched layer colors in the timeline.
 - Inspector: consistent inset fields and amber keyboard focus, six tabs arranged in two rows, independent scrolling, numeric entry as well as dragging.
 - Numbers: click to type; drag either the value or its label along the initial horizontal/vertical axis (right/up increases). A 3 px threshold separates clicks from drags, Shift reduces sensitivity tenfold, and bounds clamp continuously with immediate reversal. Values follow each field's displayed precision. Release creates one undo step; Escape restores the previous value. Attractor strength shows pull at 100 px with a nearby units explanation.

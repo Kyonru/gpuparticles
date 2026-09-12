@@ -1,6 +1,7 @@
 local prefix=(...):gsub('example_support%.custom_shaders%.app$','')
 local gpu=require(prefix..'gpuparticles')
 local palette=require(prefix..'example_support.palette')
+local GifCapture=require(prefix..'example_support.gif_capture')
 local A={}
 function A.install()
   local emitter,canvas,shader,title,text
@@ -11,6 +12,7 @@ function A.install()
     if value=='--smoke' then smoke=true end
     if value=='--capture' then capture=true end
   end
+  local gif=GifCapture.new('custom-shaders')
   local function releaseScene()
     if emitter then emitter:release();emitter=nil end
     if canvas then canvas:release();canvas=nil end
@@ -53,7 +55,7 @@ function A.install()
   function love.update(dt)
     dt=math.min(dt,1/30);elapsed=elapsed+dt;frames=frames+1
     emitter:update(smoke and 1/60 or dt)
-    if smoke and frames>=90 and (not capture or captured) then
+    if smoke and frames>=90 and (not capture or captured) and (not gif or gif.done) then
       print('Custom shaders standalone render PASS');love.event.quit()
     end
   end
@@ -75,6 +77,7 @@ function A.install()
     g.setColor(palette.blue)
     g.print('G Shader   Space Burst   R Reset   Esc',29,height-33)
     g.pop()
+    if gif then gif:draw(frames) end
     if capture and frames>=60 and not requested then
       requested=true
       g.captureScreenshot(function(data)

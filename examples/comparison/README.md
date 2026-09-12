@@ -14,7 +14,7 @@ Both panels share the texture, emission settings, color curve, particle lifetime
 
 **C** enables a mouse obstacle. Hover either panel: the circle is shown at matching positions in both, with GPU particles colliding and native particles passing through. Scroll the wheel to change radius. Leaving the particle panels disables contact. Enabling the obstacle selects stateful mode and clears old benchmark results. **B** disables it and restores the previous mode before running a matched benchmark. **M** also exits the collision demonstration.
 
-[Mouse collision preview](../../previews/comparison-mouse.png)
+[Mouse collision preview](../../previews/comparison-mouse.gif)
 
 **S** switches to a GPU **particle-contact off/on** comparison. Both sides use stateful simulation with the same seed, texture, spawn settings, four-second lifetime, and floor; the right additionally resolves particle contacts. **Up/Down** selects **256, 512, 1024, 2048, 5000, or 10000** particles. **I** cycles through 1–4 contact iterations, **[/]** changes visual size and contact diameter, and **C** applies the same mouse obstacle to both. Press **S** again to restore the regular native/GPU settings. The native LÖVE ParticleSystem has no equivalent particle-contact feature, so the GPU baseline isolates this feature's cost.
 

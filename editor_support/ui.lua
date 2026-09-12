@@ -3,10 +3,10 @@ local utf8=require('utf8')
 local palette=require('editor_support.palette')
 local U={};U.__index=U
 U.colors={
-  canvas=palette.ink,panel=palette.beige,raised=palette.teal,
-  input={1,245/255,230/255},hover={103/255,162/255,197/255},line={103/255,162/255,197/255},
-  ink={33/255,54/255,64/255},secondary={51/255,91/255,105/255},muted={78/255,116/255,121/255},
-  accent={52/255,114/255,145/255},accentDim={155/255,206/255,193/255},danger={190/255,85/255,76/255},
+  canvas={15/255,34/255,43/255},panel={22/255,42/255,52/255},raised={41/255,75/255,89/255},
+  input={28/255,53/255,64/255},hover={58/255,101/255,120/255},line={53/255,88/255,103/255},
+  ink=palette.beige,secondary=palette.teal,muted=palette.blue,
+  accent=palette.peach,accentDim={81/255,63/255,58/255},danger=palette.peach,
   dark=palette.ink,peach=palette.peach,beige=palette.beige,teal=palette.teal,blue=palette.blue,
 }
 function U.color(name,alpha)

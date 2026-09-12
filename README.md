@@ -8,7 +8,7 @@ GPU particles, collision, and material volumes for **LÖVE 11.x**. No compute sh
 
 gpuparticles keeps spawn records and simulation state on the GPU. Simple effects draw hundreds of thousands of particles with one instanced call; stateful effects add environment collision, mouse obstacles, attractors, and flow fields. A separate grid simulation provides accumulating water, rising smoke, editable terrain, and thermal reactions.
 
-![A persistent waterfall redirected by a circular mouse obstacle](previews/waterfall-volume-mouse.png)
+![A persistent waterfall redirected by a circular mouse obstacle](previews/waterfall-volume-mouse.gif)
 
 ## When should I use it?
 

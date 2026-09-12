@@ -2,7 +2,7 @@
 
 Collision requires current particle state, so `mode='auto'` selects the stateful backend. The solver projects a penetrated particle out of a surface and changes its normal and tangential velocity using bounce and friction.
 
-![GPU particles colliding with a mouse-controlled circle](../assets/images/comparison-mouse.png)
+![GPU particles colliding with a mouse-controlled circle](../assets/images/comparison-mouse.gif)
 
 ## Floor plane
 
@@ -86,7 +86,7 @@ Calling a collider setter with no arguments disables that shape. Boxes remain ax
 
 All three setters only change uniforms. They do not upload particle data, rebuild shaders, or read state back to the CPU. Coordinates must be in simulation space: undo camera translation, scale, or viewport transforms before sending pointer coordinates. Colliders do not transfer their velocity and can skip particles when moved too far between simulation steps.
 
-![Particles colliding with a moving capsule](../assets/images/colliders.png)
+![Particles colliding with a moving capsule](../assets/images/colliders.gif)
 
 ## Particle-to-particle collision
 

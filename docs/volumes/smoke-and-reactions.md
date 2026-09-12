@@ -2,7 +2,7 @@
 
 Gas materials share velocity and pressure fields. Density is advected by wind, accelerated by buoyancy and custom forces, diffused by the finite grid, and reduced through dissipation.
 
-![Smooth smoke volume](../assets/images/volume-smoke-smooth.png)
+![Smooth smoke volume](../assets/images/volume-smoke-smooth.gif)
 
 ## Configure smoke
 
@@ -70,6 +70,6 @@ world:addHeat(400, 600, 50, 2, water)
 
 The reaction transfers density and proportional heat in the same cell. Its per-step conversion fraction is `1 - exp(-rate * dt)`. Rules run in insertion order and can be started, stopped, retuned, or released.
 
-![Pixel steam produced by a thermal reaction](../assets/images/volume-steam-pixel.png)
+![Pixel steam produced by a thermal reaction](../assets/images/volume-steam-pixel.gif)
 
 This mechanism handles material-to-gas conversion. Combustion, sand, freezing, latent heat, gas expansion, bubbles, and equal-and-opposite water/gas forces are outside its current model.

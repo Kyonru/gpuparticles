@@ -37,6 +37,14 @@ zensical build --clean --strict
 
 Generated files are written to the ignored `site/` directory. The `Documentation site` GitHub workflow builds that directory and deploys it to GitHub Pages on documentation changes. Keep task guides in `docs/`; update `API.md` or `VOLUME_API.md` alongside public API changes.
 
+Animated examples are captured directly from LÖVE and encoded with `ffmpeg`. Regenerate the documented GIFs after changing their visuals or motion:
+
+```sh
+python3 scripts/capture_gifs.py
+```
+
+The script writes 24-frame, 12 FPS loops to both `previews/` and `docs/assets/images/`, then removes its temporary PNG frames.
+
 ## Before opening a pull request
 
 Run the checks relevant to the change:

@@ -25,7 +25,7 @@ This example uses the public [`gpuparticles.newVolumeWorld` API](../../VOLUME_AP
 
 The 960×480 world uses a 160×80 grid and scales into the viewport. Water is conservative but compressible. Smoke has velocity, pressure, density, and temperature transport. Reactions are thermal conversions, not a chemistry engine. Gas is not mass-conservative and does not exchange pressure forces with water. See the API's units, costs, and limitations before using it for gameplay.
 
-[Pixel smoke](../../previews/volume-smoke-pixel.png) · [Smooth smoke](../../previews/volume-smoke-smooth.png) · [Water](../../previews/volume-water-pixel.png) · [Steam](../../previews/volume-steam-smooth.png)
+[Pixel smoke](../../previews/volume-smoke-pixel.png) · [Smooth smoke](../../previews/volume-smoke-smooth.gif) · [Water](../../previews/volume-water-pixel.gif) · [Steam](../../previews/volume-steam-pixel.gif)
 
 ```sh
 love particle-gpu volume-test

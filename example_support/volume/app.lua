@@ -1,6 +1,7 @@
 local gpu=require((...):gsub('example_support%.volume%.app$','gpuparticles'))
 local prefix=(...):gsub('example_support%.volume%.app$','')
 local palette=require(prefix..'example_support.palette')
+local GifCapture=require(prefix..'example_support.gif_capture')
 local A={}
 local names={'water','smoke','steam'}
 local W,H=960,480
@@ -21,6 +22,7 @@ function A.install()
     if value=='--smooth' then smooth=true end
     for i,name in ipairs(names) do if value=='--preset='..name then index=i end end
   end
+  local gif=GifCapture.new('volume-'..names[index]..(smooth and '-smooth' or '-pixel'))
   local function load()
     if world then world:release() end
     local reason
@@ -75,7 +77,7 @@ vec4 effect(vec4 color,Image tex,vec2 tc,vec2 sc) {
       end
     end
     world:update(smoke and 1/60 or dt)
-    if smoke and frames>=90 and (not capture or captured) then print('Volume standalone render PASS');love.event.quit() end
+    if smoke and frames>=90 and (not capture or captured) and (not gif or gif.done) then print('Volume standalone render PASS');love.event.quit() end
   end
   function love.draw()
     local g=love.graphics
@@ -96,6 +98,7 @@ vec4 effect(vec4 color,Image tex,vec2 tc,vec2 sc) {
     local action=index==3 and '   LMB Heat' or index==2 and '   LMB Stir' or ''
     g.print(('1 Water   2 Smoke   3 Steam   F Style   V Inflow %s   C Circle   Wheel Size   Left/Right Wind%s   RMB Terrain   Space Pause   R Reset   Esc'):format(
       inflow and 'on' or 'off',action),24,top+H*scale+16)
+    if gif then gif:draw(frames) end
     if capture and frames>=60 and not requested then
       requested=true
       g.captureScreenshot(function(data)

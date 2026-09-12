@@ -24,7 +24,7 @@ In volume mode, **V** stops/resumes inflow; accumulated water remains and contin
 
 The volume grid replaces the fixed pool, ribbons, droplets, and authored spray/mist while enabled. Those particle emitters pause, so an obstructed stream cannot leave a decorative waterfall running downstream. This is an alternative waterfall representation, not particle-to-grid fluid coupling or a new `gpuparticles.newEmitter` option. The editor and comparison continue to use their particle systems.
 
-[Accumulation preview](../../previews/waterfall-volume.png) · [Mouse dam preview](../../previews/waterfall-volume-mouse.png)
+[Accumulation preview](../../previews/waterfall-volume.png) · [Mouse dam preview](../../previews/waterfall-volume-mouse.gif)
 
 The implementation in [fluid.lua](../../example_support/waterfall/fluid.lua) uses **160×100 cells** at **8 world pixels per cell**, with three transport relaxations per 1/120-second scene step. Each relaxation computes four outgoing neighbor fluxes and then gathers them into the next state canvas. Outgoing mass is bounded by available mass, and neighbor transfers conserve volume. The nominal source supplies **12000 world px² per simulated second**, divided across relaxations; a submerged or blocked source admits only available space. The source is independent of decorative particle counts and lifetimes.
 
@@ -50,7 +50,7 @@ The **51 nearby ferns** are two mesh batches. Their roots stay fixed while a ver
 
 Move the circle over the ferns on the ledges or foreground to brush them. This is an artistic contact approximation, not cloth or per-leaf collision: deep overlap and very large circles can still intersect foliage. Spring displacement is bounded. Two plant draws upload spring offsets as uniforms; mesh vertices are built once, and there is no GPU readback.
 
-[Plant contact preview](../../previews/waterfall-plants.png) · [Plant geometry and springs](../../example_support/waterfall/plants.lua) · [Wind/deformation shader](../../example_support/waterfall/shaders/plants.glsl)
+[Plant contact preview](../../previews/waterfall-plants.gif) · [Plant geometry and springs](../../example_support/waterfall/plants.lua) · [Wind/deformation shader](../../example_support/waterfall/shaders/plants.glsl)
 
 Edit [terrain.lua](../../example_support/waterfall/terrain.lua) to move, resize, or rotate rocks. Drawing and the distance-field generator use the same shape definitions. The 640×400 float texture covers a 1280×800 world and stores signed distance in world pixels. Its linear filtering is intentional; particle-state canvases remain nearest-filtered. If the rocks move, rebuild the field and adjust the artistic ribbons/impact emitters to match.
 

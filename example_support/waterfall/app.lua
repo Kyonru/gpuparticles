@@ -1,6 +1,7 @@
 local prefix=(...):gsub('example_support%.waterfall%.app$','')
 local Scene=require(prefix..'example_support.waterfall.scene')
 local palette=require(prefix..'example_support.palette')
+local GifCapture=require(prefix..'example_support.gif_capture')
 local M={}
 function M.viewport(width,height)
   local scale=math.min(width/1280,height/800)
@@ -22,6 +23,8 @@ function M.install()
     if value=='--self-collision' then selfDemo=true end
     if value=='--water-volume' then volumeDemo=true end
   end
+  local gif=GifCapture.new(volumeDemo and (mouseDemo and 'waterfall-volume-mouse' or 'waterfall-volume')
+    or plantDemo and 'waterfall-plants' or mouseDemo and 'waterfall-mouse' or 'waterfall')
   local function restart()
     local contacts,volume=selfDemo,volumeDemo
     if scene then contacts,volume=scene.selfCollision,scene.fluid~=nil end
@@ -43,7 +46,7 @@ function M.install()
     end
     scene:update(smoke and 1/60 or dt)
     frames=frames+1
-    if smoke and frames>=(mouseDemo and 120 or 6) and (not capture or captured) then
+    if smoke and frames>=(mouseDemo and 120 or 6) and (not capture or captured) and (not gif or gif.done) then
       print('Waterfall standalone render PASS');love.event.quit()
     end
   end
@@ -54,6 +57,7 @@ function M.install()
     local scale,left,top=M.viewport(w,h)
     g.push('all');g.translate(left,top);g.scale(scale)
     scene:draw();g.pop()
+    if gif then gif:draw(frames) end
     if capture and frames>=(mouseDemo and 90 or 3) and love.timer.getFPS()>0 and not requested then
       requested=true
       g.captureScreenshot(function(data)

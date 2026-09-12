@@ -111,7 +111,8 @@ function A.install()
   end
   function love.load()
     love.filesystem.setIdentity('gpuparticles-studio')
-    love.window.setMode(compact and 1120 or 1440,compact and 760 or 900,{resizable=true,minwidth=1120,minheight=760,vsync=1})
+    love.window.setMode(compact and 1120 or 1440,compact and 760 or 900,
+      {resizable=true,minwidth=1120,minheight=760,vsync=smoke and 0 or 1})
     love.window.setTitle('Particle Studio — GPU effect editor');love.keyboard.setKeyRepeat(true);app=A.new{preset=preset}
     if preset==3 then app.model:select(1) end
     if smoke then app.model.playing=false;app.model.tab=preset>=5 and 'Effects' or 'Style' end

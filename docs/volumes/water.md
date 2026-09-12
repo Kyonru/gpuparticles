@@ -2,7 +2,7 @@
 
 Water volumes preserve density across cells. A stream can hit terrain, spread, fill a basin, and form a temporary pool when a moving obstacle blocks its path.
 
-![Pixel-art water collecting around a mouse obstacle](../assets/images/waterfall-volume-mouse.png)
+![Pixel-art water collecting around a mouse obstacle](../assets/images/waterfall-volume-mouse.gif)
 
 ## Create the basin
 

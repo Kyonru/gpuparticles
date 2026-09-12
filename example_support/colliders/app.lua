@@ -1,6 +1,7 @@
 local prefix=(...):gsub('example_support%.colliders%.app$','')
 local gpu=require(prefix..'gpuparticles')
 local palette=require(prefix..'example_support.palette')
+local GifCapture=require(prefix..'example_support.gif_capture')
 local A={}
 function A.install()
   local emitter,title,text
@@ -11,6 +12,7 @@ function A.install()
     if value=='--smoke' then smoke=true end
     if value=='--capture' then capture=true end
   end
+  local gif=GifCapture.new('colliders')
   local function releaseEmitter() if emitter then emitter:release();emitter=nil end end
   local function loadEmitter()
     releaseEmitter()
@@ -55,7 +57,7 @@ function A.install()
     local steps=0
     while accumulator>=1/120 and steps<8 do emitter:update(1/120);accumulator=accumulator-1/120;steps=steps+1 end
     if steps==8 then accumulator=0 end
-    if smoke and frames>=100 and (not capture or captured) then print('Colliders standalone render PASS');love.event.quit() end
+    if smoke and frames>=100 and (not capture or captured) and (not gif or gif.done) then print('Colliders standalone render PASS');love.event.quit() end
   end
   local function obstacle(g)
     g.setColor(palette.peach[1],palette.peach[2],palette.peach[3],0.14);g.setLineWidth(2)
@@ -82,6 +84,7 @@ function A.install()
     local measured=love.timer.getFPS();local fps=measured>0 and (measured..' FPS') or 'FPS …'
     g.print(('%s  ·  stateful  ·  %s particles  ·  %s'):format(names[selected],emitter:getBufferSize(),fps),29,63)
     g.setColor(palette.blue);g.print('1 Circle   2 Box   3 Capsule   Move mouse   R Reset   Esc',29,height-33)
+    if gif then gif:draw(frames) end
     if capture and frames>=70 and not requested then
       requested=true;g.captureScreenshot(function(data)
         local file='colliders.png';data:encode('png',file);data:release()

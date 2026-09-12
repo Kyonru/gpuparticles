@@ -27,7 +27,7 @@ love particle-gpu/examples/custom-shaders
 
 This example injects a seeded helix displacement with `gpu.forces.custom`, then draws the emitter through a regular LÖVE fragment shader for color separation and glow. Press **G** to disable the fragment pass and compare it with the raw analytic particles.
 
-![Custom analytic movement with fragment glow](../assets/images/custom-shaders.png)
+![Custom analytic movement with fragment glow](../assets/images/custom-shaders.gif)
 
 ## Moving colliders
 
@@ -37,7 +37,7 @@ love particle-gpu/examples/colliders
 
 Press **1**, **2**, or **3** to attach a circle, axis-aligned box, or rotating capsule to the mouse. The example keeps the same stateful particle stream while each collider moves through uniforms.
 
-![Circle, box, and capsule collision example](../assets/images/colliders.png)
+![Circle, box, and capsule collision example](../assets/images/colliders.gif)
 
 ## Native versus GPU
 
@@ -68,7 +68,7 @@ love particle-gpu waterfall
 
 Basalt Falls combines stateful droplet collision, an optional particle contact pass, persistent water volume, mouse interaction, shader curtains, and responsive plant meshes. Distant vegetation stays cached; nearby ferns use GPU wind deformation and lightweight spring response for contact.
 
-![Waterfall with shader-deformed plants](../assets/images/waterfall-plants.png)
+![Waterfall with shader-deformed plants](../assets/images/waterfall-plants.gif)
 
 ## Volume materials
 
@@ -78,4 +78,4 @@ love particle-gpu volume
 
 Cycle water, smoke, and hot-water-to-steam presets and toggle pixel or smooth rendering.
 
-![Pixel water volume](../assets/images/volume-water-pixel.png)
+![Pixel water volume](../assets/images/volume-water-pixel.gif)
