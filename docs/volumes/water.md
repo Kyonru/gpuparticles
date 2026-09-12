@@ -71,7 +71,7 @@ Grid size is `ceil(width/cellSize) × ceil(height/cellSize)`. Start with 8 pixel
 | `spread` | `0.5` | Supported lateral movement |
 | `renderStyle` | `'pixel'` | Pixel or smooth display only |
 
-Water is conservative but compressible. Small mounds, delayed settling, and cell-sized edges are expected. Use a coarse volume for the pooled body and particle emitters for droplets, mist, and spray.
+Water is conservative but compressible. Small mounds, delayed settling, and cell-sized surface steps are expected. Pixel rendering treats filled interior rows as one continuous body and applies partial-cell smoothing only to the exposed surface. Use `smooth` when the surface should hide the grid entirely, or a coarse volume for the pooled body with particle emitters for droplets, mist, and spray.
 
 ## Block the stream
 

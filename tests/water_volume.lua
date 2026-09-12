@@ -1,4 +1,5 @@
 local Fluid=require('example_support.waterfall.fluid')
+local H=require('tests.volume_helpers')
 local M={}
 local function near(actual,expected,tolerance,label)
   assert(math.abs(actual-expected)<tolerance,('%s: expected %.6f, got %.6f'):format(label,expected,actual))
@@ -33,6 +34,16 @@ local function steps(fluid,count,circle)
 end
 function M.run()
   local g=love.graphics
+  local renderWorld=assert(require('gpuparticles').newVolumeWorld{width=16,height=16,cellSize=8,renderStyle='pixel'})
+  local renderWater=renderWorld:addMaterial{name='seam-test',model='water',color={1,1,1,1}}
+  H.seed(renderWater.state,function() return 1,0,0,0 end)
+  local rendered=H.picture(renderWorld)
+  local _,_,_,boundaryAlpha=rendered:getPixel(4,8)
+  local _,_,_,bodyAlpha=rendered:getPixel(4,11)
+  rendered:release();renderWorld:release()
+  near(boundaryAlpha,bodyAlpha,0.005,'interior grid rows must not create horizontal alpha seams')
+  print('Water pixel renderer continuous interior rows PASS')
+
   local f=assert(Fluid.new{width=7,height=7,cellSize=1,source={x=3,y=0,width=0,rate=0},
     distance=function(x) return math.floor(x)==3 and 1 or -1 end})
   seed(f,function(x,y) return x==3 and y==2 and 0.5 or 0 end)
