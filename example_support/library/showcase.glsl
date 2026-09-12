@@ -21,12 +21,12 @@ vec4 effect(vec4 color,Image tex,vec2 tc,vec2 sc) {
     nearby=max(nearby,Texel(tex,warped+vec2(x,y)*u_texel*2.0).a);
   float outline=max(nearby-base.a,0.0);
   float dissolve=smoothstep(0.30,0.38,noise(sc*0.18+u_time*4.0));
-  vec3 peach=vec3(1.0,0.714,0.651);
-  vec3 teal=vec3(0.608,0.808,0.757);
-  vec3 blue=vec3(0.404,0.635,0.773);
+  vec3 yellow=vec3(1.0,0.835,0.118);
+  vec3 pink=vec3(1.0,0.275,0.478);
+  vec3 purple=vec3(0.314,0.012,0.753);
   float ramp=0.5+0.5*sin(u_time+base.r*4.0+tc.y*7.0);
-  vec3 palette=mix(mix(blue,teal,ramp),peach,base.g*0.45);
+  vec3 palette=mix(mix(purple,pink,ramp),yellow,base.g*0.45);
   float glow=nearby*0.35;
-  return vec4(palette*(base.a*dissolve+glow)+peach*outline,base.a*dissolve+outline+glow*0.5)*color;
+  return vec4(palette*(base.a*dissolve+glow)+yellow*outline,base.a*dissolve+outline+glow*0.5)*color;
 }
 #endif

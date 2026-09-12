@@ -41,12 +41,12 @@ local function run()
   print('1920x1080, 50k soft discs, uniform coverage, 12 draws per sample batch')
   print('Size px | Submit/frame | Completed/frame')
   for _,size in ipairs{3,16,48} do
-    local _,_,submit,complete=measure({max=50000,rate=50000,lifetime=1,position={960,540},sizes={size},colors={{1,0.5,0.1,0.2}},
+    local _,_,submit,complete=measure({max=50000,rate=50000,lifetime=1,position={960,540},sizes={size},colors={{1,70/255,122/255,0.2}},
       emissionArea={distribution='uniform',x=950,y=530,angle=0}},1920,1080,12)
     print(('%7d | %12.3f | %15.3f'):format(size,submit,complete))
   end
   local _,_,submit,complete,_,live=measure({max=50000,rate=16000,lifetime={1,3},position={960,920},direction=-math.pi/2,spread=0.7,
-    speed={80,220},gravity={0,-40},damping=0.4,sizes={4,10,0},colors={{1,0.8,0.2,1},{1,0.15,0,0.6},{0.2,0.2,0.2,0}}},1920,1080,12)
+    speed={80,220},gravity={0,-40},damping=0.4,sizes={4,10,0},colors={{1,213/255,30/255,1},{1,70/255,122/255,0.7},{80/255,3/255,192/255,0}}},1920,1080,12)
   print(('Example plume at 1080p: %d live, submit %.3f ms, completed %.3f ms'):format(live,submit,complete))
   local burst=gpu.newEmitter{max=100000,lifetime=5,noFFI=noFFI}
   for _=1,8 do burst:emit(512) end

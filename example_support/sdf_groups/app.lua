@@ -91,10 +91,10 @@ function M.install()
   function love.load()
     width,height=love.graphics.getDimensions()
     sdf=makeSdf(width,height)
-    local world=emitterConfig(width,height,sdf,palette.beige,101)
-    local player=emitterConfig(width,height,sdf,palette.peach,202)
+    local world=emitterConfig(width,height,sdf,palette.yellow,101)
+    local player=emitterConfig(width,height,sdf,palette.pink,202)
     player.circleCollider={radius=48,particleRadius=2,bounce=0.5,friction=0.08,enabled=false}
-    local enemy=emitterConfig(width,height,sdf,palette.teal,303)
+    local enemy=emitterConfig(width,height,sdf,palette.purple,303)
     enemy.boxCollider={width=116,height=62,particleRadius=2,bounce=0.5,friction=0.08,enabled=false}
     enemy.capsuleCollider={radius=25,particleRadius=2,bounce=0.5,friction=0.08,enabled=false}
     worldParticles=gpu.newEmitter(world)
@@ -156,9 +156,9 @@ function M.install()
 
     g.setColor(palette.beige);g.print('SDF COLLISION GROUPS',24,22)
     g.setColor(palette.blue);g.print('Blue outlines: shared static SDF',24,44)
-    g.setColor(palette.beige);g.print('Beige particles: static SDF only',24,66)
-    g.setColor(palette.peach);g.print('Peach: player circle  [P to toggle]',24,88)
-    g.setColor(palette.teal);g.print('Teal: enemy box + capsule  [E to toggle]',24,110)
+    g.setColor(palette.yellow);g.print('Yellow particles: static SDF only',24,66)
+    g.setColor(palette.pink);g.print('Pink: player circle  [P to toggle]',24,88)
+    g.setColor(palette.purple);g.print('Purple: enemy box + capsule  [E to toggle]',24,110)
     g.setColor(palette.blue);g.print('Move mouse to move the player collider   Space: burst   Esc: quit',24,height-28)
     if gif then gif:draw(frames) end
   end

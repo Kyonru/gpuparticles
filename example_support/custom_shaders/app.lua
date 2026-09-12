@@ -26,10 +26,10 @@ function A.install()
       max=50000,rate=11000,lifetime={2.4,4.2},seed=77,
       position={width/2,height-92},direction=-math.pi/2,spread=0.42,speed={105,205},
       gravity={0,-12},damping=0.16,sizes={2,7,3,0},blendMode='add',
-      colors={{palette.teal[1],palette.teal[2],palette.teal[3],0},
-        {palette.teal[1],palette.teal[2],palette.teal[3],0.92},
-        {palette.blue[1],palette.blue[2],palette.blue[3],0.76},
-        {palette.peach[1],palette.peach[2],palette.peach[3],0}},
+      colors={{palette.purple[1],palette.purple[2],palette.purple[3],0},
+        {palette.red[1],palette.red[2],palette.red[3],0.92},
+        {palette.pink[1],palette.pink[2],palette.pink[3],0.76},
+        {palette.yellow[1],palette.yellow[2],palette.yellow[3],0}},
       forces={gpu.forces.custom{
         name='helix',uniforms={amplitude=72,frequency=5.4,lift=16},
         code=[[

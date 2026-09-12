@@ -13,9 +13,9 @@ function M.create(name,width,height)
   end
   local c={max=50000,rate=16000,lifetime={1,3},position={width/2,height-80},direction=-math.pi/2,spread=0.7,
     speed={80,220},gravity={0,-40},damping=0.4,sizes={4,10,0},seed=41,
-    colors={{palette.beige[1],palette.beige[2],palette.beige[3],1},
-      {palette.peach[1],palette.peach[2],palette.peach[3],0.75},
-      {palette.blue[1],palette.blue[2],palette.blue[3],0}}}
+    colors={{palette.yellow[1],palette.yellow[2],palette.yellow[3],1},
+      {palette.pink[1],palette.pink[2],palette.pink[3],0.75},
+      {palette.purple[1],palette.purple[2],palette.purple[3],0}}}
   if name=='gravity' then c.gravity={0,170}
   elseif name=='damping' then c.damping=1.8
   elseif name=='radial' then c.radialAcceleration={80,120};c.spread=math.pi*2;c.position={width/2,height/2}

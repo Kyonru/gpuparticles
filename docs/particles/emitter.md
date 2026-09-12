@@ -38,12 +38,21 @@ Use `none`, `uniform`, `normal`, `ellipse`, `borderellipse`, or `borderrectangle
 
 Stops are evenly spaced across normalized particle life. The GPU backend accepts up to 32 stops.
 
+The examples use a neon particle palette while keeping the interface and scenery muted:
+
+| Color | Hex | Normalized RGB |
+| --- | --- | --- |
+| Purple | `#5003C0` | `{0.314, 0.012, 0.753}` |
+| Red | `#AB03A9` | `{0.671, 0.012, 0.663}` |
+| Pink | `#FF467A` | `{1.000, 0.275, 0.478}` |
+| Yellow | `#FFD51E` | `{1.000, 0.835, 0.118}` |
+
 ```lua
 emitter:setSizes(2, 8, 12, 8, 0)
 emitter:setColors(
-  {1.00, 0.92, 0.83, 0},
-  {1.00, 0.71, 0.65, 1},
-  {0.40, 0.64, 0.77, 0}
+  {1.000, 0.835, 0.118, 0},
+  {1.000, 0.275, 0.478, 1},
+  {0.314, 0.012, 0.753, 0}
 )
 emitter:setSizeVariation(0.35)
 ```
@@ -61,7 +70,7 @@ image:setFilter('nearest', 'nearest')
 local emitter = gpu.newEmitter {
   texture = image,
   sizes = {16, 10, 0},
-  colors = {{1,1,1,1}, {1,0.71,0.65,0}},
+  colors = {{1,1,1,1}, {1,0.275,0.478,0}},
 }
 ```
 

@@ -7,9 +7,9 @@ C.__index=C
 C.capacities={1000,10000,25000,50000,100000,250000}
 C.particleCapacities=ParticlePreset.capacities
 C.sizes={2,3,6,12,24}
-local colors={{palette.blue[1],palette.blue[2],palette.blue[3],0.58},
-  {palette.teal[1],palette.teal[2],palette.teal[3],0.62},
-  {palette.peach[1],palette.peach[2],palette.peach[3],0}}
+local colors={{palette.purple[1],palette.purple[2],palette.purple[3],0.58},
+  {palette.red[1],palette.red[2],palette.red[3],0.62},
+  {palette.pink[1],palette.pink[2],palette.pink[3],0}}
 function C.new(options)
   options=options or {}
   local self=setmetatable({capacityIndex=options.capacityIndex or 3,sizeIndex=options.selfCollision and 4 or 2,gpuMode=options.selfCollision and 'stateful' or 'analytic',view='both',

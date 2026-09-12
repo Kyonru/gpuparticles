@@ -50,7 +50,7 @@ local function base(width,height)
     max=7000,rate=1800,lifetime={1.5,3},seed=17,
     position={width*0.5,height*0.72},direction=-math.pi/2,spread=0.5,speed={35,120},
     sizes={3,9,0},sizeVariation=0.5,gravity={0,-18},damping=0.25,blendMode='add',
-    colors={rgba(palette.beige,0.9),rgba(palette.peach,0.65),rgba(palette.blue,0)},
+    colors={rgba(palette.yellow,0.9),rgba(palette.pink,0.65),rgba(palette.purple,0)},
   }
 end
 
@@ -73,32 +73,32 @@ local builders={}
 function builders.fire(self,w,h)
   local fire=base(w,h);fire.max=12000;fire.rate=4200;fire.lifetime={0.7,1.8};fire.speed={35,105}
   fire.spread=0.75;fire.sizes={3,14,4,0};fire.gravity={0,-60};fire.damping=0.5
-  fire.colors={rgba(palette.beige,1),rgba(palette.peach,0.9),rgba(palette.teal,0.36),rgba(palette.blue,0)}
+  fire.colors={rgba(palette.yellow,1),rgba(palette.pink,0.9),rgba(palette.red,0.36),rgba(palette.purple,0)}
   fire.forces={gpu.forces.turbulence{amplitude={22,7},frequency={5,3}}};add(self,fire)
   local embers=base(w,h);embers.max=5000;embers.rate=650;embers.lifetime={1.4,3.5};embers.speed={70,180}
-  embers.spread=1.1;embers.gravity={0,45};embers.sizes={2,3,0};embers.colors={rgba(palette.beige,1),rgba(palette.peach,0.8),rgba(palette.peach,0)};add(self,embers)
+  embers.spread=1.1;embers.gravity={0,45};embers.sizes={2,3,0};embers.colors={rgba(palette.yellow,1),rgba(palette.pink,0.8),rgba(palette.pink,0)};add(self,embers)
 end
 
 function builders.explosions(self,w,h)
   local flash=base(w,h);flash.rate=0;flash.max=3000;flash.position={w*0.5,h*0.48};flash.spread=math.pi*2
   flash.direction=0;flash.speed={80,280};flash.gravity={0,90};flash.damping=1.1;flash.lifetime={0.45,1.1}
-  flash.sizes={2,9,0};flash.colors={rgba(palette.beige,1),rgba(palette.peach,0.9),rgba(palette.blue,0)}
+  flash.sizes={2,9,0};flash.colors={rgba(palette.yellow,1),rgba(palette.pink,0.9),rgba(palette.purple,0)}
   self.primary=add(self,flash);self.burstEvery=1.15;self.primary:emit(900)
   local trail=clone(flash);trail.seed=29;trail.max=1800;trail.speed={30,140};trail.lifetime={1.2,2.1};trail.damping=0.25
-  trail.colors={rgba(palette.teal,0.9),rgba(palette.blue,0.7),rgba(palette.blue,0)};self.secondary=add(self,trail);self.secondary:emit(500)
+  trail.colors={rgba(palette.red,0.9),rgba(palette.purple,0.7),rgba(palette.purple,0)};self.secondary=add(self,trail);self.secondary:emit(500)
 end
 
 function builders.weather(self,w,h)
   local rain=base(w,h);rain.position={w*0.5,10};rain.emissionArea={distribution='uniform',x=w*0.48,y=4}
   rain.max=10000;rain.rate=3800;rain.lifetime={1.2,2};rain.direction=math.pi/2+0.12;rain.spread=0.04;rain.speed={280,410}
-  rain.gravity={40,260};rain.sizes={2,4,2};rain.colors={rgba(palette.blue,0.75),rgba(palette.teal,0.3),rgba(palette.blue,0)};add(self,rain)
+  rain.gravity={40,260};rain.sizes={2,4,2};rain.colors={rgba(palette.purple,0.75),rgba(palette.red,0.3),rgba(palette.purple,0)};add(self,rain)
   local snow=clone(rain);snow.seed=22;snow.max=5000;snow.rate=800;snow.speed={25,55};snow.gravity={0,18};snow.damping=0.25
-  snow.lifetime={4,7};snow.sizes={3,7,3};snow.colors={rgba(palette.beige,0.8),rgba(palette.beige,0.55),rgba(palette.beige,0)}
+  snow.lifetime={4,7};snow.sizes={3,7,3};snow.colors={rgba(palette.yellow,0.8),rgba(palette.yellow,0.55),rgba(palette.yellow,0)}
   snow.forces={gpu.forces.turbulence{amplitude={28,5},frequency={1.8,1.2}}};add(self,snow)
 end
 
 function builders.ambient(self,w,h)
-  local colors={palette.peach,palette.teal,palette.beige,palette.blue}
+  local colors={palette.pink,palette.red,palette.yellow,palette.purple}
   for i,color in ipairs(colors) do
     local c=base(w,h);c.seed=30+i;c.max=2600;c.rate=260;c.lifetime={4,8};c.position={w*(0.15+i*0.18),h*0.55}
     c.emissionArea={distribution='uniform',x=w*0.12,y=h*0.34};c.direction=-math.pi/2;c.spread=math.pi*2;c.speed={2,18}
@@ -111,7 +111,7 @@ end
 function builders.magic(self,w,h)
   local center={w*0.5,h*0.5}
   local ring=base(w,h);ring.max=9000;ring.rate=2600;ring.lifetime={2.8,4.2};ring.position=center;ring.speed={0,0};ring.spread=math.pi*2
-  ring.sizes={2,8,2,0};ring.colors={rgba(palette.teal,0),rgba(palette.teal,0.9),rgba(palette.blue,0.8),rgba(palette.peach,0)}
+  ring.sizes={2,8,2,0};ring.colors={rgba(palette.red,0),rgba(palette.red,0.9),rgba(palette.purple,0.8),rgba(palette.pink,0)}
   ring.forces={gpu.forces.custom{name='orbit',uniforms={radius=125,speed=2.3},code=[[
     float phase=seed*6.2831853;float a=phase+age*speed;
     return radius*vec2(cos(a)-cos(phase),sin(a)-sin(phase));
@@ -127,14 +127,14 @@ function builders.clouds(self,w,h)
   local cloud=base(w,h);cloud.max=9000;cloud.rate=1800;cloud.lifetime={4,7};cloud.position={w*0.35,h*0.7}
   cloud.emissionArea={distribution='ellipse',x=w*0.22,y=25};cloud.direction=-math.pi/2;cloud.spread=0.8;cloud.speed={8,35}
   cloud.gravity={10,-15};cloud.damping=0.5;cloud.sizes={18,48,75};cloud.blendMode='alpha';cloud.texture=softDisc(32);self.owned[#self.owned+1]=cloud.texture
-  cloud.colors={rgba(palette.blue,0),rgba(palette.teal,0.18),rgba(palette.beige,0.22),rgba(palette.beige,0)}
+  cloud.colors={rgba(palette.purple,0),rgba(palette.red,0.18),rgba(palette.yellow,0.22),rgba(palette.yellow,0)}
   cloud.forces={gpu.forces.turbulence{amplitude={30,12},frequency={1.4,1.1}}};add(self,cloud)
   local steam=clone(cloud);steam.seed=66;steam.max=3500;steam.rate=520;steam.position={w*0.76,h*0.78};steam.emissionArea={distribution='uniform',x=18,y=4}
-  steam.lifetime={2,4};steam.speed={20,55};steam.sizes={8,32,55};steam.colors={rgba(palette.beige,0.32),rgba(palette.teal,0.18),rgba(palette.blue,0)};add(self,steam)
+  steam.lifetime={2,4};steam.speed={20,55};steam.sizes={8,32,55};steam.colors={rgba(palette.yellow,0.32),rgba(palette.red,0.18),rgba(palette.purple,0)};add(self,steam)
 end
 
 function builders.sprays(self,w,h)
-  local specs={{palette.peach,w*0.28,0.9,82},{palette.teal,w*0.5,0.35,38},{palette.beige,w*0.72,0.62,120}}
+  local specs={{palette.pink,w*0.28,0.9,82},{palette.red,w*0.5,0.35,38},{palette.yellow,w*0.72,0.62,120}}
   for i,spec in ipairs(specs) do
     local c=base(w,h);c.seed=70+i;c.rate=0;c.max=2600;c.position={spec[2],h*0.72};c.direction=-math.pi/2;c.spread=spec[3]
     c.speed={spec[4]*0.5,spec[4]*1.8};c.gravity={0,260};c.damping=i==2 and 1.8 or 0.2;c.lifetime={0.7,1.8};c.sizes=i==2 and {8,13,5,0} or {3,7,0}
@@ -148,10 +148,10 @@ end
 function builders.fields(self,w,h)
   local flow=flowTexture();self.owned[#self.owned+1]=flow
   local c=base(w,h);c.max=5000;c.rate=1100;c.lifetime={3,5};c.position={w*0.23,h*0.5};c.spread=math.pi*2;c.speed={15,45}
-  c.flowField={texture=flow,size={w,h},strength=1};c.gravity={0,0};c.damping=0.15;c.colors={rgba(palette.blue,0.8),rgba(palette.teal,0.7),rgba(palette.blue,0)};add(self,c)
+  c.flowField={texture=flow,size={w,h},strength=1};c.gravity={0,0};c.damping=0.15;c.colors={rgba(palette.purple,0.8),rgba(palette.red,0.7),rgba(palette.purple,0)};add(self,c)
   local attract=base(w,h);attract.max=5000;attract.rate=1000;attract.lifetime={2.5,4};attract.position={w*0.78,h*0.5};attract.spread=math.pi*2
   attract.speed={80,150};attract.gravity={0,0};attract.damping=0.1;attract.attractors={{x=w*0.78,y=h*0.5,strength=900000,softening=55}}
-  attract.colors={rgba(palette.peach,0.9),rgba(palette.beige,0.65),rgba(palette.peach,0)};add(self,attract)
+  attract.colors={rgba(palette.pink,0.9),rgba(palette.yellow,0.65),rgba(palette.pink,0)};add(self,attract)
 end
 
 function builders.pixel(self,w,h)
@@ -159,12 +159,12 @@ function builders.pixel(self,w,h)
   for _,quad in ipairs(quads) do self.owned[#self.owned+1]=quad end
   local c=base(w,h);c.texture=sheet;c.quads=quads;c.max=10000;c.rate=2600;c.lifetime={1.2,2.6};c.position={w*0.5,h*0.76}
   c.spread=1.4;c.speed={45,170};c.gravity={0,90};c.damping=0.2;c.sizes={12,24,8,0};c.spin={-2,2}
-  c.colors={rgba(palette.beige,1),rgba(palette.peach,1),rgba(palette.teal,0.8),rgba(palette.blue,0)};add(self,c)
+  c.colors={rgba(palette.yellow,1),rgba(palette.pink,1),rgba(palette.red,0.8),rgba(palette.purple,0)};add(self,c)
 end
 
 function builders.shaders(self,w,h)
   local c=base(w,h);c.max=16000;c.rate=4500;c.lifetime={1.8,3.4};c.position={w*0.5,h*0.72};c.spread=0.8;c.speed={60,150}
-  c.gravity={0,-25};c.sizes={3,13,4,0};c.colors={rgba(palette.beige,0.9),rgba(palette.peach,0.8),rgba(palette.teal,0)}
+  c.gravity={0,-25};c.sizes={3,13,4,0};c.colors={rgba(palette.yellow,0.9),rgba(palette.pink,0.8),rgba(palette.red,0)}
   c.forces={gpu.forces.curl{amplitude=36,frequency=0.8}};add(self,c)
   self.postCanvas=love.graphics.newCanvas(w,h,{dpiscale=1,msaa=0});self.postCanvas:setFilter('linear','linear')
   self.postShader=love.graphics.newShader(assert(love.filesystem.read(prefix..'example_support/library/showcase.glsl')))
