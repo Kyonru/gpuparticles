@@ -3,6 +3,9 @@
 // FORCES
 // STYLE
 #ifdef VERTEX
+#ifdef PARTICLE_DEPTH
+uniform float u_depthTilt;  // screen y per unit of z
+#endif
 attribute vec4 ParticleSpawn;
 attribute float ParticleIndex;
 attribute vec4 ParticleMotion;
@@ -17,6 +20,10 @@ vec4 position(mat4 transform, vec4 vertex) {
     displacement+=forceDisplacement(seed,age);
     vec2 velocity=ParticleMotion.zw*exp(-damping*age);
     velocity+=acceleration*(damping<0.0001 ? age : (1.0-exp(-damping*age))/max(damping,0.0001));
+#ifdef PARTICLE_DEPTH_CODE
+    particleZ=depthCode(seed,age);
+    displacement.y+=particleZ*u_depthTilt;
+#endif
     return styleVertex(transform,vertex,p+displacement,velocity,ParticleStyle,clock,ParticleSpawn.y,seed);
 }
 #endif

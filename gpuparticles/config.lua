@@ -141,6 +141,23 @@ function M.normalize(input)
       assert(s.iterations%1==0 and s.iterations<=4,'gpuparticles: self collision iterations must be an integer from 1 to 4')
     end
   end
+  if c.depth~=nil then
+    local d=c.depth
+    assert(type(d)=='table','gpuparticles: depth must be a table')
+    if d.code~=nil then
+      assert(type(d.code)=='string' and d.code:find('%S'),'gpuparticles: depth code must be GLSL returning a float')
+      for _,field in ipairs{'axis','orbit','gravity','emission','speed'} do
+        assert(d[field]==nil,'gpuparticles: depth '..field..' belongs to simulated depth and cannot be combined with depth code')
+      end
+    else
+      d.axis=M.number(d.axis or c.position[1],'depth axis')
+      d.orbit=M.range(d.orbit,0,'depth orbit',0)
+      d.gravity=M.number(d.gravity or 0,'depth gravity')
+      d.emission=M.number(d.emission or 0,'depth emission',0)
+      d.speed=M.range(d.speed,0,'depth speed')
+    end
+    d.tilt=M.number(d.tilt or 0,'depth tilt')
+  end
   return c
 end
 return M

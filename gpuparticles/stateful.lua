@@ -14,8 +14,14 @@ local function stamp(e,quad,count,preserve)
   local g=love.graphics
   g.push('all');prepare()
   e.stampTargets[1]=preserve and e.stateB or e.stateA
+  if e.depthA then e.stampTargets[5]=preserve and e.depthB or e.depthA end
   g.setCanvas(e.stampTargets)
   g.setShader(e.stampShader)
+  if e.depthA then
+    local d=e.config.depth
+    shaders.send(e.stampShader,'u_depthAxis',d.axis);shaders.send(e.stampShader,'u_depthOrbit',d.orbit)
+    shaders.send(e.stampShader,'u_depthEmission',d.emission);shaders.send(e.stampShader,'u_depthSpeed',d.speed)
+  end
   e.stampShader:send('u_origin',e.config.position)
   e.stampShader:send('u_texSize',e.texSize)
   g.drawInstanced(quad,count)
@@ -34,11 +40,31 @@ function M.new(e)
     return c
   end
   e.stateA,e.stateB=canvas(),canvas()
+  -- Optional simulated z: a small ping-pong pair, created only for `depth` without code.
+  -- Emitters without it allocate nothing here and keep the plain shaders below.
+  local depth=e.config.depth
+  if depth and not depth.code then
+    local function depthCanvas(format)
+      local c=love.graphics.newCanvas(e.texSize,e.texSize,{format=format,dpiscale=1,msaa=0})
+      c:setFilter('nearest');c:setWrap('clamp','clamp')
+      love.graphics.push('all');prepare();love.graphics.setCanvas(c);love.graphics.clear(0,0,0,0);love.graphics.pop()
+      return c
+    end
+    local format=love.graphics.getCanvasFormats().rg32f and 'rg32f' or 'rgba32f'
+    e.depthA,e.depthB=depthCanvas(format),depthCanvas(format)
+    -- A driver may refuse render targets of different formats together; match the state then.
+    if format~='rgba32f' and not pcall(function()
+      love.graphics.push('all');love.graphics.setCanvas(e.stateB,e.depthB);love.graphics.pop()
+    end) then
+      e.depthA:release();e.depthB:release()
+      e.depthA,e.depthB=depthCanvas('rgba32f'),depthCanvas('rgba32f')
+    end
+  end
   e.spawnTexture,e.motionTexture,e.styleTexture=canvas(),canvas(),canvas()
   e.stampTargets={e.stateA,e.spawnTexture,e.motionTexture,e.styleTexture}
-  e.shader,e.shaderKey=shaders.acquire('render')
-  e.simShader,e.simShaderKey=shaders.acquire('simulate',e.compiledForces.source,e.compiledForces.key)
-  e.stampShader,e.stampShaderKey=shaders.acquire('stamp')
+  e.shader,e.shaderKey=shaders.acquire('render',nil,nil,depth and (e.depthA and {} or {code=depth.code}) or nil)
+  e.simShader,e.simShaderKey=shaders.acquire('simulate',e.compiledForces.source,e.compiledForces.key,e.depthA and {} or nil)
+  e.stampShader,e.stampShaderKey=shaders.acquire('stamp',nil,nil,e.depthA and {} or nil)
   fields.new(e)
   if e.config.selfCollision then selfCollision.new(e,canvas) end
   stamp(e,e.quad,e.config.max)
@@ -48,13 +74,23 @@ function M.update(e,dt)
   timeline.advance(e,dt)
   local g,s=love.graphics,e.simShader
   g.push('all');prepare()
+  if e.depthA then g.setCanvas(e.stateB,e.depthB);g.setShader(s) else
   g.setCanvas(e.stateB);g.setShader(s)
+  end
   shaders.common(e,s);forces.send(e.compiledForces,s);fields.send(e,s)
   s:send('u_state',e.stateA);s:send('u_spawn',e.spawnTexture)
   s:send('u_motion',e.motionTexture);s:send('u_style',e.styleTexture)
   s:send('u_dt',dt);s:send('u_texSize',e.texSize);s:send('u_count',e.config.max)
+  if e.depthA then
+    local d=e.config.depth
+    s:send('u_depthState',e.depthA)
+    shaders.send(s,'u_depthAxis',d.axis);shaders.send(s,'u_depthOrbit',d.orbit)
+    shaders.send(s,'u_depthGravity',d.gravity);shaders.send(s,'u_depthEmission',d.emission)
+    shaders.send(s,'u_depthSpeed',d.speed)
+  end
   g.draw(e.stateA)
   e.stateA,e.stateB=e.stateB,e.stateA
+  if e.depthA then e.depthA,e.depthB=e.depthB,e.depthA end
   if e.selfPacked then selfCollision.step(e) end
   g.pop()
 end
@@ -74,13 +110,24 @@ function M.emit(e,n)
 end
 M.count=records.count
 function M.refresh(e) records.refresh(e);stamp(e,e.quad,e.config.max,true) end
-function M.draw(e,x,y)
+function M.draw(e,x,y,options)
   local g=love.graphics
   g.push('all');g.setBlendMode(e.config.blendMode);g.setShader(e.shader)
   shaders.common(e,e.shader);curves.send(e,e.shader)
   e.shader:send('u_state',e.stateA);e.shader:send('u_texSize',e.texSize)
+  shaders.depth(e,e.shader,options)
   g.drawInstanced(e.quad,e.config.max,x or 0,y or 0)
   g.pop()
+end
+-- Bytes held in particle state and spawn-record textures, including the optional z pair.
+local bytesPerTexel={rgba32f=16,rg32f=8,rgba16f=8,rg16f=4,r32f=4}
+function M.stateMemory(e)
+  local total=0
+  for _,key in ipairs{'stateA','stateB','spawnTexture','motionTexture','styleTexture','depthA','depthB','selfPacked'} do
+    local c=e[key]
+    if c then total=total+c:getWidth()*c:getHeight()*(bytesPerTexel[c:getFormat()] or 16) end
+  end
+  return total
 end
 M.release=require(prefix..'resources').release
 

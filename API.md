@@ -35,6 +35,7 @@ For persistent water, smoke, editable terrain, custom volume shaders, and therma
 | `selfCollision` | disabled | Optional equal-radius particle contacts; see below; maximum 24000 slots |
 | `circleCollider`, `boxCollider`, `capsuleCollider` | disabled | Optional movable uniform obstacles; each selects stateful mode |
 | `collisionResponse` | `'bounce'` | Emitter-wide contact action: bounce, slide, stop, disappear, or respawn |
+| `depth` | disabled | Optional per-particle z: depth code, or simulated z that selects stateful mode; see [Depth](#depth) |
 
 `texture`, `collision`, `flowField`, and `attractors` are optional. The library does not take ownership of caller textures or quads. Construct after LÖVE graphics initialization.
 
@@ -45,7 +46,8 @@ All setters and controls return the emitter for chaining. `update`, `draw`, and 
 | Method | Operation / GPU cost |
 |---|---|
 | `update(dt)` | Advance time / one stateful pass, plus two passes per self-collision iteration when enabled; dt must be nonnegative and finite |
-| `draw(x=0,y=0)` | One instanced draw with optional translation |
+| `draw(x=0,y=0,options)` | One instanced draw with optional translation; `options` selects a depth half and cues on `depth` emitters |
+| `getStateMemory()` | Bytes held in particle state and spawn-record textures; `0` for analytic and native emitters |
 | `emit(n)` | Burst, clamped to capacity; O(n) build/upload; ignored while stopped/paused |
 | `warm(seconds)` | O(1) analytic; repeated simulation steps stateful |
 | `setColors(c1,c2,...)` | RGBA tables, a list of tables, or flat RGBA groups; upload curve LUT |
@@ -86,7 +88,7 @@ All setters and controls return the emitter for chaining. `update`, `draw`, and 
 
 Implicit-record refresh is **O(max)** and performs a full mesh upload. Explicit burst records are preserved. Stateful refresh updates spawn templates without overwriting current simulated state. Construct with the final configuration, or make these changes outside latency-sensitive frame paths. Curves have the hardware texture-width limit; GPU curves support more than eight stops without a shader recompile.
 
-Diagnostics: `getMode()`, `getBackend()`, `getFallbackReason()`, `getCount()` (O(max)), `getPosition()`, `getBufferSize()`, `getEmissionRate()`, `getEmitterLifetime()`, `getParticleLifetime()`, `isActive()`, `isPaused()`, `isStopped()`, `isEmpty()`, and `isFull()`.
+Diagnostics: `getMode()`, `getBackend()`, `getStateMemory()`, `getFallbackReason()`, `getCount()` (O(max)), `getPosition()`, `getBufferSize()`, `getEmissionRate()`, `getEmitterLifetime()`, `getParticleLifetime()`, `isActive()`, `isPaused()`, `isStopped()`, `isEmpty()`, and `isFull()`.
 
 Area distributions: `none`, `uniform` (rectangle), `normal`, `ellipse`, `borderellipse`, and `borderrectangle`. `x,y` are half-extents or normal standard deviations. The area rotates by `angle`. With `directionRelative`, each initial direction is rotated by its sampled position's angle.
 
@@ -252,3 +254,48 @@ forces = {
 ```
 
 Stateful code receives `p`, `velocity`, `seed`, and `age` and returns acceleration. `stateful=true` drives automatic mode selection. These descriptors share the same source-based cache as analytic forces.
+
+## Depth
+
+`depth` gives each particle a z value, positive in front of z = 0 and negative behind it, so an effect can be drawn in two passes around a sprite and pass behind it. It is opt-in: emitters without it allocate nothing extra and use the same shader variants as before.
+
+Formula depth computes z while drawing and adds no memory. The emitter keeps its mode:
+
+```lua
+depth = {
+  code = 'return sin(seed*6.2831853 + age*0.9) * 130.0;', -- receives seed and age, returns z
+  tilt = 0.3,                                              -- screen y per unit of z
+}
+```
+
+Simulated depth adds z and z velocity to particle state and selects stateful mode. `mode='analytic'` rejects it, and it cannot be combined with `code`:
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `axis` | emitter x | World x of the vertical axis particles orbit |
+| `orbit` | `0` | Orbit rate, radians/sec; scalar or `{min,max}` sampled per particle |
+| `gravity` | `0` | Constant z acceleration |
+| `emission` | `0` | Random z spread at birth |
+| `speed` | `0` | Extra z velocity at birth; scalar or range |
+| `tilt` | `0` | Screen y per unit of z |
+
+A particle is born with z velocity `(x - axis) * orbit` and a spring of strength `orbit²` pulls it towards the axis in x/z, so it circles the axis. Damping applies to z. A `respawn` collision restores birth z. Attractors, colliders, flow fields, and self-collision act in x/y only.
+
+Simulated z uses two `rg32f` textures (**16 bytes per slot**), or `rgba32f` (32 bytes) where the driver cannot bind render targets of different formats together. Position and z are written in the same simulation pass.
+
+Draw options, valid only on `depth` emitters:
+
+| Option | Default | Meaning |
+|---|---|---|
+| `cut` | none | `'behind'` or `'front'`: draw only that half |
+| `range` | `1` | z distance counted as fully behind or in front; halves blend within a quarter of it |
+| `size` | `0` | Scale sizes by `1 + size*depth`, where depth is `z/range` clamped to ±1 |
+| `dim` | `0` | The back loses up to this fraction of its brightness |
+
+```lua
+emitter:draw(0, 0, {cut='behind', range=40, size=0.35, dim=0.6})
+drawSprite()
+emitter:draw(0, 0, {cut='front', range=40, size=0.35, dim=0.6})
+```
+
+The behind and front weights are complementary, so the two passes add up to one full draw. Each cut is an extra instanced draw, not an extra simulation pass. The native fallback has no z: a behind pass draws nothing and a front pass draws everything.

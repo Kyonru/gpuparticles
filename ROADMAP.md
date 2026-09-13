@@ -53,7 +53,7 @@ Connected trails would support lasers, lightning, projectile streaks, smoke trai
 
 ### 7. Depth-aware rendering
 
-Optional depth testing and scene-depth collision would integrate particles into 3D and pseudo-3D scenes. Full transparent sorting remains a separate, expensive problem.
+Implemented: optional per-particle z, from depth code or simulated orbits, with behind/front draw passes around a sprite ([depth guide](docs/particles/depth.md)). Depth testing against scene depth, scene-depth collision, and several occluders at different depths remain open. Full transparent sorting remains a separate, expensive problem.
 
 ## Volume simulation opportunities
 

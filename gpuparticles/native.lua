@@ -52,7 +52,9 @@ function M.new(e)
   M.configure(e)
 end
 function M.update(e, dt) e.native:update(dt) end
-function M.draw(e, x, y)
+function M.draw(e, x, y, options)
+  -- The native fallback has no z: a behind pass draws nothing and a front pass draws all.
+  if options and options.cut=='behind' then return end
   love.graphics.push('all')
   love.graphics.setBlendMode(e.config.blendMode)
   love.graphics.draw(e.native, x or 0, y or 0)

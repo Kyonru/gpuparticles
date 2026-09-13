@@ -51,6 +51,17 @@ Press **1**, **2**, or **3** to attach a circle, axis-aligned box, or rotating c
 
 ![Circle, box, and capsule collision example](../assets/images/colliders.gif)
 
+## Depth and occlusion
+
+```sh
+love particle-gpu/examples/depth
+# or: love particle-gpu depth
+```
+
+Sparks with simulated z orbit an obelisk while an attractor lifts them, and an analytic ring with formula depth circles a planet. Both draw in two passes around their shape, so the half behind it is hidden. Press **C** to toggle the cut, **V** for size and brightness cues, and **T** to tint the behind half red with the shapes drawn as outlines. The HUD reports each emitter's state memory: the ring's formula depth holds none.
+
+![Sparks orbiting behind an obelisk and a ring passing behind a planet](../assets/images/depth-occlusion.png)
+
 ## SDF collision groups
 
 ```sh

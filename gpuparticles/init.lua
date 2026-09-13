@@ -19,10 +19,10 @@ local function disc()
 end
 function M.newEmitter(input)
   local c = config.normalize(input)
-  local needsState = c.collision or c.circleCollider or c.boxCollider or c.capsuleCollider or c.selfCollision or (c.attractors and #c.attractors>0) or c.flowField
+  local needsState = c.collision or c.circleCollider or c.boxCollider or c.capsuleCollider or c.selfCollision or (c.attractors and #c.attractors>0) or c.flowField or (c.depth and not c.depth.code)
   for _, force in ipairs(c.forces) do needsState = needsState or force.stateful end
   if c.mode == 'analytic' and needsState then
-    error('gpuparticles: this effect requires stateful mode (collision, dynamic collider, attractors, flowField or stateful force)',2)
+    error('gpuparticles: this effect requires stateful mode (collision, dynamic collider, attractors, flowField, simulated depth or stateful force)',2)
   end
   local mode = c.mode == 'auto' and (needsState and 'stateful' or 'analytic') or c.mode
   local compiled = M.forces.compose(c.forces, mode)

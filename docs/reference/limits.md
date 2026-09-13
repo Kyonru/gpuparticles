@@ -34,7 +34,7 @@ Unsupported emitters fall back to `love.graphics.ParticleSystem`, log once, and 
 | Volume materials | 8, including one water material |
 | Sources / reactions | 64 / 16 |
 
-Particle state uses 32-bit floats. Keep coordinates near the effect and recreate very long-running systems before clock precision becomes visible. Particles retain ring-slot draw order; alpha sorting is unavailable.
+Stateful emitters hold five `rgba32f` textures, 80 bytes per slot; simulated [depth](../particles/depth.md) adds 16 bytes per slot, and formula depth adds none. `emitter:getStateMemory()` reports the total. Particle state uses 32-bit floats. Keep coordinates near the effect and recreate very long-running systems before clock precision becomes visible. Particles retain ring-slot draw order; alpha sorting is unavailable.
 
 ## Measure the shipped effect
 

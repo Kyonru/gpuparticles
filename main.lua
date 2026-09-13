@@ -8,6 +8,7 @@ for _, value in ipairs(arg or {}) do
   if value == 'test' or value == 'bench' or value == 'fallback' or value == 'examples-test' or value == 'waterfall' or value == 'waterfall-test' or value == 'comparison' or value == 'comparison-test' or value == 'editor' or value == 'editor-test' then command = value end
   if value=='custom-shaders' then command=value end
   if value=='colliders' then command=value end
+  if value=='depth' then command=value end
   if value=='sdf-groups' then command=value end
   if value=='library' then command=value end
 end
@@ -21,6 +22,7 @@ elseif command == 'editor-test' then require('tests.editor').install()
 elseif command == 'comparison' then require('example_support.comparison.app').install()
 elseif command == 'custom-shaders' then require('example_support.custom_shaders.app').install()
 elseif command == 'colliders' then require('example_support.colliders.app').install()
+elseif command == 'depth' then require('example_support.depth.app').install()
 elseif command == 'sdf-groups' then require('example_support.sdf_groups.app').install()
 elseif command == 'library' then require('example_support.library.app').install()
 elseif command == 'comparison-test' then require('tests.comparison').install()

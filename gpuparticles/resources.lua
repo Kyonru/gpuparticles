@@ -1,7 +1,7 @@
 local shaders=require((...):gsub('resources$','shaders'))
 local M={}
 local owned={'quad','instances','random','colorCurve','sizeCurve','quadCurve','timelineTexture',
-  'stateA','stateB','spawnTexture','motionTexture','styleTexture','emptyField','attractorTexture','selfPacked'}
+  'stateA','stateB','spawnTexture','motionTexture','styleTexture','emptyField','attractorTexture','selfPacked','depthA','depthB'}
 local shared={'shaderKey','simShaderKey','stampShaderKey','selfPackKey','selfResolveKey'}
 function M.release(e)
   for _,key in ipairs(owned) do

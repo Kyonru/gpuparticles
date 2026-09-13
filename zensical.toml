@@ -19,6 +19,7 @@ nav = [
     { "Configure and render" = "particles/emitter.md" },
     { "Motion and lifetime" = "particles/motion.md" },
     { "Collision" = "particles/collision.md" },
+    { "Depth and occlusion" = "particles/depth.md" },
   ] },
   { "Material volumes" = [
     { "Create water" = "volumes/water.md" },

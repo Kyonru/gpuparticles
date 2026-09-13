@@ -340,6 +340,7 @@ if options.demos_only or options.waterfall_only:
         demo('comparison', '--self-collision', '--benchmark')
         custom_shader_demo()
         collider_demo()
+        demo('depth')
         sdf_groups_demo()
         effect_library_demo()
     demo('waterfall', '--mouse-collision')
@@ -399,6 +400,20 @@ if options.mutations:
         ('collision slide response', 'gpuparticles/shaders/collision.glsl',
          '} else if (action==1) {', '} else if (action==99) {',
          'collider expected 7.500000'),
+        ('depth orbit spring', 'gpuparticles/shaders/simulate.glsl',
+         'acceleration.x-=(state.x-u_depthAxis)*spring;', 'acceleration.x-=0.0*spring;',
+         'depth orbit x velocity'),
+        ('depth complementary halves', 'gpuparticles/shaders/style.glsl',
+         'else if (u_depthCut>0.5) result.a*=1.0-smoothstep(-0.25,0.25,particleDepth);',
+         'else if (u_depthCut>0.5) result.a*=1.0-smoothstep(-0.5,0.25,particleDepth);',
+         'depth halves'),
+        ('depth plain shader variants', 'gpuparticles/shaders.lua',
+         "(depth.code and ('|depth:code:'..depth.code) or '|depth:state') or ''",
+         "(depth.code and ('|depth:code:'..depth.code) or '|depth:state') or '|plain'",
+         'must keep the plain render shader'),
+        ('depth texture release', 'gpuparticles/resources.lua',
+         "'selfPacked','depthA','depthB'}", "'selfPacked'}",
+         'release must free the z pair'),
     ]
     for mutation in mutations + editor_mutations + waterfall_mutations + self_mutations + volume_api_mutations:
         mutate(*mutation)

@@ -10,9 +10,22 @@ function E:update(dt)
   config.number(dt, 'dt', 0)
   self.driver.update(self, dt)
 end
-function E:draw(x, y)
+function E:draw(x, y, options)
   self:_check()
-  self.driver.draw(self, x, y)
+  if options ~= nil then
+    assert(type(options) == 'table', 'gpuparticles: draw options must be a table')
+    assert(self.config.depth, 'gpuparticles: draw depth options need an emitter created with depth')
+    assert(options.cut == nil or options.cut == 'behind' or options.cut == 'front',
+      "gpuparticles: depth cut must be 'behind' or 'front'")
+    if options.range ~= nil then config.number(options.range, 'depth range', 0.000001) end
+    if options.size ~= nil then config.number(options.size, 'depth size') end
+    if options.dim ~= nil then config.number(options.dim, 'depth dim', 0) end
+  end
+  self.driver.draw(self, x, y, options)
+end
+function E:getStateMemory()
+  self:_check()
+  return self.driver.stateMemory and self.driver.stateMemory(self) or 0
 end
 function E:emit(n)
   self:_check()

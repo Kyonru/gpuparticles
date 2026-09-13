@@ -7,7 +7,7 @@ Create an emitter with `gpu.newEmitter(config)`. Setters and control methods ret
 | Method | Behavior |
 | --- | --- |
 | `update(dt)` | Advance the clock and stateful simulation |
-| `draw(x=0, y=0)` | Draw all slots in one instanced call on the GPU backend |
+| `draw(x=0, y=0, options)` | Draw all slots in one instanced call; on `depth` emitters, `options` selects a half and depth cues |
 | `emit(n)` | Upload an explicit burst into the ring buffer |
 | `warm(seconds)` | Offset analytic time or step stateful simulation |
 | `setColors(...)` | Upload RGB/RGBA lifetime stops |
@@ -46,7 +46,7 @@ Create an emitter with `gpu.newEmitter(config)`. Setters and control methods ret
 
 ## Diagnostics
 
-`getMode()`, `getBackend()`, `getFallbackReason()`, `getCount()`, `getPosition()`, `getBufferSize()`, `getEmissionRate()`, `getEmitterLifetime()`, `getParticleLifetime()`, `isActive()`, `isPaused()`, `isStopped()`, `isEmpty()`, and `isFull()` are available.
+`getMode()`, `getBackend()`, `getFallbackReason()`, `getStateMemory()`, `getCount()`, `getPosition()`, `getBufferSize()`, `getEmissionRate()`, `getEmitterLifetime()`, `getParticleLifetime()`, `isActive()`, `isPaused()`, `isStopped()`, `isEmpty()`, and `isFull()` are available.
 
 `getCount()` is `O(max)` and should remain a diagnostic rather than a per-frame counter for large effects.
 
@@ -54,4 +54,4 @@ Create an emitter with `gpu.newEmitter(config)`. Setters and control methods ret
 
 The emitter owns generated sprites, meshes, canvases, LUTs, and cached shader references. It does not own a supplied texture, flow texture, collision texture, or quads.
 
-Spawn-setting changes rebuild implicit records in `O(max)`. Uniform and curve changes remain much cheaper. Self-collision settings and custom force source are construction-time choices; recreate the emitter to change them.
+Spawn-setting changes rebuild implicit records in `O(max)`. Uniform and curve changes remain much cheaper. Self-collision settings, `depth` settings, and custom force or depth code are construction-time choices; recreate the emitter to change them.

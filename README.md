@@ -23,6 +23,7 @@ Use gpuparticles when the effect needs something the native system does not prov
 - collision with floors, heightfields, signed-distance fields, or moving circles, boxes, and capsules;
 - selectable collision responses: bounce, slide, stop, disappear, and respawn;
 - optional approximate particle-to-particle contact;
+- optional depth, so particles can orbit and pass behind a sprite, allocating state only when simulated;
 - water that spreads and accumulates, smoke that advects and rises, or materials that react.
 
 | Behavior | System |
