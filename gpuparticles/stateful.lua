@@ -53,9 +53,10 @@ function M.new(e)
     local format=love.graphics.getCanvasFormats().rg32f and 'rg32f' or 'rgba32f'
     e.depthA,e.depthB=depthCanvas(format),depthCanvas(format)
     -- A driver may refuse render targets of different formats together; match the state then.
-    if format~='rgba32f' and not pcall(function()
-      love.graphics.push('all');love.graphics.setCanvas(e.stateB,e.depthB);love.graphics.pop()
-    end) then
+    love.graphics.push('all')
+    local mixedTargetsOk=format=='rgba32f' or pcall(love.graphics.setCanvas,e.stateB,e.depthB)
+    love.graphics.pop()
+    if not mixedTargetsOk then
       e.depthA:release();e.depthB:release()
       e.depthA,e.depthB=depthCanvas('rgba32f'),depthCanvas('rgba32f')
     end

@@ -51,6 +51,25 @@ function M.run()
   assert(orbiting.shader~=plain.shader and orbiting.simShader~=plain.simShader,'z emitters must use their own variants')
   plain:release();orbiting:release()
   assert(orbiting.depthA==nil and orbiting.depthB==nil,'release must free the z pair')
+
+  -- A driver may advertise rg32f but reject it beside rgba32f. The format probe must
+  -- fall back without leaking its graphics-state push.
+  if love.graphics.getCanvasFormats().rg32f then
+    local setCanvas=love.graphics.setCanvas
+    local stackDepth=love.graphics.getStackDepth()
+    love.graphics.setCanvas=function(...)
+      if select('#',...)==2 then error('simulated mixed-format rejection') end
+      return setCanvas(...)
+    end
+    local ok,fallback=pcall(gpu.newEmitter,{max=4,lifetime=1,depth={orbit=1}})
+    love.graphics.setCanvas=setCanvas
+    assert(ok,fallback)
+    assert(fallback.depthA:getFormat()=='rgba32f' and fallback.depthB:getFormat()=='rgba32f',
+      'mixed-format rejection must use rgba32f depth textures')
+    assert(love.graphics.getStackDepth()==stackDepth,
+      'mixed-format fallback must leave the graphics stack balanced')
+    fallback:release()
+  end
   print('Depth opt-in allocation / plain variants / state memory / release PASS')
 
   -- One step: born moving round the axis at the orbit rate, pulled back towards it.
