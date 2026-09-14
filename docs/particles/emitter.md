@@ -109,4 +109,18 @@ emitter:setOffset(8, 8)
 
 Relative rotation follows ballistic or simulated velocity. Analytic noise displacement does not change orientation.
 
+## Streak recipe
+
+`stretch` turns particles into streaks along their travel, such as rain, sparks, or tracer fire:
+
+```lua
+local rain = gpu.newEmitter {
+  direction = math.pi / 2, speed = {420, 560}, sizes = {2},
+  stretch = 0.03, -- each drop trails 0.03 seconds of its own travel
+}
+rain:setStretch(0.05)
+```
+
+Each billboard keeps its leading edge on the particle and extends behind it by `speed × stretch` pixels, aligned to velocity. The streak follows the particle's own speed, so it shortens as the particle slows and vanishes when a collision stops it: a landed raindrop leaves no trail. Use zero rotation and spin with it, since those turn the streak off its line of travel. The native fallback draws unstretched particles.
+
 Use `getMode()`, `getBackend()`, and `getFallbackReason()` for diagnostics. `getCount()` scans spawn metadata in `O(max)`; avoid it in a large emitter’s frame loop.

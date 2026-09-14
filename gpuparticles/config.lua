@@ -80,6 +80,7 @@ function M.normalize(input)
   c.collisionResponse = c.collisionResponse or 'bounce'
   c.emitterLifetime = c.emitterLifetime or -1
   c.forces = c.forces or {}
+  c.stretch = M.number(c.stretch or 0, 'stretch', 0)
   assert(c.max<=16777216,'gpuparticles: max exceeds exact float particle indices')
   for _,field in ipairs{'position','gravity','offset'} do
     assert(type(c[field])=='table','gpuparticles: '..field..' must be a vector')

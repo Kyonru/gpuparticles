@@ -114,6 +114,11 @@ function M.install(E)
     self:_check();assert(type(value)=='boolean','gpuparticles: relative rotation must be boolean')
     self.config.relativeRotation=value;return refresh(self)
   end
+  -- Uniform only: the style shader reads it every draw, so no records are rebuilt.
+  function E:setStretch(seconds)
+    self:_check();self.config.stretch=config.number(seconds,'stretch',0)
+    return self
+  end
   function E:setOffset(x,y)
     self:_check();self.config.offset={config.number(x,'offset x'),config.number(y,'offset y')}
     return refresh(self)
@@ -195,5 +200,6 @@ function M.install(E)
   function E:getEmissionRate() return self.config.rate end
   function E:getEmitterLifetime() return self.config.emitterLifetime end
   function E:getParticleLifetime() return unpack(self.config.lifetime) end
+  function E:getStretch() return self.config.stretch end
 end
 return M

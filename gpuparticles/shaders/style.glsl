@@ -7,6 +7,7 @@ uniform float u_quadCount;
 uniform vec2 u_offset;
 uniform float u_sizeVariation;
 uniform bool u_relativeRotation;
+uniform float u_stretch;   // seconds of travel a velocity streak covers; 0 for none
 varying vec4 particleColor;
 varying vec2 particleUV;
 #ifdef PARTICLE_DEPTH
@@ -39,9 +40,15 @@ vec4 styleVertex(mat4 transform, vec4 vertex, vec2 p, vec2 velocity, vec4 style,
     vec4 uv=Texel(u_quads,vec2((quadIndex+0.5)/u_quadCount,0.5));
     particleUV=uv.xy+VertexTexCoord.xy*uv.zw;
     float angle=style.x+style.y*clock.x;
-    if (u_relativeRotation && length(velocity)>0.00001) angle+=atan(velocity.y,velocity.x);
+    float speed=length(velocity);
+    // A streak lies along travel, so stretching aligns to velocity even without relative rotation.
+    if ((u_relativeRotation || u_stretch>0.0) && speed>0.00001) angle+=atan(velocity.y,velocity.x);
     float ca=cos(angle),sa=sin(angle);
     vec2 localVertex=vertex.xy*size-u_offset;
+    // Velocity stretch: the trailing edge (vertex.x = -0.5) moves back by speed * u_stretch
+    // and the leading edge stays on the particle. A particle stopped by a collision has no speed
+    // and therefore no streak.
+    localVertex.x+=(vertex.x-0.5)*u_stretch*speed;
     vec2 rotated=vec2(ca*localVertex.x-sa*localVertex.y,sa*localVertex.x+ca*localVertex.y);
     return transform*vec4(p+rotated,0.0,1.0);
 }
