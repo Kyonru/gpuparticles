@@ -113,7 +113,7 @@ local water = world:addMaterial {
   name = 'water', model = 'liquid', behavior = 'water',
   viscosity = 0.04,
   surfaceTension = 14,
-  volumeRelaxation = 12,
+  volumeRelaxation = 100,
   sleepSpeed = 2,
 }
 water:set {velocityDamping = 0.2, solidFriction = 0.1}

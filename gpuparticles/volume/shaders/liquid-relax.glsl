@@ -24,7 +24,7 @@ vec4 effect(vec4 color,Image state,vec2 tc,vec2 sc) {
   bool supported=solid(gravityNeighbor) || mass(state,gravityNeighbor)>0.8;
   if (supported) {
     for (int i=0;i<2;i++) if (!solid(neighbors[i])) {
-      f[i]=max(0.0,(m-mass(state,neighbors[i]))*0.25);
+      f[i]=max(0.0,(m-mass(state,neighbors[i]))*0.5);
     }
   }
   f*=u_amount;

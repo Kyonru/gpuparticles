@@ -3,11 +3,11 @@ local U,Shaders=require(prefix..'util'),require(prefix..'shaders')
 local M={};M.__index=M
 local defaults={buoyancy=40,dissipation=0,cooling=0.3,flowSpeed=1,compression=0.125,spread=0.5}
 local liquidPresets={
-  water={viscosity=0.08,velocityDamping=0.12,pressure=1,surfaceTension=10,gravity=1400,solidFriction=0.08,maxSpeed=1200,volumeRelaxation=12,sleepSpeed=2},
-  fluid={viscosity=0.08,velocityDamping=0.12,pressure=1,surfaceTension=10,gravity=1400,solidFriction=0.08,maxSpeed=1200,volumeRelaxation=12,sleepSpeed=2},
-  oil={viscosity=0.8,velocityDamping=0.35,pressure=0.85,surfaceTension=6,gravity=1250,solidFriction=0.2,maxSpeed=900,volumeRelaxation=8,sleepSpeed=2},
-  slime={viscosity=4,velocityDamping=1.1,pressure=0.65,surfaceTension=28,gravity=900,solidFriction=0.65,maxSpeed=520,volumeRelaxation=3,sleepSpeed=2.5},
-  lava={viscosity=7,velocityDamping=1.8,pressure=0.7,surfaceTension=20,gravity=750,solidFriction=0.8,maxSpeed=420,volumeRelaxation=1.5,sleepSpeed=3},
+  water={viscosity=0.08,velocityDamping=0.12,pressure=1,surfaceTension=10,gravity=1400,solidFriction=4,maxSpeed=1200,volumeRelaxation=100,sleepSpeed=2},
+  fluid={viscosity=0.08,velocityDamping=0.12,pressure=1,surfaceTension=10,gravity=1400,solidFriction=4,maxSpeed=1200,volumeRelaxation=100,sleepSpeed=2},
+  oil={viscosity=0.8,velocityDamping=0.35,pressure=0.85,surfaceTension=6,gravity=1250,solidFriction=5,maxSpeed=900,volumeRelaxation=50,sleepSpeed=2.5},
+  slime={viscosity=4,velocityDamping=1.1,pressure=0.65,surfaceTension=28,gravity=900,solidFriction=7,maxSpeed=520,volumeRelaxation=12,sleepSpeed=3},
+  lava={viscosity=7,velocityDamping=1.8,pressure=0.7,surfaceTension=20,gravity=750,solidFriction=9,maxSpeed=420,volumeRelaxation=5,sleepSpeed=4},
 }
 local bounds={buoyancy={-1000,1000},dissipation={0,20},cooling={0,20},flowSpeed={0,1},compression={0.001,1},spread={0,0.5},
   viscosity={0,20},velocityDamping={0,20},pressure={0,2},surfaceTension={0,100},gravity={-5000,5000},solidFriction={0,20},maxSpeed={1,10000},

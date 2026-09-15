@@ -128,16 +128,38 @@ function M.run()
   H.near(sleepingMomentum,0,1e-6,'supported liquid sleep threshold')
   sleepWorld:release()
 
+  -- A live stream must build a filled, level pool instead of circulating partial cells forever.
+  local fillWorld=assert(gpu.newVolumeWorld{width=12,height=12,cellSize=1,transportSteps=3,liquidPressureIterations=10,
+    distance=function(x,y) return math.min(x-1,11-x,11-y) end})
+  local filling=fillWorld:addMaterial{name='filling',model='liquid',behavior='water',cooling=0}
+  fillWorld:newSource{material=filling,position={6.5,2.5},rate=4}
+  for _=1,480 do fillWorld:update(1/120) end
+  local fillData=fillWorld:readback(filling)
+  local bottomMass,bottomCells=0,0
+  for x=1,10 do
+    local m=fillData:getPixel(x,10)
+    bottomMass=bottomMass+m
+    if m>0.7 then bottomCells=bottomCells+1 end
+  end
+  fillData:release()
+  print(('Liquid sustained fill bottom mass %.3f across %d cells'):format(bottomMass,bottomCells))
+  assert(bottomMass>7 and bottomCells>=8,'live liquid stream must fill the supported basin')
+  fillWorld:release()
+
   local presets={water={},oil={},slime={},lava={}}
   for behavior in pairs(presets) do
     local w=assert(gpu.newVolumeWorld{width=8,height=8,liquidPressureIterations=1})
     local m=w:addMaterial{name=behavior,model='liquid',behavior=behavior}
-    presets[behavior]={m.viscosity,m.velocityDamping,m.maxSpeed}
+    presets[behavior]={m.viscosity,m.velocityDamping,m.maxSpeed,m.volumeRelaxation,m.solidFriction}
     w:release()
   end
   assert(presets.water[1]<presets.oil[1] and presets.oil[1]<presets.slime[1] and presets.slime[1]<presets.lava[1],
     'liquid presets must progress from water to lava viscosity')
   assert(presets.water[3]>presets.slime[3],'water must retain faster motion than slime')
+  assert(presets.water[4]>presets.oil[4] and presets.oil[4]>presets.slime[4] and presets.slime[4]>presets.lava[4],
+    'liquid presets must progress from fast water settling to slow lava settling')
+  assert(presets.water[5]<presets.oil[5] and presets.oil[5]<presets.slime[5] and presets.slime[5]<presets.lava[5],
+    'liquid presets must progress from water to lava surface friction')
   local invalid=assert(gpu.newVolumeWorld{width=8,height=8})
   assert(not pcall(invalid.addMaterial,invalid,{name='bad',model='liquid',behavior='mist'}),'unknown liquid behavior must fail')
   assert(not pcall(invalid.addMaterial,invalid,{name='bad',model='water',behavior='water'}),'legacy water must reject behavior')
