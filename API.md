@@ -25,6 +25,7 @@ For persistent water, smoke, editable terrain, custom volume shaders, and therma
 | `spin`, `rotation` | `0` | Scalar or range in radians/sec and radians |
 | `relativeRotation` | `false` | Orient to velocity |
 | `stretch` | `0` | Seconds of travel a velocity streak covers: each billboard lengthens behind its particle by `speed × stretch` and aligns to velocity |
+| `carry` | `{0, 0}` | Stateful only: velocity moving particles are carried by on top of their own, such as a camera's; velocity and streaks are unchanged and stopped particles stay put |
 | `emissionArea` | `{distribution='none',x=0,y=0}` | Area settings below |
 | `emitterLifetime` | `-1` | Negative means unlimited; otherwise seconds of active emission |
 | `offset` | `{0,0}` | Pixel offset from billboard center |
@@ -66,6 +67,7 @@ All setters and controls return the emitter for chaining. `update`, `draw`, and 
 | `setRotation(min,max=min)` | Refresh implicit records |
 | `setRelativeRotation(boolean)` | Uniform |
 | `setStretch(seconds)` | Uniform; nonnegative |
+| `setCarry(vx, vy)` | Uniform; cheap to call every frame; stateful only |
 | `setEmissionArea(distribution,x=0,y=0,angle=0,directionRelative=false)` | Refresh implicit records |
 | `setEmitterLifetime(seconds)` | Reset remaining active emission time |
 | `setParticleLifetime(min,max=min)` | Refresh implicit records |
@@ -90,7 +92,7 @@ All setters and controls return the emitter for chaining. `update`, `draw`, and 
 
 Implicit-record refresh is **O(max)** and performs a full mesh upload. Explicit burst records are preserved. Stateful refresh updates spawn templates without overwriting current simulated state. Construct with the final configuration, or make these changes outside latency-sensitive frame paths. Curves have the hardware texture-width limit; GPU curves support more than eight stops without a shader recompile.
 
-Diagnostics: `getMode()`, `getBackend()`, `getStateMemory()`, `getFallbackReason()`, `getCount()` (O(max)), `getPosition()`, `getBufferSize()`, `getEmissionRate()`, `getEmitterLifetime()`, `getParticleLifetime()`, `getStretch()`, `isActive()`, `isPaused()`, `isStopped()`, `isEmpty()`, and `isFull()`.
+Diagnostics: `getMode()`, `getBackend()`, `getStateMemory()`, `getFallbackReason()`, `getCount()` (O(max)), `getPosition()`, `getBufferSize()`, `getEmissionRate()`, `getEmitterLifetime()`, `getParticleLifetime()`, `getStretch()`, `getCarry()`, `isActive()`, `isPaused()`, `isStopped()`, `isEmpty()`, and `isFull()`.
 
 Area distributions: `none`, `uniform` (rectangle), `normal`, `ellipse`, `borderellipse`, and `borderrectangle`. `x,y` are half-extents or normal standard deviations. The area rotates by `angle`. With `directionRelative`, each initial direction is rotated by its sampled position's angle.
 

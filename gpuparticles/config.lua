@@ -81,8 +81,9 @@ function M.normalize(input)
   c.emitterLifetime = c.emitterLifetime or -1
   c.forces = c.forces or {}
   c.stretch = M.number(c.stretch or 0, 'stretch', 0)
+  c.carry = c.carry or {0,0}
   assert(c.max<=16777216,'gpuparticles: max exceeds exact float particle indices')
-  for _,field in ipairs{'position','gravity','offset'} do
+  for _,field in ipairs{'position','gravity','offset','carry'} do
     assert(type(c[field])=='table','gpuparticles: '..field..' must be a vector')
     M.number(c[field][1],field..' x');M.number(c[field][2],field..' y')
   end

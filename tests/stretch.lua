@@ -61,11 +61,45 @@ function M.run()
   assert(math.abs(landedTop-plainTop)<=1 and math.abs(landedBottom-plainBottom)<=1,
     'a particle stopped by a collision must not keep a streak')
 
+  -- Carry moves a moving particle further without changing its velocity, so its streak keeps
+  -- its length; a particle stopped by a collision is not carried.
+  local function drifter(stretch,carry)
+    local e=gpu.newEmitter{max=1,mode='stateful',lifetime=10,position={10,32},speed=100,direction=0,
+      sizes={4},colors={{1,1,1,1}},stretch=stretch}
+    if carry then e:setCarry(carry,0) end
+    e:emit(1)
+    for _=1,4 do e:update(0.05) end
+    return e
+  end
+  local function extentOf(stretch,carry)
+    local e=drifter(stretch,carry)
+    local minX,maxX=render(e)
+    e:release()
+    return minX,maxX
+  end
+  local _,uncarriedHead=extentOf(0)
+  local _,carriedHead=extentOf(0,100)
+  assert(carriedHead-uncarriedHead>=16 and carriedHead-uncarriedHead<=24,
+    'stateful: carry must move a moving particle with it, got '..(carriedHead-uncarriedHead))
+  local streakMin,streakMax=extentOf(0.2)
+  local carriedMin,carriedMax=extentOf(0.2,100)
+  assert(math.abs((carriedMax-carriedMin)-(streakMax-streakMin))<=2,'stateful: carry must not change streak length')
+  local landedLeft,landedRight=render(landed)
+  landed:setCarry(300,0)
+  landed:update(0.1)
+  local carriedLeft,carriedRight,carriedTop,carriedBottom=render(landed)
+  assert(math.abs(carriedLeft-landedLeft)<=1 and math.abs(carriedRight-landedRight)<=1
+    and math.abs(carriedTop-plainTop)<=1 and math.abs(carriedBottom-plainBottom)<=1,
+    'a particle stopped by a collision must not be carried')
+  assert(select(1,landed:getCarry())==300,'setCarry must be readable back')
+  assert(not pcall(landed.setCarry,landed,'fast',0),'a non-numeric carry must fail')
+  assert(not pcall(gpu.newEmitter,{carry={1}}),'a malformed carry must fail at construction')
+
   landed:setStretch(0.5)
   assert(landed:getStretch()==0.5,'setStretch must be readable back')
   assert(not pcall(landed.setStretch,landed,-1),'a negative stretch must fail')
   assert(not pcall(gpu.newEmitter,{stretch=-0.1}),'a negative stretch must fail at construction')
   landed:release()
-  print('Velocity stretch length / head / collision stop / setter PASS')
+  print('Velocity stretch length / head / collision stop / carry / setter PASS')
 end
 return M

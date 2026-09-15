@@ -119,6 +119,13 @@ function M.install(E)
     self:_check();self.config.stretch=config.number(seconds,'stretch',0)
     return self
   end
+  -- Uniform only, so it is cheap to set every frame from a moving camera. Stateful only.
+  function E:setCarry(x,y)
+    self:_check()
+    self.config.carry={config.number(x or 0,'carry x'),config.number(y or 0,'carry y')}
+    return self
+  end
+  function E:getCarry() return self.config.carry[1],self.config.carry[2] end
   function E:setOffset(x,y)
     self:_check();self.config.offset={config.number(x,'offset x'),config.number(y,'offset y')}
     return refresh(self)

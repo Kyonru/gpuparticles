@@ -6,6 +6,7 @@ uniform Image u_spawn;
 uniform Image u_motion;
 uniform Image u_style;
 uniform float u_dt;
+uniform vec2 u_carry; // velocity moving particles are carried by on top of their own
 uniform float u_texSize;
 uniform Image u_flow;
 uniform bool u_hasFlow;
@@ -75,6 +76,10 @@ vec4 stepParticle(vec2 tc,vec2 sc,inout vec4 depth) {
     vec2 velocity=(state.zw+acceleration*stepTime)*exp(-damping*stepTime);
     vec2 p=state.xy+velocity*stepTime;
     p+=forceDisplacement(seed,clock.x)-forceDisplacement(seed,max(clock.x-stepTime,0.0));
+    // Carry: displaced along with a moving frame, such as a camera, without touching velocity,
+    // so streaks keep their shape. It fades with the particle's own speed, so a particle a
+    // collision has stopped stays where it landed.
+    p+=u_carry*smoothstep(0.5,8.0,length(velocity))*stepTime;
     bool collisionHit=collide(p,velocity);
     if (collisionHit && u_collisionAction==3) p=vec2(1.0e20);
     if (collisionHit && u_collisionAction==4) {

@@ -25,6 +25,7 @@ Create an emitter with `gpu.newEmitter(config)`. Setters and control methods ret
 | `setRotation(min,max=min)` | Change initial rotation |
 | `setRelativeRotation(boolean)` | Follow velocity direction |
 | `setStretch(seconds)` | Lengthen particles behind them by speed × seconds |
+| `setCarry(vx, vy)` | Carry moving particles along with a moving frame, such as the camera |
 | `setEmissionArea(kind,x,y,angle,relative)` | Change spawn distribution |
 | `setEmitterLifetime(seconds)` | Limit continuous emission duration |
 | `setParticleLifetime(min,max=min)` | Change lifetime range |
@@ -47,7 +48,7 @@ Create an emitter with `gpu.newEmitter(config)`. Setters and control methods ret
 
 ## Diagnostics
 
-`getMode()`, `getBackend()`, `getFallbackReason()`, `getStateMemory()`, `getCount()`, `getPosition()`, `getBufferSize()`, `getEmissionRate()`, `getEmitterLifetime()`, `getParticleLifetime()`, `getStretch()`, `isActive()`, `isPaused()`, `isStopped()`, `isEmpty()`, and `isFull()` are available.
+`getMode()`, `getBackend()`, `getFallbackReason()`, `getStateMemory()`, `getCount()`, `getPosition()`, `getBufferSize()`, `getEmissionRate()`, `getEmitterLifetime()`, `getParticleLifetime()`, `getStretch()`, `getCarry()`, `isActive()`, `isPaused()`, `isStopped()`, `isEmpty()`, and `isFull()` are available.
 
 `getCount()` is `O(max)` and should remain a diagnostic rather than a per-frame counter for large effects.
 

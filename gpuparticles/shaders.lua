@@ -62,6 +62,7 @@ function M.common(e,shader)
   M.send(shader,'u_offset',c.offset)
   M.send(shader,'u_relativeRotation',c.relativeRotation or false)
   M.send(shader,'u_stretch',c.stretch or 0)
+  M.send(shader,'u_carry',c.carry or {0,0})
 end
 -- Draw-time depth settings for z variants. Always sent in full: emitters share variants,
 -- so a cut left over from one draw would otherwise apply to the next.

@@ -123,4 +123,12 @@ rain:setStretch(0.05)
 
 Each billboard keeps its leading edge on the particle and extends behind it by `speed × stretch` pixels, aligned to velocity. The streak follows the particle's own speed, so it shortens as the particle slows and vanishes when a collision stops it: a landed raindrop leaves no trail. Use zero rotation and spin with it, since those turn the streak off its line of travel. The native fallback draws unstretched particles.
 
+Under a moving camera, world-space rain slides across the screen and reads as blowing one way. For weather that should look the same whether the view moves or not, carry the falling drops along with the camera every frame:
+
+```lua
+rain:setCarry(cameraVx, cameraVy)
+```
+
+Carry moves every moving particle by that velocity on top of its own without touching its velocity, so streaks keep their shape and collisions still happen in the world. Particles that have stopped, such as landed drops, are not carried and stay where they hit. It is a stateful feature; analytic and native emitters ignore it.
+
 Use `getMode()`, `getBackend()`, and `getFallbackReason()` for diagnostics. `getCount()` scans spawn metadata in `O(max)`; avoid it in a large emitter’s frame loop.
