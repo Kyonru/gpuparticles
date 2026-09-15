@@ -13,6 +13,7 @@ function M.run()
   c:release();w:release();w:release()
   print('Volume API water / gas compile and render PASS')
   require('tests.volume_controls').run()
+  require('tests.volume_liquid').run()
   require('tests.volume_gas').run()
   require('tests.volume_extensions').run()
 end

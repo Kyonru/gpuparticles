@@ -3,7 +3,7 @@ local U,Shaders=require(prefix..'util'),require(prefix..'shaders')
 local W={};W.__index=W
 function W.new(options)
   options=options or {}
-  U.keys(options,'width height cellSize fixedStep maxSubsteps transportSteps pressureIterations velocityDamping renderStyle distance wind','world')
+  U.keys(options,'width height cellSize fixedStep maxSubsteps transportSteps pressureIterations liquidPressureIterations velocityDamping renderStyle distance wind','world')
   local g=love.graphics
   local caps=g.getSupported()
   if not caps.glsl3 or not caps.pixelshaderhighp or not g.getCanvasFormats().rgba32f then
@@ -20,6 +20,7 @@ function W.new(options)
     maxSubsteps=U.number(options.maxSubsteps,8,'max substeps',1,64,true),
     transportSteps=U.number(options.transportSteps,3,'transport steps',1,4,true),
     pressureIterations=U.number(options.pressureIterations,24,'pressure iterations',1,80,true),
+    liquidPressureIterations=U.number(options.liquidPressureIterations,10,'liquid pressure iterations',1,80,true),
     velocityDamping=U.number(options.velocityDamping,0.1,'velocity damping',0,20),
     renderStyle=U.choice(options.renderStyle,'pixel','render style',{pixel=true,smooth=true})},W)
   self.columns,self.rows=math.ceil(self.width/self.cellSize),math.ceil(self.height/self.cellSize)
@@ -102,6 +103,54 @@ function W:_water(dt)
   end
   self.waterForce[4]=0
 end
+function W:_liquid(dt)
+  local m=self.water;if not m then return end
+  if m.solver=='settling' then self:_water(dt);return end
+  local s=m.forceShader
+  s:send('u_state',m.state);s:send('u_dt',dt);s:send('u_gravity',m.gravity)
+  s:send('u_viscosity',m.viscosity);s:send('u_damping',m.velocityDamping)
+  s:send('u_surfaceTension',m.surfaceTension);s:send('u_solidFriction',m.solidFriction)
+  s:send('u_maxSpeed',m.maxSpeed);s:send('u_waterForceVector',self.waterForceVector)
+  U.pass(self,s,m.velocityNext,m.velocity);m.velocity,m.velocityNext=m.velocityNext,m.velocity
+  if m.pressure>0 then
+    s=m.divergenceShader;s:send('u_state',m.state);U.pass(self,s,m.divergence,m.velocity)
+    U.clear(m.pressureField)
+    s=m.pressureShader;s:send('u_state',m.state);s:send('u_divergence',m.divergence)
+    for _=1,self.liquidPressureIterations do
+      U.pass(self,s,m.pressureNext,m.pressureField)
+      m.pressureField,m.pressureNext=m.pressureNext,m.pressureField
+    end
+    s=m.projectShader;s:send('u_state',m.state);s:send('u_pressure',m.pressureField);s:send('u_strength',m.pressure)
+    U.pass(self,s,m.velocityNext,m.velocity);m.velocity,m.velocityNext=m.velocityNext,m.velocity
+  end
+  self.waterForce[4]=0
+  local subdt=dt/self.transportSteps
+  for _=1,self.transportSteps do
+    s=m.fluxShader;s:send('u_velocity',m.velocity);s:send('u_dt',subdt)
+    U.pass(self,s,m.flux,m.state)
+    local old=m.state
+    s=m.transportShader;s:send('u_flux',m.flux);s:send('u_injection',m.injection)
+    s:send('u_injectionScale',1/self.transportSteps)
+    s:send('u_decay',math.exp(-m.dissipation*subdt));s:send('u_cooling',math.exp(-m.cooling*subdt))
+    U.pass(self,s,m.next,old)
+    s=m.momentumShader;s:send('u_stateAfter',m.next);s:send('u_velocity',m.velocity);s:send('u_flux',m.flux)
+    s:send('u_sleepSpeed',m.sleepSpeed)
+    U.pass(self,s,m.velocityNext,old)
+    m.state,m.next=m.next,m.state;m.velocity,m.velocityNext=m.velocityNext,m.velocity
+  end
+  if m.volumeRelaxation>0 then
+    s=m.relaxShader;s:send('u_amount',1-math.exp(-m.volumeRelaxation*dt));s:send('u_gravity',m.gravity)
+    U.pass(self,s,m.flux,m.state)
+    local old=m.state
+    s=m.transportShader;s:send('u_flux',m.flux);s:send('u_injection',m.injection)
+    s:send('u_injectionScale',0);s:send('u_decay',1);s:send('u_cooling',1)
+    U.pass(self,s,m.next,old)
+    s=m.momentumShader;s:send('u_stateAfter',m.next);s:send('u_velocity',m.velocity);s:send('u_flux',m.flux)
+    s:send('u_sleepSpeed',m.sleepSpeed)
+    U.pass(self,s,m.velocityNext,old)
+    m.state,m.next=m.next,m.state;m.velocity,m.velocityNext=m.velocityNext,m.velocity
+  end
+end
 function W:_gas(dt)
   local gas=self.gas;if not gas then return end
   local g=love.graphics
@@ -145,7 +194,7 @@ function W:_step(dt)
   self.time=self.time+dt
   for _,m in ipairs(self.materials) do U.clear(m.injection) end
   for _,source in ipairs(self.sources) do if source.active then self:_injectSource(source,source.rate*dt) end end
-  self:_water(dt);self:_gas(dt);self:_react(dt)
+  self:_liquid(dt);self:_gas(dt);self:_react(dt)
 end
 function W:update(dt)
   U.alive(self);dt=U.number(dt,nil,'dt',0)

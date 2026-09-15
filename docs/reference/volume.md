@@ -6,7 +6,7 @@
 
 | Method | Behavior |
 | --- | --- |
-| `addMaterial(config)` | Add one water or gas material |
+| `addMaterial(config)` | Add one settling water, inertial liquid, or gas material |
 | `newSource(config)` | Add a circular or rectangular source |
 | `addReaction(config)` | Convert material into gas above a threshold |
 | `update(dt)` | Advance the fixed-step clock |
@@ -32,12 +32,14 @@
 ## Limits
 
 - At most 1,048,576 cells, further limited by maximum texture size.
-- At most eight materials, including one water material.
+- At most eight materials, including one liquid material (`water` or `liquid`).
 - At most 64 sources and 16 reaction rules per world.
 - Custom hook uniform values are finite scalars or vectors of two to four components.
 - World size, cell size, and solver structure require reconstruction to change.
 
 Material handles support `set`, `setColor`, `setUniform`, `reset`, and `release`. Source handles support geometry, rate, temperature, start/stop, immediate `emit`, and release. Reaction handles support rate, start/stop, and release.
+
+`model='water'` is the original settling solver and remains backward compatible. `model='liquid'` selects a named `behavior`: `water`/`fluid`, `oil`, `slime`, `lava`, or `settling`. Inertial behaviors retain velocity and expose `viscosity`, `velocityDamping`, `pressure`, `surfaceTension`, `gravity`, `solidFriction`, `maxSpeed`, `volumeRelaxation`, and `sleepSpeed`. The last two controls make supported pools fill and come to rest; set them to zero for pure inertial motion. `liquidPressureIterations` is fixed when the world is constructed.
 
 ## Readback channels
 

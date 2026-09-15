@@ -94,6 +94,21 @@ volume_mutations = [
 ]
 
 volume_api_mutations = [
+    ('inertial liquid impulse', 'gpuparticles/volume/shaders/liquid-force.glsl',
+     'if (u_waterForce.w>0.5 && forceDistance<u_waterForce.z', 'if (u_waterForce.w>1.5 && forceDistance<u_waterForce.z',
+     'liquid impulse must move mass', 'volume-test'),
+    ('inertial liquid momentum', 'gpuparticles/volume/shaders/liquid-momentum.glsl',
+     'momentum+=flow(left).y*velocityAt(left)+flow(right).x*velocityAt(right)', 'momentum+=vec2(0.0)',
+     'liquid momentum transfer conservation', 'volume-test'),
+    ('inertial liquid pressure', 'gpuparticles/volume/init.lua',
+     'if m.pressure>0 then', 'if m.pressure>2 then',
+     'liquid pressure projection must reduce divergence', 'volume-test'),
+    ('inertial liquid relaxation', 'gpuparticles/volume/init.lua',
+     'if m.volumeRelaxation>0 then', 'if m.volumeRelaxation>100 then',
+     'liquid volume relaxation must fill lower cells', 'volume-test'),
+    ('inertial liquid sleep', 'gpuparticles/volume/shaders/liquid-momentum.glsl',
+     'length(v)<u_sleepSpeed', 'length(v)+1000.0<u_sleepSpeed',
+     'supported liquid sleep threshold', 'volume-test'),
     ('soft water push', 'gpuparticles/volume/shaders/water-flux.glsl',
      'if (u_push.w>0.0 && pushDistance<u_push.z', 'if (u_push.w>1000.0 && pushDistance<u_push.z',
      'soft water push must move density', 'volume-test'),
@@ -308,7 +323,7 @@ if options.volume_api_only:
     run('volume-test')
     run('water-volume-test')
     volume_portability()
-    for preset in ('water', 'smoke', 'steam'):
+    for preset in ('water', 'settling', 'oil', 'slime', 'smoke', 'steam'):
         demo('volume', f'--preset={preset}')
         demo('volume', f'--preset={preset}', '--smooth')
     if options.mutations:

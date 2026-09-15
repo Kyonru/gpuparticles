@@ -24,7 +24,7 @@ Use gpuparticles when the effect needs something the native system does not prov
 - selectable collision responses: bounce, slide, stop, disappear, and respawn;
 - optional approximate particle-to-particle contact;
 - optional depth, so particles can orbit and pass behind a sprite, allocating state only when simulated;
-- water that spreads and accumulates, smoke that advects and rises, or materials that react.
+- inertial water, oil, slime, legacy settling material, smoke that advects and rises, or materials that react.
 
 | Behavior | System |
 | --- | --- |
@@ -113,7 +113,7 @@ local world, reason = gpu.newVolumeWorld {
 }
 assert(world, reason)
 
-local water = world:addMaterial {name='water', model='water'}
+local water = world:addMaterial {name='water', model='liquid', behavior='water'}
 world:newSource {
   material = water,
   position = {640, 40},
@@ -134,7 +134,7 @@ love . editor                  # layered Particle Studio and Lua export
 love . library                 # browsable collection of fifteen effect recipes
 love . comparison              # native/GPU FPS comparison
 love . waterfall               # collision and persistent water
-love . volume                  # water, smoke, and steam
+love . volume                  # water, settling mud, oil, slime, smoke, and steam
 love . custom-shaders          # custom GLSL movement and fragment glow
 love . colliders               # moving circles, boxes, and capsules
 love . sdf-groups              # shared SDF with selective player/enemy collision

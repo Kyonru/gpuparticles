@@ -22,15 +22,15 @@ world:setCirclePush(x, y, radius, strength)
 world:setCirclePush() -- disable
 ```
 
-This biases water flux away from the circle with a smooth falloff. The circle never becomes solid, and every outgoing amount is gathered by a neighboring cell, so the operation conserves mass and does not cut a collider-shaped hole. A strong sustained push can still form a natural low-density depression. Use a solid collider when an object must block water or form a dam.
+This biases settling flux or accelerates inertial liquid away from the circle with a smooth falloff. The circle never becomes solid, and conservative transport moves rather than deletes mass, so it does not cut a collider-shaped hole. A strong sustained push can still form a natural low-density depression. Use a solid collider when an object must block liquid or form a dam.
 
-For directional interaction, apply a one-time flux impulse in world pixels per second:
+For directional interaction, apply a one-time impulse in world pixels per second:
 
 ```lua
 world:addWaterForce(x, y, radius, forceX, forceY)
 ```
 
-Call it while dragging to stir water from pointer velocity, or use it for pumps, wind, explosions, and character movement. The current liquid model stores density rather than velocity, so the impulse biases the next transport step and does not retain inertia after that step. It conserves mass and never creates solid space.
+Call it while dragging to stir liquid from pointer velocity, or use it for pumps, wind, explosions, and character movement. Inertial liquid adds it to persistent velocity, so the wake continues after the call. Settling liquid preserves the former behavior: it biases only the next transport step. Both paths conserve transported mass and never create solid space.
 
 ## Paint terrain
 

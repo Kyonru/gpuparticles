@@ -23,7 +23,7 @@
   </div>
   <div class="gp-card">
     <h3>Material volumes</h3>
-    <p>A grid stores density, heat, and velocity so water can collect, smoke can rise, terrain can change, and materials can react.</p>
+    <p>A grid stores density, heat, and optional persistent liquid velocity so water can slosh, settling material can pile, smoke can rise, terrain can change, and materials can react.</p>
     <a href="volumes/water/">Create a volume →</a>
   </div>
 </div>
@@ -35,7 +35,8 @@
 | Sparks, embers, trails, rain, stylized smoke | Analytic emitter | Lowest update cost; deterministic closed-form motion |
 | Particles hitting a floor, SDF, heightfield, circle, box, or capsule | Stateful emitter | Each particle retains its current position and velocity |
 | Approximate particles pushing one another | Stateful + self-collision | Optional bounded visual contact solver |
-| A waterfall that spreads and accumulates in a basin | Water volume | Density persists in cells instead of expiring by lifetime |
+| Water that coasts, splashes, and accumulates in a basin | Inertial liquid volume | Density, velocity, and momentum persist on the grid |
+| Mud or a deliberately sluggish pour | Settling liquid volume | The original conservative density relaxation remains available |
 | Smoke that rises, advects, cools, and dissipates | Gas volume | Shared velocity and pressure fields model bulk motion |
 | Water heated into steam | Water + gas + reaction | Conserved per-cell conversion connects both materials |
 

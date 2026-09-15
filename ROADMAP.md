@@ -57,8 +57,8 @@ Implemented: optional per-particle z, from depth code or simulated orbits, with 
 
 ## Volume simulation opportunities
 
-- Sand and granular materials
-- Lava, mud, slime, and viscous liquids
+- Inertial water, oil, slime, and lava are implemented alongside the original settling-liquid behavior
+- Sand, granular materials, and angle-of-repose controls
 - Fire that consumes fuel and produces smoke
 - Freezing, melting, and evaporation
 - Water pushing smoke or steam

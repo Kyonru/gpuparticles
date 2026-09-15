@@ -122,6 +122,6 @@ Basalt Falls combines stateful droplet collision, an optional particle contact p
 love particle-gpu volume
 ```
 
-Cycle water, smoke, and hot-water-to-steam presets and toggle pixel or smooth rendering.
+Compare inertial water, the original settling liquid, oil, slime, smoke, and hot-water-to-steam presets; toggle pixel or smooth rendering.
 
 ![Pixel water volume](../assets/images/volume-water-pixel.gif)

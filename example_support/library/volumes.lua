@@ -23,14 +23,17 @@ function V.new(kind,width,height,automated)
     pointer={x=width*0.5,y=height*0.45,previousX=width*0.5,previousY=height*0.45,inside=true}},Scene)
   local world,reason=gpu.newVolumeWorld{
     width=width,height=height,cellSize=7,renderStyle=kind=='smoke' and 'smooth' or 'pixel',
-    pressureIterations=18,distance=function(x,y) return distanceFor(kind,width,height,x,y) end,
+    pressureIterations=18,liquidPressureIterations=10,
+    distance=function(x,y) return distanceFor(kind,width,height,x,y) end,
   }
   self.world,self.error=world,reason
   if not world then return self end
 
   if kind=='water' or kind=='terrain' or kind=='colliders' then
-    self.material=world:addMaterial{name='water',model='water',flowSpeed=1,spread=0.5,
+    local material={name='water',model=kind=='water' and 'liquid' or 'water',
       color={palette.blue[1],palette.blue[2],palette.blue[3],0.9}}
+    if kind=='water' then material.behavior='water' else material.flowSpeed=1;material.spread=0.5 end
+    self.material=world:addMaterial(material)
     self.source=world:newSource{material=self.material,shape='rectangle',position={width*0.5,28},
       width=kind=='colliders' and 150 or 38,height=2,rate=7500}
     if kind=='colliders' then
@@ -47,7 +50,8 @@ function V.new(kind,width,height,automated)
     self.source=world:newSource{material=self.material,position={width*0.46,height-46},radius=17,rate=2300,temperature=2.8}
     world:setWind(25,-3)
   elseif kind=='steam' then
-    self.water=world:addMaterial{name='water',model='water',cooling=0.03,color={palette.blue[1],palette.blue[2],palette.blue[3],0.9}}
+    self.water=world:addMaterial{name='water',model='liquid',behavior='water',cooling=0.03,
+      color={palette.blue[1],palette.blue[2],palette.blue[3],0.9}}
     self.material=world:addMaterial{name='steam',model='gas',buoyancy=150,dissipation=0.08,cooling=0.06,
       color={palette.beige[1],palette.beige[2],palette.beige[3],0.94}}
     self.source=world:newSource{material=self.water,position={width*0.5,70},radius=13,rate=3300,temperature=0.15}

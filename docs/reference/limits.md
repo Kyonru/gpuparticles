@@ -31,10 +31,10 @@ Unsupported emitters fall back to `love.graphics.ParticleSystem`, log once, and 
 | Editor self-collision capacity | 2,048 slots |
 | Sprite-sheet frames | 256 |
 | Volume cells | 1,048,576, texture size permitting |
-| Volume materials | 8, including one water material |
+| Volume materials | 8, including one liquid material |
 | Sources / reactions | 64 / 16 |
 
-Stateful emitters hold five `rgba32f` textures, 80 bytes per slot; simulated [depth](../particles/depth.md) adds 16 bytes per slot, and formula depth adds none. `emitter:getStateMemory()` reports the total. Particle state uses 32-bit floats. Keep coordinates near the effect and recreate very long-running systems before clock precision becomes visible. Particles retain ring-slot draw order; alpha sorting is unavailable.
+Stateful emitters hold five `rgba32f` textures, 80 bytes per slot; simulated [depth](../particles/depth.md) adds 16 bytes per slot, and formula depth adds none. `emitter:getStateMemory()` reports the total. Settling liquid owns four `rgba32f` material canvases (64 bytes per cell); inertial liquid adds a velocity pair, divergence, and pressure pair (80 more bytes per cell), alongside world terrain and scratch fields. Particle and volume state use 32-bit floats. Keep coordinates near an effect and recreate very long-running systems before clock precision becomes visible. Particles retain ring-slot draw order; alpha sorting is unavailable.
 
 ## Measure the shipped effect
 
@@ -65,6 +65,6 @@ Self-collision cost grows approximately with `iterations × capacity²`:
 | 2,048 | 0.051 ms | 0.939 ms | 1.714 ms | 3.353 ms |
 | 10,000 | 0.055 ms | 6.718 ms | 12.267 ms | 24.519 ms |
 
-Keep the collision buffer near the live count and begin with one iteration. Volume cost follows cell count, water transport steps, gas pressure iterations, active materials, and reactions.
+Keep the collision buffer near the live count and begin with one iteration. Volume cost follows cell count, liquid transport and pressure steps, gas pressure iterations, active materials, and reactions.
 
 Submission time measures Lua-to-driver work. Completed time forces synchronization and includes its overhead. Window FPS includes presentation, UI, and operating-system load.

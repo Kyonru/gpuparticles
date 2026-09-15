@@ -60,7 +60,7 @@ Force code receives `position`, `velocity`, `density`, `temperature`, and `time`
 
 ```lua
 local water = world:addMaterial {
-  name = 'water', model = 'water', cooling = 0.05,
+  name = 'water', model = 'liquid', behavior = 'water', cooling = 0.05,
 }
 local steam = world:addMaterial {
   name = 'steam', model = 'gas', buoyancy = 90,

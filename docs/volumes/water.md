@@ -33,10 +33,8 @@ function love.load()
 
   water = world:addMaterial {
     name = 'water',
-    model = 'water',
-    flowSpeed = 1,
-    compression = 0.125,
-    spread = 0.5,
+    model = 'liquid',
+    behavior = 'water',
     color = {0.40, 0.64, 0.77, 0.9},
   }
 
@@ -66,12 +64,30 @@ Grid size is `ceil(width/cellSize) × ceil(height/cellSize)`. Start with 8 pixel
 | `cellSize` | `8` | Smaller cells capture finer shapes and cost more |
 | `fixedStep` | `1/120` | Simulation step duration |
 | `maxSubsteps` | `8` | Maximum catch-up steps per update |
-| `transportSteps` | `3` | Water settling passes, 1–4 |
-| `flowSpeed` | `1` | Downhill movement rate |
-| `spread` | `0.5` | Supported lateral movement |
+| `transportSteps` | `3` | Conservative mass transfers per step, 1–4 |
+| `liquidPressureIterations` | `10` | Inertial-liquid pressure passes |
 | `renderStyle` | `'pixel'` | Pixel or smooth display only |
 
-Water is conservative but compressible. Small mounds, delayed settling, and cell-sized surface steps are expected. Pixel rendering treats filled interior rows as one continuous body and applies partial-cell smoothing only to the exposed surface. Use `smooth` when the surface should hide the grid entirely, or a coarse volume for the pooled body with particle emitters for droplets, mist, and spray.
+Inertial liquids retain velocity, conservatively carry momentum with their mass, and project velocity pressure. They can coast, wake, rebound, and slosh, but remain a stylized free-surface grid rather than an engineering fluid simulation. Pixel rendering treats filled interior rows as one continuous body and applies partial-cell smoothing only to the exposed surface. Use `smooth` when the surface should hide the grid entirely, or a coarse volume for the pooled body with particle emitters for droplets, mist, and spray.
+
+## Choose a liquid behavior
+
+```lua
+local oil = world:addMaterial {name='oil', model='liquid', behavior='oil'}
+```
+
+`water` (also named `fluid`) is quick and lightly damped. `oil` has more viscosity, `slime` is slower and cohesive, and `lava` is the heaviest preset. Presets expand into ordinary properties: `viscosity`, `velocityDamping`, `pressure`, `surfaceTension`, `gravity`, `solidFriction`, `maxSpeed`, `volumeRelaxation`, and `sleepSpeed`. Pass any of those fields to override its preset or change them later with `material:set`.
+
+`volumeRelaxation` conservatively packs supported mass toward full cells after inertial transport, so pooled liquid fills a volume instead of remaining a perpetually moving mist of partial cells. `sleepSpeed` zeros small velocities only where liquid is supported by solid or a substantially filled neighboring cell. The water preset uses `volumeRelaxation=12` and `sleepSpeed=2`; use zero for either control to disable that part of settling. Relaxation adds three fragment passes per fixed simulation step when enabled.
+
+The former cellular behavior is deliberately preserved:
+
+```lua
+local mud = world:addMaterial {name='mud', model='liquid', behavior='settling'}
+-- Existing model='water' configurations select the same solver and remain unchanged.
+```
+
+Settling liquids use `flowSpeed`, `compression`, and `spread`. They store mass but no velocity, making them useful for mud, granular pours, and deliberately sluggish effects. Small mounds and delayed settling are expected from that mode.
 
 ## Block the stream
 
