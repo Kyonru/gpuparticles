@@ -39,7 +39,7 @@
 
 Material handles support `set`, `setColor`, `setUniform`, `reset`, and `release`. Source handles support geometry, rate, temperature, start/stop, immediate `emit`, and release. Reaction handles support rate, start/stop, and release.
 
-`model='water'` is the original settling solver and remains backward compatible. `model='liquid'` selects a named `behavior`: `water`/`fluid`, `oil`, `slime`, `lava`, or `settling`. Inertial behaviors retain velocity and expose `viscosity`, `velocityDamping`, `pressure`, `surfaceTension`, `gravity`, `solidFriction`, `maxSpeed`, `volumeRelaxation`, and `sleepSpeed`. The last two controls make supported pools fill and come to rest; set them to zero for pure inertial motion. `liquidPressureIterations` is fixed when the world is constructed.
+`model='water'` is the original settling solver and remains backward compatible. `model='liquid'` selects a named `behavior`: `water`/`fluid`, `oil`, `slime`, `lava`, or `settling`. Inertial behaviors retain velocity and expose `viscosity`, `velocityDamping`, `pressure`, `surfaceTension`, `gravity`, `solidFriction`, `maxSpeed`, `volumeRelaxation`, `sleepSpeed`, and the two-axis `interactionScale`. The relaxation and sleep controls make supported pools fill and come to rest; interaction scale constrains external pushes without restricting natural flow. `liquidPressureIterations` is fixed when the world is constructed.
 
 ## Readback channels
 

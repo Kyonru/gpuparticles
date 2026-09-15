@@ -78,6 +78,8 @@ local oil = world:addMaterial {name='oil', model='liquid', behavior='oil'}
 
 `water` (also named `fluid`) is quick and lightly damped. `oil` has more viscosity, `slime` is slower and cohesive, and `lava` is the heaviest preset. Presets expand into ordinary properties: `viscosity`, `velocityDamping`, `pressure`, `surfaceTension`, `gravity`, `solidFriction`, `maxSpeed`, `volumeRelaxation`, and `sleepSpeed`. Pass any of those fields to override its preset or change them later with `material:set`.
 
+Use `interactionScale={x,y}` to shape external interaction by axis. `{0.1,1.5}` produces stronger vertical splashes with little sideways motion, while `{0,1}` removes horizontal character/brush impulse entirely. Natural pressure, gravity, momentum, and occupancy relaxation are unaffected, so the liquid can still spread and fill its container. Both components range from zero to four and can be changed with `material:set`.
+
 `volumeRelaxation` conservatively packs supported mass toward full cells after inertial transport, so pooled liquid fills a volume instead of remaining a perpetually moving mist of partial cells. `sleepSpeed` zeros small velocities only where liquid is supported by solid or a substantially filled neighboring cell. The water preset uses `volumeRelaxation=100`, `solidFriction=4`, and `sleepSpeed=2`: it fills quickly and dissipates unresolved floor-scale motion while falling water can still accelerate and splash. Oil, slime, and lava progressively relax more slowly and lose more motion at solids. Use zero for either relaxation or sleep to disable that part of settling. Relaxation adds three fragment passes per fixed simulation step when enabled.
 
 The former cellular behavior is deliberately preserved:

@@ -111,6 +111,7 @@ function W:_liquid(dt)
   s:send('u_viscosity',m.viscosity);s:send('u_damping',m.velocityDamping)
   s:send('u_surfaceTension',m.surfaceTension);s:send('u_solidFriction',m.solidFriction)
   s:send('u_maxSpeed',m.maxSpeed);s:send('u_waterForceVector',self.waterForceVector)
+  s:send('u_interactionScale',m.interactionScale)
   U.pass(self,s,m.velocityNext,m.velocity);m.velocity,m.velocityNext=m.velocityNext,m.velocity
   if m.pressure>0 then
     s=m.divergenceShader;s:send('u_state',m.state);U.pass(self,s,m.divergence,m.velocity)

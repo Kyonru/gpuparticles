@@ -84,10 +84,11 @@ Requires GLSL 3, high-precision pixel shaders, and `rgba32f` canvases; no instan
 | `maxSpeed` | inertial liquid | preset | Velocity safety limit in px/s, 1–10000 |
 | `volumeRelaxation` | inertial liquid | preset | Conservative rate that fills supported cells toward density 1, 0–100 per second |
 | `sleepSpeed` | inertial liquid | preset | Supported velocities below this px/s threshold settle to rest, 0–100 |
+| `interactionScale` | inertial liquid | `{1,1}` | Horizontal and vertical multipliers for circle pushes and `addWaterForce`; each 0–4 |
 | `force` | gas | none | Custom GLSL acceleration hook |
 | `render` | all | none | Custom GLSL shading hook |
 
-`material:set {buoyancy=80, cooling=0.1}` changes applicable numeric parameters. `setColor(rgba)` changes rendering. Neither rebuilds resources. Unsupported fields/models and parameters for the wrong model are rejected. Hook code and uniform types are construction settings; values can change with `setUniform` below.
+`material:set {buoyancy=80, cooling=0.1}` changes applicable parameters; `interactionScale` also accepts its two-component vector there. `setColor(rgba)` changes rendering. Neither rebuilds resources. Unsupported fields/models and parameters for the wrong model are rejected. Hook code and uniform types are construction settings; values can change with `setUniform` below.
 
 `material:reset()` clears its fields but retains shared gas velocity. `material:release()` releases its fields and sources, removes reactions referring to it, and frees shared gas canvases when the last gas material is released. `world:release()` releases every remaining owned object and cached shader reference. Releases are idempotent; mutating released handles is rejected.
 
@@ -115,11 +116,14 @@ local water = world:addMaterial {
   surfaceTension = 14,
   volumeRelaxation = 100,
   sleepSpeed = 2,
+  interactionScale = {0.1, 1.5},
 }
 water:set {velocityDamping = 0.2, solidFriction = 0.1}
 ```
 
 One world still supports one liquid. Use separate worlds when two independently drawn liquids need different behaviors. Interacting or mixing liquids require a multiphase solver and are not provided.
+
+`interactionScale` constrains only external circle pushes and directional water forces. For example, `{0.1,1}` makes a character produce mostly vertical splashes without preventing pressure, gravity, momentum, or occupancy relaxation from leveling the pool horizontally. `{0,1}` removes the horizontal part entirely. It is deliberately not a transport lock: constraining natural horizontal flow would stop water filling neighboring columns and moving around obstacles.
 
 Source methods: `setPosition(x,y)`, `setRadius(r)` (circles), `setSize(width,height)` (rectangles), `setRate(rate)` / `setEmissionRate(rate)`, `setTemperature(value)`, `start()`, `stop()`, `isActive()`, `emit(amount)`, and `release()`. Controls return the source. Stopping/removing a source retains its emitted material. `emit` injects immediately, even while continuous emission or world simulation is stopped.
 

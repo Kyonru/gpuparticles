@@ -14,7 +14,7 @@ local bounds={buoyancy={-1000,1000},dissipation={0,20},cooling={0,20},flowSpeed=
   volumeRelaxation={0,100},sleepSpeed={0,100}}
 function M.new(w,options)
   options=options or {};U.alive(w)
-  U.keys(options,'name model behavior color buoyancy dissipation cooling flowSpeed compression spread viscosity velocityDamping pressure surfaceTension gravity solidFriction maxSpeed volumeRelaxation sleepSpeed force render','material')
+  U.keys(options,'name model behavior color buoyancy dissipation cooling flowSpeed compression spread viscosity velocityDamping pressure surfaceTension gravity solidFriction maxSpeed volumeRelaxation sleepSpeed interactionScale force render','material')
   assert(#w.materials<8,'volume material limit is 8')
   local model=U.choice(options.model,'water','material model',{water=true,liquid=true,gas=true})
   local liquid=model=='water' or model=='liquid'
@@ -32,7 +32,7 @@ function M.new(w,options)
     'settling transport parameters require a settling liquid')
   assert(inertial or (options.viscosity==nil and options.velocityDamping==nil and options.pressure==nil and
     options.surfaceTension==nil and options.gravity==nil and options.solidFriction==nil and options.maxSpeed==nil and
-    options.volumeRelaxation==nil and options.sleepSpeed==nil),
+    options.volumeRelaxation==nil and options.sleepSpeed==nil and options.interactionScale==nil),
     'inertial parameters require a non-settling liquid')
   local self=setmetatable({world=w,name=options.name,model=model,owned={},keys={},
     behavior=behavior,solver=inertial and 'inertial' or liquid and 'settling' or 'gas',
@@ -42,6 +42,10 @@ function M.new(w,options)
   if inertial then
     local preset=liquidPresets[behavior]
     for name,default in pairs(preset) do self[name]=U.number(options[name],default,name,bounds[name][1],bounds[name][2]) end
+    self.interactionScale=U.vector(options.interactionScale,{1,1},'interaction scale',2)
+    for _,value in ipairs(self.interactionScale) do
+      assert(value>=0 and value<=4,'gpuparticles volume: invalid interaction scale')
+    end
   end
   local ok,err=xpcall(function()
     U.guard(function()
@@ -81,14 +85,20 @@ end
 function M:set(properties)
   U.alive(self);local validated={}
   for name,value in pairs(properties) do
-    assert(bounds[name],'unsupported volume parameter '..tostring(name))
+    assert(bounds[name] or name=='interactionScale','unsupported volume parameter '..tostring(name))
     local gas=name=='buoyancy'
     local settling=name=='compression' or name=='spread' or name=='flowSpeed'
     local inertial=name=='viscosity' or name=='velocityDamping' or name=='pressure' or name=='surfaceTension' or
       name=='gravity' or name=='solidFriction' or name=='maxSpeed' or name=='volumeRelaxation' or name=='sleepSpeed'
-    assert((not gas or self.model=='gas') and (not settling or self.solver=='settling') and (not inertial or self.solver=='inertial'),
+    assert((not gas or self.model=='gas') and (not settling or self.solver=='settling') and
+      (not inertial or self.solver=='inertial') and (name~='interactionScale' or self.solver=='inertial'),
       'volume parameter does not apply to '..self.solver)
-    validated[name]=U.number(value,nil,name,bounds[name][1],bounds[name][2])
+    if name=='interactionScale' then
+      validated[name]=U.vector(value,nil,'interaction scale',2)
+      for _,component in ipairs(validated[name]) do
+        assert(component>=0 and component<=4,'gpuparticles volume: invalid interaction scale')
+      end
+    else validated[name]=U.number(value,nil,name,bounds[name][1],bounds[name][2]) end
   end
   for name,value in pairs(validated) do self[name]=value end
   return self

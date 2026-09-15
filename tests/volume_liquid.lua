@@ -80,6 +80,31 @@ function M.run()
   H.near(vx,0,1e-7,'reset liquid velocity x');H.near(vy,0,1e-7,'reset liquid velocity y')
   world:release();assert(not pcall(velocity.getWidth,velocity),'release must free liquid velocity')
 
+  -- External interaction can favor one axis without constraining pressure or natural flow.
+  local constrainedWorld=assert(gpu.newVolumeWorld{width=32,height=24,cellSize=1,transportSteps=3,
+    liquidPressureIterations=1})
+  local constrained=constrainedWorld:addMaterial{name='vertical',model='liquid',behavior='water',gravity=0,pressure=0,
+    viscosity=0,velocityDamping=0,surfaceTension=0,solidFriction=0,maxSpeed=500,
+    volumeRelaxation=0,sleepSpeed=0,interactionScale={0,1},cooling=0}
+  H.seed(constrained.state,blob)
+  local constrainedBefore=H.sum(constrained)
+  constrainedWorld:addWaterForce(6.5,6.5,6,90,90):update(constrainedWorld.fixedStep)
+  local vertical=H.sum(constrained)
+  H.near(vertical.x,constrainedBefore.x,1e-4,'vertical interaction constraint x')
+  assert(vertical.y>constrainedBefore.y+0.05,'vertical interaction constraint must preserve y')
+  constrained:set{interactionScale={1,0}}
+  constrainedWorld:reset();H.seed(constrained.state,blob)
+  local horizontalBefore=H.sum(constrained)
+  constrainedWorld:addWaterForce(6.5,6.5,6,90,90):update(constrainedWorld.fixedStep)
+  local horizontal=H.sum(constrained)
+  assert(horizontal.x>horizontalBefore.x+0.05,'runtime interaction constraint must preserve x')
+  H.near(horizontal.y,horizontalBefore.y,1e-4,'horizontal interaction constraint y')
+  assert(not pcall(constrained.set,constrained,{interactionScale={-0.1,1}}),
+    'interaction constraint must reject negative components')
+  assert(not pcall(constrained.set,constrained,{interactionScale={1,4.1}}),
+    'interaction constraint must reject excessive components')
+  constrainedWorld:release()
+
   -- The free-surface pressure solve reduces divergence in occupied cells.
   local pressureWorld=assert(gpu.newVolumeWorld{width=16,height=16,cellSize=1,transportSteps=1,liquidPressureIterations=30})
   local projected=pressureWorld:addMaterial{name='projected',model='liquid',behavior='water',gravity=0,
@@ -129,11 +154,11 @@ function M.run()
   sleepWorld:release()
 
   -- A live stream must build a filled, level pool instead of circulating partial cells forever.
-  local fillWorld=assert(gpu.newVolumeWorld{width=12,height=12,cellSize=1,transportSteps=3,liquidPressureIterations=10,
+  local fillWorld=assert(gpu.newVolumeWorld{width=12,height=12,cellSize=1,fixedStep=1/60,transportSteps=3,liquidPressureIterations=8,
     distance=function(x,y) return math.min(x-1,11-x,11-y) end})
   local filling=fillWorld:addMaterial{name='filling',model='liquid',behavior='water',cooling=0}
   fillWorld:newSource{material=filling,position={6.5,2.5},rate=4}
-  for _=1,480 do fillWorld:update(1/120) end
+  for _=1,240 do fillWorld:update(1/60) end
   local fillData=fillWorld:readback(filling)
   local bottomMass,bottomCells=0,0
   for x=1,10 do
@@ -165,7 +190,9 @@ function M.run()
   assert(not pcall(invalid.addMaterial,invalid,{name='bad',model='water',behavior='water'}),'legacy water must reject behavior')
   assert(not pcall(invalid.addMaterial,invalid,{name='bad',model='liquid',behavior='water',spread=0.2}),
     'inertial liquid must reject settling controls at construction')
+  assert(not pcall(invalid.addMaterial,invalid,{name='bad',model='water',interactionScale={0,1}}),
+    'settling liquid must reject interaction constraints')
   invalid:release()
-  print('Liquid settling compatibility / momentum / pressure / volume relaxation / sleep / presets / lifecycle PASS')
+  print('Liquid settling compatibility / momentum / pressure / relaxation / sleep / interaction constraints / presets / lifecycle PASS')
 end
 return M

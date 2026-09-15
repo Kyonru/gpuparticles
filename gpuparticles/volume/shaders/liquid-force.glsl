@@ -7,6 +7,7 @@ uniform float u_surfaceTension;
 uniform float u_solidFriction;
 uniform float u_maxSpeed;
 uniform vec2 u_waterForceVector;
+uniform vec2 u_interactionScale;
 bool liquidAt(vec2 p) { return inside(p) && !solid(p) && at(u_state,p).r>0.0001; }
 vec2 liquidVelocity(Image velocity,vec2 p,vec2 fallback) {
   return liquidAt(p) ? at(velocity,p).xy : fallback;
@@ -27,12 +28,12 @@ vec4 effect(vec4 color,Image velocity,vec2 tc,vec2 sc) {
   float pushDistance=length(pushDelta);
   if (u_push.w>0.0 && pushDistance<u_push.z && pushDistance>0.0001) {
     float falloff=pow(1.0-pushDistance/u_push.z,2.0);
-    v+=pushDelta/pushDistance*u_push.w*120.0*u_dt*falloff;
+    v+=pushDelta/pushDistance*u_interactionScale*u_push.w*120.0*u_dt*falloff;
   }
   vec2 forceDelta=(p+0.5)*u_cell-u_waterForce.xy;
   float forceDistance=length(forceDelta);
   if (u_waterForce.w>0.5 && forceDistance<u_waterForce.z) {
-    v+=u_waterForceVector*pow(1.0-forceDistance/u_waterForce.z,2.0);
+    v+=u_waterForceVector*u_interactionScale*pow(1.0-forceDistance/u_waterForce.z,2.0);
   }
   v*=exp(-u_damping*u_dt);
   bool side=solid(p+vec2(1,0)) || solid(p-vec2(1,0));
