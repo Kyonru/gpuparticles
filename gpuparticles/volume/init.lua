@@ -78,6 +78,7 @@ function W:_injectSource(source,amount,immediate)
   if immediate then U.clear(m.injection) end
   g.setCanvas(m.injection);local s=self.shaders.inject;U.bind(self,s)
   s:send('u_brush',source.brush);s:send('u_amount',amount/(source.count*self.cell[1]*self.cell[2]))
+  s:send('u_exclusionCircle',source.exclusionCircle)
   s:send('u_temperature',source.temperature)
   g.setBlendMode('add','premultiplied')
   local b=source.bounds;g.rectangle('fill',b[1],b[2],b[3]-b[1]+1,b[4]-b[2]+1)

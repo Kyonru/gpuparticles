@@ -12,7 +12,7 @@ function S.new(w,options)
     shape=U.choice(options.shape,'circle','source shape',{circle=true,rectangle=true}),
     width=U.number(options.width,0,'source width',0),height=U.number(options.height,0,'source height',0),
     rate=U.number(options.rate,0,'source rate',0),temperature=U.number(options.temperature,material.model=='gas' and 1 or 0,'temperature',0,1000),
-    bounds={0,0,0,0},brush={0,0,0,0}},S)
+    bounds={0,0,0,0},brush={0,0,0,0},exclusionCircle={0,0,0,0}},S)
   self:geometry();w.sources[#w.sources+1]=self;return self
 end
 function S:geometry()
@@ -47,6 +47,15 @@ end
 function S:setRate(rate) U.alive(self);self.rate=U.number(rate,nil,'rate',0);return self end
 S.setEmissionRate=S.setRate
 function S:setTemperature(t) U.alive(self);self.temperature=U.number(t,nil,'temperature',0,1000);return self end
+function S:setExclusionCircle(x,y,radius)
+  U.alive(self);x=U.number(x,nil,'exclusion x');y=U.number(y,nil,'exclusion y')
+  radius=U.number(radius,nil,'exclusion radius',0)
+  self.exclusionCircle[1],self.exclusionCircle[2],self.exclusionCircle[3],self.exclusionCircle[4]=x,y,radius,1
+  return self
+end
+function S:clearExclusion()
+  U.alive(self);self.exclusionCircle[4]=0;return self
+end
 function S:start() U.alive(self);self.active=true;return self end
 function S:stop() U.alive(self);self.active=false;return self end
 function S:isActive() return not self.released and self.active end

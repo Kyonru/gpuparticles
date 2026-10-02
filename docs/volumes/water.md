@@ -116,9 +116,11 @@ local tap = world:newSource {
 }
 
 tap:setPosition(500, 100)
+tap:setExclusionCircle(player.x, player.y, player.radius)
+tap:clearExclusion()
 tap:stop()
 tap:start()
 tap:emit(400) -- immediate amount
 ```
 
-`rate` uses density × world-pixel² per second. Sources reject solid cells. Continue with [runtime terrain and colliders](runtime-interaction.md) or [smoke and steam](smoke-and-reactions.md).
+`rate` uses density × world-pixel² per second. Sources reject solid cells. A source exclusion circle suppresses injection around a moving body without pausing the rest of a wide source; call `clearExclusion()` when it is no longer needed. Continue with [runtime terrain and colliders](runtime-interaction.md) or [smoke and steam](smoke-and-reactions.md).

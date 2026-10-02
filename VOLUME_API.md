@@ -103,6 +103,8 @@ Requires GLSL 3, high-precision pixel shaders, and `rgba32f` canvases; no instan
 
 Injection is uniform across selected in-bounds cells. Solid locations reject injection. Liquid sources admit up to density 1 at their locations; submerged/full locations admit less. Gas injection caps density at 1000. Actual admitted rate can therefore be below the requested rate, and is recorded for verification.
 
+`source:setExclusionCircle(x,y,radius)` suppresses that source inside a world-space circle without stopping injection elsewhere. Use it to keep a reservoir, waterfall, or fog source active while an interactive body occupies part of its region. `source:clearExclusion()` restores the complete source shape. Both continuous emission and `emit(amount)` respect the exclusion; excluded cells' share is rejected rather than redistributed to the remaining cells.
+
 ## Liquid behaviors
 
 Existing `model='water'` configurations continue to select the original settling solver with the same shaders, resources, defaults, and results. The explicit equivalent is `model='liquid', behavior='settling'`. It stores density and temporary directional flux, but no persistent velocity.
@@ -125,7 +127,7 @@ One world still supports one liquid. Use separate worlds when two independently 
 
 `interactionScale` constrains only external circle pushes and directional water forces. For example, `{0.1,1}` makes a character produce mostly vertical splashes without preventing pressure, gravity, momentum, or occupancy relaxation from leveling the pool horizontally. `{0,1}` removes the horizontal part entirely. It is deliberately not a transport lock: constraining natural horizontal flow would stop water filling neighboring columns and moving around obstacles.
 
-Source methods: `setPosition(x,y)`, `setRadius(r)` (circles), `setSize(width,height)` (rectangles), `setRate(rate)` / `setEmissionRate(rate)`, `setTemperature(value)`, `start()`, `stop()`, `isActive()`, `emit(amount)`, and `release()`. Controls return the source. Stopping/removing a source retains its emitted material. `emit` injects immediately, even while continuous emission or world simulation is stopped.
+Source methods: `setPosition(x,y)`, `setRadius(r)` (circles), `setSize(width,height)` (rectangles), `setRate(rate)` / `setEmissionRate(rate)`, `setTemperature(value)`, `setExclusionCircle(x,y,radius)`, `clearExclusion()`, `start()`, `stop()`, `isActive()`, `emit(amount)`, and `release()`. Controls return the source. Stopping/removing a source retains its emitted material. `emit` injects immediately, even while continuous emission or world simulation is stopped.
 
 Moving/resizing circular sources counts coverage in Lua over their bounding region. This runs only when geometry changes, not on ordinary simulation updates; moving very large sources can cost CPU time.
 

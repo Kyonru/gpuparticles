@@ -24,6 +24,12 @@ function M.run()
   assert(not pcall(world2.newSource,world2,{material=m}),'cross-world source references must be rejected')
   local gas=world2:addMaterial{name='smoke',model='gas',buoyancy=0,dissipation=0,cooling=0}
   local probe=world2:newSource{material=gas,position={4,4},rate=0}
+  probe:setExclusionCircle(4,4,2):setRate(8);world2:warm(0.25);probe:emit(8)
+  assert(H.sum(gas).mass==0,'source exclusion circle must reject continuous and immediate injection')
+  probe:clearExclusion();world2:warm(0.25)
+  assert(H.sum(gas).mass>0,'cleared source exclusion must admit injection')
+  probe:setRate(0)
+  world2:reset()
   world2:setBoxCollider(4,4,4,4);probe:emit(8);assert(H.sum(gas).mass==0,'box must reject volume injection')
   world2:setBoxCollider();world2:setCapsuleCollider(2,4,6,4,2);probe:emit(8)
   assert(H.sum(gas).mass==0,'capsule must reject volume injection')
