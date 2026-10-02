@@ -166,19 +166,23 @@ function M.run()
     return px>=1 and px<=22 and py>=6 and py<=18 and 1 or 0,0,0,0
   end)
   local levelMass=H.sum(levelLiquid).mass
-  levelWorld:warm(2)
+  -- The former compression defect appeared gradually as isolated columns that climbed
+  -- to the top of a bounded pool, so exercise a long unattended interval.
+  levelWorld:warm(30)
   local levelData=levelWorld:readback(levelLiquid)
-  local maximum,maxX,maxY,surfaceCells=0,0,0,0
+  local maximum,maxX,maxY,surfaceCells,upperMass=0,0,0,0,0
   for py=0,19 do for px=0,23 do
     local density=levelData:getPixel(px,py)
     if density>maximum then maximum,maxX,maxY=density,px,py end
     if py==6 and density>0.35 then surfaceCells=surfaceCells+1 end
+    if py<6 then upperMass=upperMass+density end
   end end
   levelData:release()
   H.near(H.sum(levelLiquid).mass,levelMass,0.01,'resting pool mass conservation')
   assert(maximum<=1.001,('resting liquid exceeded cell capacity: %.3f at %d,%d; surface %d'):format(
     maximum,maxX,maxY,surfaceCells))
   assert(surfaceCells>=18,'resting liquid collapsed below its seeded surface')
+  assert(upperMass<0.01,('resting liquid formed an upward pile: %.3f mass above surface'):format(upperMass))
   levelWorld:release()
 
   -- Occupancy relaxation packs partial mass into the lower cell even after motion stops.
