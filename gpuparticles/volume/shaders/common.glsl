@@ -3,31 +3,37 @@ uniform vec2 u_cell;
 uniform Image u_terrain;
 uniform vec4 u_circle;
 uniform vec2 u_circleVelocity;
+uniform bool u_circleDisplaces;
 uniform vec4 u_push; // xy center, z radius, w strength; never marks cells solid
 uniform vec4 u_waterForce; // xy center, z radius, w enabled
 uniform vec4 u_box;
 uniform bool u_boxEnabled;
 uniform vec2 u_boxVelocity;
+uniform bool u_boxDisplaces;
 uniform vec4 u_capsule;
 uniform float u_capsuleRadius;
 uniform bool u_capsuleEnabled;
 uniform vec2 u_capsuleVelocity;
+uniform bool u_capsuleDisplaces;
 uniform float u_time;
 bool inside(vec2 p) { return all(greaterThanEqual(p,vec2(0.0))) && all(lessThan(p,u_grid)); }
 vec2 uv(vec2 p) { return (p+0.5)/u_grid; }
-float circleDistance(vec2 p) {
+float circleShapeDistance(vec2 p) {
   return u_circle.w>0.5 ? length((p+0.5)*u_cell-u_circle.xy)-u_circle.z : 1.0e6;
 }
-float boxDistance(vec2 p) {
+float boxShapeDistance(vec2 p) {
   vec2 q=abs((p+0.5)*u_cell-u_box.xy)-u_box.zw;
   return u_boxEnabled ? length(max(q,vec2(0.0)))+min(max(q.x,q.y),0.0) : 1.0e6;
 }
-float capsuleDistance(vec2 p) {
+float capsuleShapeDistance(vec2 p) {
   vec2 world=(p+0.5)*u_cell,a=u_capsule.xy,segment=u_capsule.zw-a;
   float length2=dot(segment,segment);
   float along=length2>0.00001 ? clamp(dot(world-a,segment)/length2,0.0,1.0) : 0.0;
   return u_capsuleEnabled ? length(world-(a+segment*along))-u_capsuleRadius : 1.0e6;
 }
+float circleDistance(vec2 p) { return u_circleDisplaces ? circleShapeDistance(p) : 1.0e6; }
+float boxDistance(vec2 p) { return u_boxDisplaces ? boxShapeDistance(p) : 1.0e6; }
+float capsuleDistance(vec2 p) { return u_capsuleDisplaces ? capsuleShapeDistance(p) : 1.0e6; }
 float dynamicDistance(vec2 p) { return min(circleDistance(p),min(boxDistance(p),capsuleDistance(p))); }
 vec2 dynamicVelocity(vec2 p) {
   float circleD=circleDistance(p),boxD=boxDistance(p),capsuleD=capsuleDistance(p);
@@ -39,6 +45,16 @@ float obstacleDistance(vec2 p) { return min(Texel(u_terrain,uv(p)).r,dynamicDist
 bool solid(vec2 p) { return !inside(p) || obstacleDistance(p)<0.0; }
 vec2 obstacleVelocity(vec2 p) {
   return inside(p) && dynamicDistance(p)<0.0 ? dynamicVelocity(p) : vec2(0.0);
+}
+vec3 softColliderVelocity(vec2 p) {
+  float circleD=u_circleDisplaces ? 1.0e6 : circleShapeDistance(p);
+  float boxD=u_boxDisplaces ? 1.0e6 : boxShapeDistance(p);
+  float capsuleD=u_capsuleDisplaces ? 1.0e6 : capsuleShapeDistance(p);
+  float nearest=min(circleD,min(boxD,capsuleD));
+  if (nearest>0.0) return vec3(0.0);
+  vec2 velocity=circleD<=boxD && circleD<=capsuleD ? u_circleVelocity :
+    (boxD<=capsuleD ? u_boxVelocity : u_capsuleVelocity);
+  return vec3(velocity,1.0);
 }
 vec2 enforceNoThrough(vec2 p,vec2 velocity) {
   vec2 right=p+vec2(1,0),left=p-vec2(1,0),down=p+vec2(0,1),up=p-vec2(0,1);

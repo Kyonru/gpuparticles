@@ -124,6 +124,18 @@ function M.run()
     'moving collider did not transfer velocity through its leading boundary (%.3f)',leading))
   assert(math.abs(trailing)<1e-4,string.format(
     'moving collider pulled liquid through its trailing boundary (%.3f)',trailing))
+  boundaryWorld:reset()
+  H.seed(boundaryLiquid.state,function(px,py)
+    return px>=3 and px<=11 and py>=3 and py<=11 and 0.8 or 0,0,0,0
+  end)
+  boundaryWorld:setCircleCollider(7.5,7.5,2,120,0,false):update(boundaryWorld.fixedStep)
+  local softState=boundaryLiquid.state:newImageData()
+  local softVelocity=boundaryLiquid.velocity:newImageData()
+  local centerMass=softState:getPixel(7,7)
+  local centerVelocity=softVelocity:getPixel(7,7)
+  softState:release();softVelocity:release()
+  assert(centerMass>0.4,'non-displacing collider carved a cavity in liquid density')
+  assert(centerVelocity>10,'non-displacing collider did not couple its velocity to liquid')
   boundaryWorld:release()
 
   -- The free-surface pressure solve reduces divergence in occupied cells.

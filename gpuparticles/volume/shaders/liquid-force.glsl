@@ -35,6 +35,8 @@ vec4 effect(vec4 color,Image velocity,vec2 tc,vec2 sc) {
   if (u_waterForce.w>0.5 && forceDistance<u_waterForce.z) {
     v+=u_waterForceVector*u_interactionScale*pow(1.0-forceDistance/u_waterForce.z,2.0);
   }
+  vec3 softCollider=softColliderVelocity(p);
+  if (softCollider.z>0.5) v=mix(v,softCollider.xy,1.0-exp(-18.0*u_dt));
   v*=exp(-u_damping*u_dt);
   bool side=solid(p+vec2(1,0)) || solid(p-vec2(1,0));
   bool floorOrCeiling=solid(p+vec2(0,1)) || solid(p-vec2(0,1));

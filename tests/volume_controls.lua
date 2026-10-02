@@ -37,6 +37,10 @@ function M.run()
   assert(H.sum(gas).mass==0,'capsule must reject volume injection')
   assert(world2.capsuleVelocity[1]==-7 and world2.capsuleVelocity[2]==9,
     'capsule collider velocity was not retained')
+  world2:setCapsuleCollider(2,4,6,4,2,-7,9,false)
+  assert(not world2.capsuleDisplaces,'capsule non-displacing mode was not retained')
+  assert(not pcall(world2.setCapsuleCollider,world2,2,4,6,4,2,0,0,'soft'),
+    'collider displacement mode must be boolean')
   world2:setCapsuleCollider();probe:emit(8);assert(H.sum(gas).mass>0,'disabled dynamic colliders must admit volume injection')
   world2:release()
   local pushWorld=assert(gpu.newVolumeWorld{width=15,height=15,cellSize=1,transportSteps=1})

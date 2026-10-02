@@ -5,11 +5,11 @@ Volume controls mutate GPU fields without reading every cell into Lua. Coordinat
 ## Moving obstacles
 
 ```lua
-world:setCircleCollider(x, y, radius, velocityX, velocityY)
+world:setCircleCollider(x, y, radius, velocityX, velocityY, displaces)
 world:setCircleCollider() -- disable
-world:setBoxCollider(x, y, width, height, velocityX, velocityY)
+world:setBoxCollider(x, y, width, height, velocityX, velocityY, displaces)
 world:setBoxCollider() -- disable
-world:setCapsuleCollider(x1, y1, x2, y2, radius, velocityX, velocityY)
+world:setCapsuleCollider(x1, y1, x2, y2, radius, velocityX, velocityY, displaces)
 world:setCapsuleCollider() -- disable
 ```
 
