@@ -12,7 +12,8 @@ function W.new(options)
   local self=setmetatable({materials={},sources={},reactions={},owned={},keys={},shaders={},time=0,accumulator=0,
     paused=false,released=false,droppedTime=0,wind=U.vector(options.wind,{0,0},'wind',2),circle={0,0,0,0},
     push={0,0,0,0},waterForce={0,0,0,0},waterForceVector={0,0},waterForceStep={0,0},
-    box={0,0,0,0},boxEnabled=false,capsule={0,0,0,0},capsuleRadius=0,capsuleEnabled=false,
+    circleVelocity={0,0},box={0,0,0,0},boxEnabled=false,boxVelocity={0,0},
+    capsule={0,0,0,0},capsuleRadius=0,capsuleEnabled=false,capsuleVelocity={0,0},
     brush={0,0,0,0},impulse={0,0},
     width=U.number(options.width,1280,'width',1),height=U.number(options.height,800,'height',1),
     cellSize=U.number(options.cellSize,8,'cell size',0.25),
@@ -229,12 +230,14 @@ end
 function W:setWind(x,y)
   U.alive(self);x=U.number(x,nil,'wind x');y=U.number(y,nil,'wind y');self.wind[1],self.wind[2]=x,y;return self
 end
-function W:setCircleCollider(x,y,radius)
+function W:setCircleCollider(x,y,radius,vx,vy)
   U.alive(self)
-  if x==nil then self.circle[4]=0
+  if x==nil then self.circle[4]=0;self.circleVelocity[1],self.circleVelocity[2]=0,0
   else
     x=U.number(x,nil,'circle x');y=U.number(y,nil,'circle y');radius=U.number(radius,nil,'circle radius',0)
     self.circle[1],self.circle[2],self.circle[3],self.circle[4]=x,y,radius,1
+    self.circleVelocity[1]=U.number(vx,0,'circle velocity x')
+    self.circleVelocity[2]=U.number(vy,0,'circle velocity y')
   end
   return self
 end
@@ -256,24 +259,28 @@ function W:addWaterForce(x,y,radius,forceX,forceY)
   self.waterForceVector[2]=U.number(forceY,nil,'water force vertical velocity')
   return self
 end
-function W:setBoxCollider(x,y,width,height)
+function W:setBoxCollider(x,y,width,height,vx,vy)
   U.alive(self)
-  if x==nil then self.boxEnabled=false
+  if x==nil then self.boxEnabled=false;self.boxVelocity[1],self.boxVelocity[2]=0,0
   else
     x=U.number(x,nil,'box x');y=U.number(y,nil,'box y')
     width=U.number(width,nil,'box width',0.001);height=U.number(height,nil,'box height',0.001)
     self.box[1],self.box[2],self.box[3],self.box[4],self.boxEnabled=x,y,width*0.5,height*0.5,true
+    self.boxVelocity[1]=U.number(vx,0,'box velocity x')
+    self.boxVelocity[2]=U.number(vy,0,'box velocity y')
   end
   return self
 end
-function W:setCapsuleCollider(x1,y1,x2,y2,radius)
+function W:setCapsuleCollider(x1,y1,x2,y2,radius,vx,vy)
   U.alive(self)
-  if x1==nil then self.capsuleEnabled=false
+  if x1==nil then self.capsuleEnabled=false;self.capsuleVelocity[1],self.capsuleVelocity[2]=0,0
   else
     x1=U.number(x1,nil,'capsule start x');y1=U.number(y1,nil,'capsule start y')
     x2=U.number(x2,nil,'capsule end x');y2=U.number(y2,nil,'capsule end y')
     self.capsuleRadius=U.number(radius,nil,'capsule radius',0.001)
     self.capsule[1],self.capsule[2],self.capsule[3],self.capsule[4],self.capsuleEnabled=x1,y1,x2,y2,true
+    self.capsuleVelocity[1]=U.number(vx,0,'capsule velocity x')
+    self.capsuleVelocity[2]=U.number(vy,0,'capsule velocity y')
   end
   return self
 end

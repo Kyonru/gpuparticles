@@ -38,10 +38,7 @@ vec4 effect(vec4 color,Image velocity,vec2 tc,vec2 sc) {
   v*=exp(-u_damping*u_dt);
   bool side=solid(p+vec2(1,0)) || solid(p-vec2(1,0));
   bool floorOrCeiling=solid(p+vec2(0,1)) || solid(p-vec2(0,1));
-  if (solid(p+vec2(1,0))) v.x=min(v.x,0.0);
-  if (solid(p-vec2(1,0))) v.x=max(v.x,0.0);
-  if (solid(p+vec2(0,1))) v.y=min(v.y,0.0);
-  if (solid(p-vec2(0,1))) v.y=max(v.y,0.0);
+  v=enforceNoThrough(p,v);
   float friction=exp(-u_solidFriction*u_dt);
   if (side) v.y*=friction;
   if (floorOrCeiling) v.x*=friction;

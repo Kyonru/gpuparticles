@@ -105,6 +105,27 @@ function M.run()
     'interaction constraint must reject excessive components')
   constrainedWorld:release()
 
+  -- Moving obstacles impose their normal velocity on adjacent liquid. This is a
+  -- boundary condition, not a radial impulse: the leading face pushes while the
+  -- trailing face does not pull liquid through the collider.
+  local boundaryWorld=assert(gpu.newVolumeWorld{width=15,height=15,cellSize=1,
+    transportSteps=1,liquidPressureIterations=1})
+  local boundaryLiquid=boundaryWorld:addMaterial{name='boundary water',model='liquid',behavior='water',
+    gravity=0,pressure=0,viscosity=0,velocityDamping=0,surfaceTension=0,solidFriction=0,
+    maxSpeed=500,volumeRelaxation=0,sleepSpeed=0,cooling=0}
+  H.seed(boundaryLiquid.state,function(px,py)
+    return px>=3 and px<=11 and py>=3 and py<=11 and 0.8 or 0,0,0,0
+  end)
+  boundaryWorld:setCircleCollider(7.5,7.5,2,120,0):update(boundaryWorld.fixedStep)
+  local boundaryVelocity=boundaryLiquid.velocity:newImageData()
+  local leading,trailing=boundaryVelocity:getPixel(9,7),boundaryVelocity:getPixel(5,7)
+  boundaryVelocity:release()
+  assert(leading>20,string.format(
+    'moving collider did not transfer velocity through its leading boundary (%.3f)',leading))
+  assert(math.abs(trailing)<1e-4,string.format(
+    'moving collider pulled liquid through its trailing boundary (%.3f)',trailing))
+  boundaryWorld:release()
+
   -- The free-surface pressure solve reduces divergence in occupied cells.
   local pressureWorld=assert(gpu.newVolumeWorld{width=16,height=16,cellSize=1,transportSteps=1,liquidPressureIterations=30})
   local projected=pressureWorld:addMaterial{name='projected',model='liquid',behavior='water',gravity=0,

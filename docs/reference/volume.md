@@ -13,11 +13,11 @@
 | `warm(seconds)` | Run all complete steps in a duration |
 | `draw(x=0,y=0)` | Draw materials in creation order |
 | `setWind(x,y)` | Change gas target velocity |
-| `setCircleCollider(x,y,radius)` | Enable or move the circle obstacle |
+| `setCircleCollider(x,y,radius,vx=0,vy=0)` | Enable or move the circle obstacle; velocity couples moving boundaries to inertial liquid |
 | `setCircleCollider()` | Disable the circle obstacle |
-| `setBoxCollider(x,y,width,height)` | Enable or move an axis-aligned box obstacle |
+| `setBoxCollider(x,y,width,height,vx=0,vy=0)` | Enable or move an axis-aligned box obstacle with optional velocity |
 | `setBoxCollider()` | Disable the box obstacle |
-| `setCapsuleCollider(x1,y1,x2,y2,radius)` | Enable or move an oriented capsule obstacle |
+| `setCapsuleCollider(x1,y1,x2,y2,radius,vx=0,vy=0)` | Enable or move an oriented capsule obstacle with optional velocity |
 | `setCapsuleCollider()` | Disable the capsule obstacle |
 | `paintTerrain(x,y,radius,solid)` | Add or erase solid terrain |
 | `resetTerrain()` | Restore construction terrain |

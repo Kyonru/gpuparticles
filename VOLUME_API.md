@@ -139,13 +139,13 @@ Moving/resizing circular sources counts coverage in Lua over their bounding regi
 | `warm(seconds)` | Run full fixed steps without catch-up limits, even when paused; fractional steps round down |
 | `draw(x=0,y=0)` | Draw materials in creation order |
 | `setWind(x,y)` | Change gas wind target; no effect on cellular water |
-| `setCircleCollider(x,y,radius)` | Move/resize the circular obstacle |
+| `setCircleCollider(x,y,radius,vx=0,vy=0)` | Move/resize the circular obstacle; optional velocity pushes inertial liquid at the boundary |
 | `setCircleCollider()` | Disable the circle |
 | `setCirclePush(x, y, radius, strength)` | Bias settling flux or accelerate inertial liquid radially without creating a solid mask; requires a liquid |
 | `setCirclePush()` | Disable the soft water push |
-| `setBoxCollider(x,y,width,height)` | Move/resize an axis-aligned box obstacle |
+| `setBoxCollider(x,y,width,height,vx=0,vy=0)` | Move/resize an axis-aligned box obstacle with optional boundary velocity |
 | `setBoxCollider()` | Disable the box |
-| `setCapsuleCollider(x1,y1,x2,y2,radius)` | Move/resize/rotate a capsule obstacle |
+| `setCapsuleCollider(x1,y1,x2,y2,radius,vx=0,vy=0)` | Move/resize/rotate a capsule obstacle with optional boundary velocity |
 | `setCapsuleCollider()` | Disable the capsule |
 | `paintTerrain(x,y,radius,solid)` | Add solid terrain when true, erase when false |
 | `resetTerrain()` | Restore original terrain |

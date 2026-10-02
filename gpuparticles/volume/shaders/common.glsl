@@ -2,13 +2,16 @@ uniform vec2 u_grid;
 uniform vec2 u_cell;
 uniform Image u_terrain;
 uniform vec4 u_circle;
+uniform vec2 u_circleVelocity;
 uniform vec4 u_push; // xy center, z radius, w strength; never marks cells solid
 uniform vec4 u_waterForce; // xy center, z radius, w enabled
 uniform vec4 u_box;
 uniform bool u_boxEnabled;
+uniform vec2 u_boxVelocity;
 uniform vec4 u_capsule;
 uniform float u_capsuleRadius;
 uniform bool u_capsuleEnabled;
+uniform vec2 u_capsuleVelocity;
 uniform float u_time;
 bool inside(vec2 p) { return all(greaterThanEqual(p,vec2(0.0))) && all(lessThan(p,u_grid)); }
 vec2 uv(vec2 p) { return (p+0.5)/u_grid; }
@@ -26,8 +29,25 @@ float capsuleDistance(vec2 p) {
   return u_capsuleEnabled ? length(world-(a+segment*along))-u_capsuleRadius : 1.0e6;
 }
 float dynamicDistance(vec2 p) { return min(circleDistance(p),min(boxDistance(p),capsuleDistance(p))); }
+vec2 dynamicVelocity(vec2 p) {
+  float circleD=circleDistance(p),boxD=boxDistance(p),capsuleD=capsuleDistance(p);
+  if (circleD<=boxD && circleD<=capsuleD) return u_circleVelocity;
+  if (boxD<=capsuleD) return u_boxVelocity;
+  return u_capsuleVelocity;
+}
 float obstacleDistance(vec2 p) { return min(Texel(u_terrain,uv(p)).r,dynamicDistance(p)); }
 bool solid(vec2 p) { return !inside(p) || obstacleDistance(p)<0.0; }
+vec2 obstacleVelocity(vec2 p) {
+  return inside(p) && dynamicDistance(p)<0.0 ? dynamicVelocity(p) : vec2(0.0);
+}
+vec2 enforceNoThrough(vec2 p,vec2 velocity) {
+  vec2 right=p+vec2(1,0),left=p-vec2(1,0),down=p+vec2(0,1),up=p-vec2(0,1);
+  if (solid(right)) velocity.x=min(velocity.x,obstacleVelocity(right).x);
+  if (solid(left)) velocity.x=max(velocity.x,obstacleVelocity(left).x);
+  if (solid(down)) velocity.y=min(velocity.y,obstacleVelocity(down).y);
+  if (solid(up)) velocity.y=max(velocity.y,obstacleVelocity(up).y);
+  return velocity;
+}
 bool gasSolid(vec2 p) { return solid(p); }
 vec4 at(Image field,vec2 p) { return inside(p) ? Texel(field,uv(p)) : vec4(0.0); }
 // Manual interpolation leaves all simulation textures nearest filtered. Solid samples
