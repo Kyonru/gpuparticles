@@ -68,7 +68,7 @@ Grid size is `ceil(width/cellSize) × ceil(height/cellSize)`. Start with 8 pixel
 | `liquidPressureIterations` | `10` | Inertial-liquid pressure passes |
 | `renderStyle` | `'pixel'` | Pixel or smooth display only |
 
-Inertial liquids retain velocity, conservatively carry momentum with their mass, and project velocity pressure. They can coast, wake, rebound, and slosh, but remain a stylized free-surface grid rather than an engineering fluid simulation. Pixel rendering treats filled interior rows as one continuous body and applies partial-cell smoothing only to the exposed surface. Use `smooth` when the surface should hide the grid entirely, or a coarse volume for the pooled body with particle emitters for droplets, mist, and spray.
+Inertial liquids retain velocity, conservatively carry momentum with their mass, and project velocity pressure. Converging transfers share the destination cell's free capacity, preventing an idle pool from compressing into over-dense columns. They can coast, wake, rebound, and slosh, but remain a stylized free-surface grid rather than an engineering fluid simulation. Pixel rendering treats filled interior rows as one continuous body and applies partial-cell smoothing only to the exposed surface. Use `smooth` when the surface should hide the grid entirely, or a coarse volume for the pooled body with particle emitters for droplets, mist, and spray.
 
 ## Choose a liquid behavior
 

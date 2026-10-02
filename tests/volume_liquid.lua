@@ -154,6 +154,33 @@ function M.run()
   assert(divergenceAfter<divergenceBefore*0.8,'liquid pressure projection must reduce divergence')
   pressureWorld:release()
 
+  -- Converging velocity fields must share destination capacity. Without this guard,
+  -- resting gravity compresses a level pool into over-dense cells and a local column.
+  local levelWorld=assert(gpu.newVolumeWorld{width=24,height=20,cellSize=1,fixedStep=1/60,
+    transportSteps=3,liquidPressureIterations=8,
+    distance=function(x,y) return math.min(x-1,23-x,19-y) end})
+  local levelLiquid=levelWorld:addMaterial{name='level pool',model='liquid',behavior='water',
+    viscosity=0.18,velocityDamping=0.2,pressure=1.1,surfaceTension=8,gravity=1400,
+    solidFriction=2.5,maxSpeed=900,volumeRelaxation=18,sleepSpeed=1.5,cooling=0}
+  H.seed(levelLiquid.state,function(px,py)
+    return px>=1 and px<=22 and py>=6 and py<=18 and 1 or 0,0,0,0
+  end)
+  local levelMass=H.sum(levelLiquid).mass
+  levelWorld:warm(2)
+  local levelData=levelWorld:readback(levelLiquid)
+  local maximum,maxX,maxY,surfaceCells=0,0,0,0
+  for py=0,19 do for px=0,23 do
+    local density=levelData:getPixel(px,py)
+    if density>maximum then maximum,maxX,maxY=density,px,py end
+    if py==6 and density>0.35 then surfaceCells=surfaceCells+1 end
+  end end
+  levelData:release()
+  H.near(H.sum(levelLiquid).mass,levelMass,0.01,'resting pool mass conservation')
+  assert(maximum<=1.001,('resting liquid exceeded cell capacity: %.3f at %d,%d; surface %d'):format(
+    maximum,maxX,maxY,surfaceCells))
+  assert(surfaceCells>=18,'resting liquid collapsed below its seeded surface')
+  levelWorld:release()
+
   -- Occupancy relaxation packs partial mass into the lower cell even after motion stops.
   local relaxedWorld=assert(gpu.newVolumeWorld{width=8,height=8,cellSize=1,transportSteps=1,liquidPressureIterations=1})
   local staticWorld=assert(gpu.newVolumeWorld{width=8,height=8,cellSize=1,transportSteps=1,liquidPressureIterations=1})
