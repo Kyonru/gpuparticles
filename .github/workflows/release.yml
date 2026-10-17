@@ -17,8 +17,8 @@ jobs:
 
       - name: Package standalone module
         run: |
-          tar -czf "gpuparticles-${GITHUB_REF_NAME}.tar.gz" gpuparticles README.md API.md VOLUME_API.md LICENSE
-          zip -q -r "gpuparticles-${GITHUB_REF_NAME}.zip" gpuparticles README.md API.md VOLUME_API.md LICENSE
+          tar -czf "gpuparticles-${GITHUB_REF_NAME}.tar.gz" gpuparticles README.md API.md VOLUME_API.md CHANGELOG.md LICENSE
+          zip -q -r "gpuparticles-${GITHUB_REF_NAME}.zip" gpuparticles README.md API.md VOLUME_API.md CHANGELOG.md LICENSE
 
       - name: Create GitHub release
         env:
